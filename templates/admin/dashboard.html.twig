@@ -1,8 +1,9 @@
-{% extends '@EasyAdmin/page/content.html.twig' %}
+{% extends '@EasyAdmin/layout.html.twig' %}
 
 {% block page_title %}Tableau de bord{% endblock %}
 
 {% block main %}
+<div class="container-fluid">
 <div class="row">
     <div class="col-12">
         <h1 class="mb-4">Bienvenue sur Mercuriale.io</h1>
@@ -22,7 +23,7 @@
                 </div>
             </div>
             <div class="card-footer d-flex align-items-center justify-content-between">
-                <a href="{{ ea_url().setController('App\\\\Controller\\\\Admin\\\\BonLivraisonCrudController').setAction('index') }}" class="text-white text-decoration-none small">Voir tout</a>
+                <a href="{{ ea_url().setController('App\\Controller\\Admin\\BonLivraisonCrudController').setAction('index') }}" class="text-white text-decoration-none small">Voir tout</a>
                 <i class="fa fa-arrow-right text-white"></i>
             </div>
         </div>
@@ -40,7 +41,7 @@
                 </div>
             </div>
             <div class="card-footer d-flex align-items-center justify-content-between">
-                <a href="{{ ea_url().setController('App\\\\Controller\\\\Admin\\\\AlerteControleCrudController').setAction('index') }}" class="text-dark text-decoration-none small">Voir tout</a>
+                <a href="{{ ea_url().setController('App\\Controller\\Admin\\AlerteControleCrudController').setAction('index') }}" class="text-dark text-decoration-none small">Voir tout</a>
                 <i class="fa fa-arrow-right text-dark"></i>
             </div>
         </div>
@@ -58,7 +59,7 @@
                 </div>
             </div>
             <div class="card-footer d-flex align-items-center justify-content-between">
-                <a href="{{ ea_url().setController('App\\\\Controller\\\\Admin\\\\ProduitFournisseurCrudController').setAction('index') }}" class="text-white text-decoration-none small">Voir tout</a>
+                <a href="{{ ea_url().setController('App\\Controller\\Admin\\ProduitFournisseurCrudController').setAction('index') }}" class="text-white text-decoration-none small">Voir tout</a>
                 <i class="fa fa-arrow-right text-white"></i>
             </div>
         </div>
@@ -76,7 +77,7 @@
                 </div>
             </div>
             <div class="card-footer d-flex align-items-center justify-content-between">
-                <a href="{{ ea_url().setController('App\\\\Controller\\\\Admin\\\\EtablissementCrudController').setAction('index') }}" class="text-white text-decoration-none small">Voir tout</a>
+                <a href="{{ ea_url().setController('App\\Controller\\Admin\\EtablissementCrudController').setAction('index') }}" class="text-white text-decoration-none small">Voir tout</a>
                 <i class="fa fa-arrow-right text-white"></i>
             </div>
         </div>
@@ -94,27 +95,28 @@
                     <div class="col-md-4">
                         <h6>Gestion des BL</h6>
                         <ul class="list-unstyled">
-                            <li><a href="{{ ea_url().setController('App\\\\Controller\\\\Admin\\\\BonLivraisonCrudController').setAction('new') }}"><i class="fa fa-plus me-2"></i>Nouveau bon de livraison</a></li>
-                            <li><a href="{{ ea_url().setController('App\\\\Controller\\\\Admin\\\\AlerteControleCrudController').setAction('index') }}"><i class="fa fa-exclamation-triangle me-2"></i>Gérer les alertes</a></li>
+                            <li><a href="{{ ea_url().setController('App\\Controller\\Admin\\BonLivraisonCrudController').setAction('new') }}"><i class="fa fa-plus me-2"></i>Nouveau bon de livraison</a></li>
+                            <li><a href="{{ ea_url().setController('App\\Controller\\Admin\\AlerteControleCrudController').setAction('index') }}"><i class="fa fa-exclamation-triangle me-2"></i>Gérer les alertes</a></li>
                         </ul>
                     </div>
                     <div class="col-md-4">
                         <h6>Mercuriale</h6>
                         <ul class="list-unstyled">
-                            <li><a href="{{ ea_url().setController('App\\\\Controller\\\\Admin\\\\MercurialeCrudController').setAction('new') }}"><i class="fa fa-plus me-2"></i>Nouveau prix négocié</a></li>
-                            <li><a href="{{ ea_url().setController('App\\\\Controller\\\\Admin\\\\ProduitFournisseurCrudController').setAction('new') }}"><i class="fa fa-plus me-2"></i>Nouveau produit fournisseur</a></li>
+                            <li><a href="{{ ea_url().setController('App\\Controller\\Admin\\MercurialeCrudController').setAction('new') }}"><i class="fa fa-plus me-2"></i>Nouveau prix négocié</a></li>
+                            <li><a href="{{ ea_url().setController('App\\Controller\\Admin\\ProduitFournisseurCrudController').setAction('new') }}"><i class="fa fa-plus me-2"></i>Nouveau produit fournisseur</a></li>
                         </ul>
                     </div>
                     <div class="col-md-4">
                         <h6>Configuration</h6>
                         <ul class="list-unstyled">
-                            <li><a href="{{ ea_url().setController('App\\\\Controller\\\\Admin\\\\UtilisateurCrudController').setAction('new') }}"><i class="fa fa-plus me-2"></i>Nouvel utilisateur</a></li>
-                            <li><a href="{{ ea_url().setController('App\\\\Controller\\\\Admin\\\\FournisseurCrudController').setAction('new') }}"><i class="fa fa-plus me-2"></i>Nouveau fournisseur</a></li>
+                            <li><a href="{{ ea_url().setController('App\\Controller\\Admin\\UtilisateurCrudController').setAction('new') }}"><i class="fa fa-plus me-2"></i>Nouvel utilisateur</a></li>
+                            <li><a href="{{ ea_url().setController('App\\Controller\\Admin\\FournisseurCrudController').setAction('new') }}"><i class="fa fa-plus me-2"></i>Nouveau fournisseur</a></li>
                         </ul>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 </div>
 {% endblock %}
