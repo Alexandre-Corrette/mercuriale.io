@@ -25,3 +25,7 @@ services:
     App\EventListener\SecurityHeadersListener:
         arguments:
             $environment: '%kernel.environment%'
+
+    App\Service\Upload\BonLivraisonUploadService:
+        arguments:
+            $projectDir: '%kernel.project_dir%'

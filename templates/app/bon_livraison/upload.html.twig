@@ -1,0 +1,352 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Upload Bon de Livraison - Mercuriale.io{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    .drop-zone {
+        border: 3px dashed #cbd5e1;
+        border-radius: 1rem;
+        padding: 3rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    }
+    .drop-zone:hover, .drop-zone.drag-over {
+        border-color: #1B4F72;
+        background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%);
+    }
+    .drop-zone.has-file {
+        border-color: #22c55e;
+        border-style: solid;
+    }
+    .drop-zone-icon {
+        font-size: 4rem;
+        color: #94a3b8;
+        margin-bottom: 1rem;
+    }
+    .drop-zone:hover .drop-zone-icon, .drop-zone.drag-over .drop-zone-icon {
+        color: #1B4F72;
+    }
+    .preview-container {
+        max-width: 400px;
+        margin: 1rem auto;
+    }
+    .preview-image {
+        max-width: 100%;
+        max-height: 300px;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    .progress-bar {
+        height: 0.5rem;
+        border-radius: 0.25rem;
+        background: #e2e8f0;
+        overflow: hidden;
+    }
+    .progress-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #1B4F72, #E67E22);
+        width: 0%;
+        transition: width 0.3s ease;
+    }
+    .btn-primary-custom {
+        background: linear-gradient(135deg, #1B4F72 0%, #2563eb 100%);
+        border: none;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    .btn-primary-custom:hover:not(:disabled) {
+        background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(27, 79, 114, 0.4);
+    }
+    .btn-primary-custom:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    .file-info {
+        background: #f1f5f9;
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h4 class="mb-0">
+                        <i class="fas fa-cloud-upload-alt me-2 text-primary"></i>
+                        Nouveau bon de livraison
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    {% for flash_message in app.flashes('error') %}
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            {{ flash_message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+
+                    {% for flash_message in app.flashes('success') %}
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle me-2"></i>
+                            {{ flash_message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+
+                    {{ form_start(form, {'attr': {'id': 'upload-form', 'novalidate': 'novalidate'}}) }}
+
+                        {# Sélection de l'établissement #}
+                        <div class="mb-4">
+                            {{ form_label(form.etablissement, null, {'label_attr': {'class': 'form-label fw-semibold'}}) }}
+                            {{ form_widget(form.etablissement, {'attr': {'class': 'form-select form-select-lg'}}) }}
+                            {{ form_errors(form.etablissement) }}
+                        </div>
+
+                        {# Zone de drag & drop #}
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Image du bon de livraison</label>
+
+                            <div id="drop-zone" class="drop-zone">
+                                <div class="drop-zone-icon">
+                                    <i class="fas fa-camera"></i>
+                                </div>
+                                <h5 class="mb-2">Glissez votre image ici</h5>
+                                <p class="text-muted mb-3">ou</p>
+                                <button type="button" id="browse-btn" class="btn btn-outline-primary">
+                                    <i class="fas fa-folder-open me-2"></i>
+                                    Parcourir
+                                </button>
+                                <p class="text-muted mt-3 mb-0 small">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Formats acceptés : JPEG, PNG, HEIC, PDF - Max 20 Mo
+                                </p>
+                            </div>
+
+                            {{ form_widget(form.file) }}
+                            {{ form_errors(form.file) }}
+                        </div>
+
+                        {# Aperçu et infos du fichier #}
+                        <div id="file-preview" class="mb-4 d-none">
+                            <div class="preview-container">
+                                <img id="preview-image" src="" alt="Aperçu" class="preview-image d-none">
+                                <div id="preview-pdf" class="d-none text-center py-4">
+                                    <i class="fas fa-file-pdf fa-4x text-danger mb-2"></i>
+                                    <p class="mb-0">Document PDF</p>
+                                </div>
+                            </div>
+                            <div class="file-info mt-3 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-file me-2 text-primary"></i>
+                                    <span id="file-name">-</span>
+                                </div>
+                                <div>
+                                    <span id="file-size" class="text-muted">-</span>
+                                    <button type="button" id="remove-file" class="btn btn-sm btn-outline-danger ms-2">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {# Barre de progression #}
+                        <div id="progress-container" class="mb-4 d-none">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="small text-muted">Upload en cours...</span>
+                                <span id="progress-percent" class="small fw-semibold">0%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div id="progress-fill" class="progress-bar-fill"></div>
+                            </div>
+                        </div>
+
+                        {# Bouton submit #}
+                        <div class="d-grid">
+                            <button type="submit" id="submit-btn" class="btn btn-primary-custom btn-lg text-white" disabled>
+                                <i class="fas fa-magic me-2"></i>
+                                Extraire les données
+                            </button>
+                        </div>
+
+                    {{ form_end(form) }}
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <a href="{{ path('app_dashboard') }}" class="text-muted">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Retour au tableau de bord
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('bl-file-input');
+    const browseBtn = document.getElementById('browse-btn');
+    const submitBtn = document.getElementById('submit-btn');
+    const filePreview = document.getElementById('file-preview');
+    const previewImage = document.getElementById('preview-image');
+    const previewPdf = document.getElementById('preview-pdf');
+    const fileName = document.getElementById('file-name');
+    const fileSize = document.getElementById('file-size');
+    const removeFile = document.getElementById('remove-file');
+    const progressContainer = document.getElementById('progress-container');
+    const progressFill = document.getElementById('progress-fill');
+    const progressPercent = document.getElementById('progress-percent');
+    const uploadForm = document.getElementById('upload-form');
+
+    const maxFileSize = 20 * 1024 * 1024; // 20 Mo
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/heic', 'image/heif', 'application/pdf'];
+
+    // Ouvrir le sélecteur de fichiers
+    browseBtn.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('click', (e) => {
+        if (e.target === dropZone || e.target.closest('.drop-zone-icon')) {
+            fileInput.click();
+        }
+    });
+
+    // Drag & Drop
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => dropZone.classList.add('drag-over'));
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => dropZone.classList.remove('drag-over'));
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFile(files[0]);
+        }
+    });
+
+    // Changement de fichier via input
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files.length > 0) {
+            handleFile(fileInput.files[0]);
+        }
+    });
+
+    // Supprimer le fichier
+    removeFile.addEventListener('click', () => {
+        resetFileInput();
+    });
+
+    function handleFile(file) {
+        // Validation côté client
+        if (!validateFile(file)) {
+            return;
+        }
+
+        // Mettre à jour l'input file
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        fileInput.files = dataTransfer.files;
+
+        // Afficher l'aperçu
+        showPreview(file);
+
+        // Activer le bouton submit
+        submitBtn.disabled = false;
+        dropZone.classList.add('has-file');
+    }
+
+    function validateFile(file) {
+        // Vérifier le type
+        if (!allowedTypes.includes(file.type) && !file.name.toLowerCase().endsWith('.heic')) {
+            alert('Format de fichier non supporté. Formats acceptés : JPEG, PNG, HEIC, PDF');
+            return false;
+        }
+
+        // Vérifier la taille
+        if (file.size > maxFileSize) {
+            alert('Le fichier est trop volumineux. Taille maximale : 20 Mo');
+            return false;
+        }
+
+        return true;
+    }
+
+    function showPreview(file) {
+        filePreview.classList.remove('d-none');
+        fileName.textContent = file.name;
+        fileSize.textContent = formatFileSize(file.size);
+
+        if (file.type === 'application/pdf') {
+            previewImage.classList.add('d-none');
+            previewPdf.classList.remove('d-none');
+        } else {
+            previewPdf.classList.add('d-none');
+            previewImage.classList.remove('d-none');
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImage.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function resetFileInput() {
+        fileInput.value = '';
+        filePreview.classList.add('d-none');
+        previewImage.src = '';
+        previewImage.classList.add('d-none');
+        previewPdf.classList.add('d-none');
+        submitBtn.disabled = true;
+        dropZone.classList.remove('has-file');
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes < 1024) return bytes + ' o';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' Ko';
+        return (bytes / (1024 * 1024)).toFixed(2) + ' Mo';
+    }
+
+    // Upload avec progression (optionnel - pour une meilleure UX)
+    uploadForm.addEventListener('submit', function(e) {
+        if (!fileInput.files.length) {
+            e.preventDefault();
+            alert('Veuillez sélectionner un fichier');
+            return;
+        }
+
+        // Désactiver le bouton pendant l'upload
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Upload en cours...';
+
+        // Note: Pour un vrai indicateur de progression, il faudrait utiliser XMLHttpRequest
+        // au lieu du submit standard du formulaire. Ceci est une version simplifiée.
+    });
+});
+</script>
+{% endblock %}
