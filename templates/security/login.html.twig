@@ -1,0 +1,43 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Connexion - Mercuriale.io{% endblock %}
+
+{% block body %}
+<div style="max-width: 400px; margin: 100px auto; padding: 20px; font-family: sans-serif;">
+    <h1 style="text-align: center; color: #333;">Mercuriale.io</h1>
+    <h2 style="text-align: center; color: #666; font-weight: normal;">Connexion</h2>
+
+    {% if error %}
+        <div style="background: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin-bottom: 20px;">
+            {{ error.messageKey|trans(error.messageData, 'security') }}
+        </div>
+    {% endif %}
+
+    <form method="post">
+        <div style="margin-bottom: 15px;">
+            <label for="username" style="display: block; margin-bottom: 5px; color: #333;">Email</label>
+            <input type="email" id="username" name="_username" value="{{ last_username }}" required autofocus
+                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label for="password" style="display: block; margin-bottom: 5px; color: #333;">Mot de passe</label>
+            <input type="password" id="password" name="_password" required
+                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+        </div>
+
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+
+        <div style="margin-bottom: 15px;">
+            <label style="display: flex; align-items: center; color: #666;">
+                <input type="checkbox" name="_remember_me" style="margin-right: 8px;">
+                Se souvenir de moi
+            </label>
+        </div>
+
+        <button type="submit" style="width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">
+            Se connecter
+        </button>
+    </form>
+</div>
+{% endblock %}
