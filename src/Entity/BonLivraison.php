@@ -35,8 +35,7 @@ class BonLivraison
     private ?Etablissement $etablissement = null;
 
     #[ORM\ManyToOne(targetEntity: Fournisseur::class, inversedBy: 'bonsLivraison')]
-    #[ORM\JoinColumn(nullable: false)]
-    #[Assert\NotNull(message: 'Le fournisseur est obligatoire')]
+    #[ORM\JoinColumn(nullable: true)]
     private ?Fournisseur $fournisseur = null;
 
     #[ORM\Column(length: 100, nullable: true)]

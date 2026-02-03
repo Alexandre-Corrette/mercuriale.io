@@ -38,7 +38,7 @@
                     </div>
                 {% endfor %}
 
-                {{ form_start(form, {'attr': {'id': 'upload-form', 'novalidate': 'novalidate'}}) }}
+                {{ form_start(form, {'attr': {'id': 'upload-form', 'novalidate': 'novalidate', 'data-turbo': 'false'}}) }}
 
                     {# Etablissement select #}
                     <div class="mb-6">
@@ -118,9 +118,8 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const dropZone = document.getElementById('drop-zone');
-    const fileInput = document.getElementById('bl-file-input') || document.querySelector('input[type="file"]');
+    const fileInput = document.querySelector('input[type="file"]');
     const browseBtn = document.getElementById('browse-btn');
-
     const submitBtn = document.getElementById('submit-btn');
     const previewSection = document.getElementById('preview-section');
     const filesList = document.getElementById('files-list');
@@ -323,9 +322,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Form submit
-    uploadForm.addEventListener('submit', function() {
+    uploadForm.addEventListener('submit', function(e) {
         const validFiles = selectedFiles.filter(f => f.valid);
-        if (validFiles.length === 0) return;
+
+        if (validFiles.length === 0) {
+            e.preventDefault();
+            return;
+        }
 
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyse en cours...';
