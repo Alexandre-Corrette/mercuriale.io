@@ -38,7 +38,7 @@ class DashboardController extends AbstractDashboardController
     public function configureDashboard(): Dashboard
     {
         return Dashboard::new()
-            ->setTitle('Mercuriale.io')
+            ->setTitle('<img src="/images/logo-rectangulaire-mercuriale.jpg" alt="Mercuriale.io" style="width: 200px; height: 45px; object-fit: cover; object-position: center;">')
             ->setFaviconPath('favicon.ico')
             ->setLocales(['fr' => 'Français']);
     }
