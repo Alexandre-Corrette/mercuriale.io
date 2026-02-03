@@ -5,191 +5,485 @@
 {% block stylesheets %}
 {{ parent() }}
 <style>
+    :root {
+        --primary: #1B4F72;
+        --primary-light: #2980b9;
+        --accent: #E67E22;
+        --success: #27ae60;
+        --gray-50: #f9fafb;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-300: #d1d5db;
+        --gray-500: #6b7280;
+        --gray-700: #374151;
+        --gray-900: #111827;
+    }
+
+    body {
+        background: linear-gradient(135deg, var(--gray-100) 0%, var(--gray-200) 100%);
+        min-height: 100vh;
+    }
+
+    .upload-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+
+    .upload-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .upload-header h1 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--gray-900);
+        margin-bottom: 0.5rem;
+    }
+
+    .upload-header p {
+        color: var(--gray-500);
+        margin: 0;
+    }
+
+    .upload-card {
+        background: white;
+        border-radius: 1.5rem;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+    }
+
+    .upload-card-body {
+        padding: 2rem;
+    }
+
+    .form-label-custom {
+        font-weight: 600;
+        color: var(--gray-700);
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .form-select-custom {
+        width: 100%;
+        padding: 0.875rem 1rem;
+        font-size: 1rem;
+        border: 2px solid var(--gray-200);
+        border-radius: 0.75rem;
+        background-color: white;
+        transition: all 0.2s ease;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 0.75rem center;
+        background-repeat: no-repeat;
+        background-size: 1.5em 1.5em;
+    }
+
+    .form-select-custom:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(27, 79, 114, 0.1);
+    }
+
     .drop-zone {
-        border: 3px dashed #cbd5e1;
+        border: 2px dashed var(--gray-300);
         border-radius: 1rem;
-        padding: 3rem;
+        padding: 3rem 2rem;
         text-align: center;
         transition: all 0.3s ease;
         cursor: pointer;
-        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        background: var(--gray-50);
+        position: relative;
     }
-    .drop-zone:hover, .drop-zone.drag-over {
-        border-color: #1B4F72;
-        background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%);
+
+    .drop-zone:hover {
+        border-color: var(--primary);
+        background: rgba(27, 79, 114, 0.03);
     }
+
+    .drop-zone.drag-over {
+        border-color: var(--primary);
+        background: rgba(27, 79, 114, 0.08);
+        transform: scale(1.01);
+    }
+
     .drop-zone.has-file {
-        border-color: #22c55e;
+        border-color: var(--success);
         border-style: solid;
+        background: rgba(39, 174, 96, 0.05);
     }
+
     .drop-zone-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1.5rem;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.3s ease;
+    }
+
+    .drop-zone:hover .drop-zone-icon {
+        transform: scale(1.1);
+    }
+
+    .drop-zone-icon i {
+        font-size: 2rem;
+        color: white;
+    }
+
+    .drop-zone h3 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--gray-900);
+        margin-bottom: 0.5rem;
+    }
+
+    .drop-zone p {
+        color: var(--gray-500);
+        margin-bottom: 1.5rem;
+    }
+
+    .btn-browse {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        background: white;
+        border: 2px solid var(--primary);
+        color: var(--primary);
+        font-weight: 600;
+        border-radius: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-browse:hover {
+        background: var(--primary);
+        color: white;
+    }
+
+    .formats-hint {
+        margin-top: 1.5rem;
+        padding: 0.75rem 1rem;
+        background: var(--gray-100);
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        color: var(--gray-500);
+    }
+
+    .formats-hint i {
+        color: var(--primary);
+    }
+
+    .preview-section {
+        margin-top: 1.5rem;
+        padding: 1.5rem;
+        background: var(--gray-50);
+        border-radius: 1rem;
+        display: none;
+    }
+
+    .preview-section.visible {
+        display: block;
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .preview-image-container {
+        position: relative;
+        border-radius: 0.75rem;
+        overflow: hidden;
+        background: white;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .preview-image {
+        width: 100%;
+        max-height: 300px;
+        object-fit: contain;
+        display: block;
+    }
+
+    .preview-pdf {
+        padding: 3rem;
+        text-align: center;
+        background: white;
+    }
+
+    .preview-pdf i {
         font-size: 4rem;
-        color: #94a3b8;
+        color: #dc3545;
         margin-bottom: 1rem;
     }
-    .drop-zone:hover .drop-zone-icon, .drop-zone.drag-over .drop-zone-icon {
-        color: #1B4F72;
-    }
-    .preview-container {
-        max-width: 400px;
-        margin: 1rem auto;
-    }
-    .preview-image {
-        max-width: 100%;
-        max-height: 300px;
+
+    .file-info-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 1rem;
+        padding: 0.75rem 1rem;
+        background: white;
         border-radius: 0.5rem;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     }
-    .progress-bar {
-        height: 0.5rem;
-        border-radius: 0.25rem;
-        background: #e2e8f0;
+
+    .file-info-left {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .file-icon {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, var(--success) 0%, #2ecc71 100%);
+        border-radius: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+    }
+
+    .file-details {
+        line-height: 1.3;
+    }
+
+    .file-name {
+        font-weight: 600;
+        color: var(--gray-900);
+        font-size: 0.9rem;
+    }
+
+    .file-size {
+        font-size: 0.8rem;
+        color: var(--gray-500);
+    }
+
+    .btn-remove {
+        width: 36px;
+        height: 36px;
+        border: none;
+        background: var(--gray-100);
+        border-radius: 0.5rem;
+        color: var(--gray-500);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-remove:hover {
+        background: #fee2e2;
+        color: #dc3545;
+    }
+
+    .progress-section {
+        margin-top: 1.5rem;
+        display: none;
+    }
+
+    .progress-section.visible {
+        display: block;
+    }
+
+    .progress-bar-custom {
+        height: 8px;
+        background: var(--gray-200);
+        border-radius: 4px;
         overflow: hidden;
     }
-    .progress-bar-fill {
+
+    .progress-fill {
         height: 100%;
-        background: linear-gradient(90deg, #1B4F72, #E67E22);
+        background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%);
         width: 0%;
         transition: width 0.3s ease;
+        border-radius: 4px;
     }
-    .btn-primary-custom {
-        background: linear-gradient(135deg, #1B4F72 0%, #2563eb 100%);
-        border: none;
-        padding: 0.75rem 2rem;
+
+    .btn-submit {
+        width: 100%;
+        padding: 1rem 2rem;
+        font-size: 1.1rem;
         font-weight: 600;
+        color: white;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+        border: none;
+        border-radius: 0.75rem;
+        cursor: pointer;
         transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
     }
-    .btn-primary-custom:hover:not(:disabled) {
-        background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
+
+    .btn-submit:hover:not(:disabled) {
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(27, 79, 114, 0.4);
+        box-shadow: 0 8px 25px rgba(27, 79, 114, 0.3);
     }
-    .btn-primary-custom:disabled {
-        opacity: 0.6;
+
+    .btn-submit:disabled {
+        opacity: 0.5;
         cursor: not-allowed;
+        transform: none;
     }
-    .file-info {
-        background: #f1f5f9;
-        border-radius: 0.5rem;
-        padding: 0.75rem 1rem;
+
+    .btn-submit i {
+        font-size: 1.2rem;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--gray-500);
+        text-decoration: none;
+        font-size: 0.9rem;
+        margin-top: 1.5rem;
+        transition: color 0.2s ease;
+    }
+
+    .back-link:hover {
+        color: var(--primary);
+    }
+
+    .alert-custom {
+        padding: 1rem 1.25rem;
+        border-radius: 0.75rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .alert-error {
+        background: #fef2f2;
+        color: #991b1b;
+        border: 1px solid #fecaca;
+    }
+
+    .alert-success {
+        background: #f0fdf4;
+        color: #166534;
+        border: 1px solid #bbf7d0;
     }
 </style>
 {% endblock %}
 
 {% block body %}
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card shadow-sm">
-                <div class="card-header bg-white py-3">
-                    <h4 class="mb-0">
-                        <i class="fas fa-cloud-upload-alt me-2 text-primary"></i>
-                        Nouveau bon de livraison
-                    </h4>
+<div class="upload-container">
+    <div class="upload-header">
+        <h1><i class="fas fa-receipt me-2"></i>Nouveau bon de livraison</h1>
+        <p>Photographiez votre BL et laissez l'IA extraire les données</p>
+    </div>
+
+    <div class="upload-card">
+        <div class="upload-card-body">
+            {% for flash_message in app.flashes('error') %}
+                <div class="alert-custom alert-error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    {{ flash_message }}
                 </div>
-                <div class="card-body p-4">
-                    {% for flash_message in app.flashes('error') %}
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <i class="fas fa-exclamation-circle me-2"></i>
-                            {{ flash_message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    {% endfor %}
+            {% endfor %}
 
-                    {% for flash_message in app.flashes('success') %}
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            <i class="fas fa-check-circle me-2"></i>
-                            {{ flash_message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    {% endfor %}
-
-                    {{ form_start(form, {'attr': {'id': 'upload-form', 'novalidate': 'novalidate'}}) }}
-
-                        {# Sélection de l'établissement #}
-                        <div class="mb-4">
-                            {{ form_label(form.etablissement, null, {'label_attr': {'class': 'form-label fw-semibold'}}) }}
-                            {{ form_widget(form.etablissement, {'attr': {'class': 'form-select form-select-lg'}}) }}
-                            {{ form_errors(form.etablissement) }}
-                        </div>
-
-                        {# Zone de drag & drop #}
-                        <div class="mb-4">
-                            <label class="form-label fw-semibold">Image du bon de livraison</label>
-
-                            <div id="drop-zone" class="drop-zone">
-                                <div class="drop-zone-icon">
-                                    <i class="fas fa-camera"></i>
-                                </div>
-                                <h5 class="mb-2">Glissez votre image ici</h5>
-                                <p class="text-muted mb-3">ou</p>
-                                <button type="button" id="browse-btn" class="btn btn-outline-primary">
-                                    <i class="fas fa-folder-open me-2"></i>
-                                    Parcourir
-                                </button>
-                                <p class="text-muted mt-3 mb-0 small">
-                                    <i class="fas fa-info-circle me-1"></i>
-                                    Formats acceptés : JPEG, PNG, HEIC, PDF - Max 20 Mo
-                                </p>
-                            </div>
-
-                            {{ form_widget(form.file) }}
-                            {{ form_errors(form.file) }}
-                        </div>
-
-                        {# Aperçu et infos du fichier #}
-                        <div id="file-preview" class="mb-4 d-none">
-                            <div class="preview-container">
-                                <img id="preview-image" src="" alt="Aperçu" class="preview-image d-none">
-                                <div id="preview-pdf" class="d-none text-center py-4">
-                                    <i class="fas fa-file-pdf fa-4x text-danger mb-2"></i>
-                                    <p class="mb-0">Document PDF</p>
-                                </div>
-                            </div>
-                            <div class="file-info mt-3 d-flex justify-content-between align-items-center">
-                                <div>
-                                    <i class="fas fa-file me-2 text-primary"></i>
-                                    <span id="file-name">-</span>
-                                </div>
-                                <div>
-                                    <span id="file-size" class="text-muted">-</span>
-                                    <button type="button" id="remove-file" class="btn btn-sm btn-outline-danger ms-2">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        {# Barre de progression #}
-                        <div id="progress-container" class="mb-4 d-none">
-                            <div class="d-flex justify-content-between mb-2">
-                                <span class="small text-muted">Upload en cours...</span>
-                                <span id="progress-percent" class="small fw-semibold">0%</span>
-                            </div>
-                            <div class="progress-bar">
-                                <div id="progress-fill" class="progress-bar-fill"></div>
-                            </div>
-                        </div>
-
-                        {# Bouton submit #}
-                        <div class="d-grid">
-                            <button type="submit" id="submit-btn" class="btn btn-primary-custom btn-lg text-white" disabled>
-                                <i class="fas fa-magic me-2"></i>
-                                Extraire les données
-                            </button>
-                        </div>
-
-                    {{ form_end(form) }}
+            {% for flash_message in app.flashes('success') %}
+                <div class="alert-custom alert-success">
+                    <i class="fas fa-check-circle"></i>
+                    {{ flash_message }}
                 </div>
-            </div>
+            {% endfor %}
 
-            <div class="text-center mt-4">
-                <a href="{{ path('app_dashboard') }}" class="text-muted">
-                    <i class="fas fa-arrow-left me-2"></i>
-                    Retour au tableau de bord
-                </a>
-            </div>
+            {{ form_start(form, {'attr': {'id': 'upload-form', 'novalidate': 'novalidate'}}) }}
+
+                <div class="mb-4">
+                    <label class="form-label-custom">
+                        <i class="fas fa-building me-2"></i>Établissement
+                    </label>
+                    {{ form_widget(form.etablissement, {'attr': {'class': 'form-select-custom'}}) }}
+                    {{ form_errors(form.etablissement) }}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label-custom">
+                        <i class="fas fa-camera me-2"></i>Photo du bon de livraison
+                    </label>
+
+                    <div id="drop-zone" class="drop-zone">
+                        <div class="drop-zone-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <h3>Glissez votre photo ici</h3>
+                        <p>ou cliquez pour parcourir</p>
+                        <button type="button" id="browse-btn" class="btn-browse">
+                            <i class="fas fa-folder-open"></i>
+                            Choisir un fichier
+                        </button>
+                        <div class="formats-hint">
+                            <i class="fas fa-info-circle me-1"></i>
+                            JPEG, PNG, HEIC ou PDF — Maximum 20 Mo
+                        </div>
+                    </div>
+
+                    {{ form_widget(form.file) }}
+                    {{ form_errors(form.file) }}
+                </div>
+
+                <div id="preview-section" class="preview-section">
+                    <div class="preview-image-container">
+                        <img id="preview-image" src="" alt="Aperçu" class="preview-image">
+                        <div id="preview-pdf" class="preview-pdf" style="display: none;">
+                            <i class="fas fa-file-pdf"></i>
+                            <p class="mb-0 fw-semibold">Document PDF</p>
+                        </div>
+                    </div>
+                    <div class="file-info-bar">
+                        <div class="file-info-left">
+                            <div class="file-icon">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="file-details">
+                                <div id="file-name" class="file-name">-</div>
+                                <div id="file-size" class="file-size">-</div>
+                            </div>
+                        </div>
+                        <button type="button" id="remove-file" class="btn-remove">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="progress-section" class="progress-section">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="small text-muted">Upload en cours...</span>
+                        <span id="progress-percent" class="small fw-bold">0%</span>
+                    </div>
+                    <div class="progress-bar-custom">
+                        <div id="progress-fill" class="progress-fill"></div>
+                    </div>
+                </div>
+
+                <button type="submit" id="submit-btn" class="btn-submit" disabled>
+                    <i class="fas fa-magic"></i>
+                    Analyser et extraire les données
+                </button>
+
+            {{ form_end(form) }}
         </div>
+    </div>
+
+    <div class="text-center">
+        <a href="{{ path('admin') }}" class="back-link">
+            <i class="fas fa-arrow-left"></i>
+            Retour au tableau de bord
+        </a>
     </div>
 </div>
 {% endblock %}
@@ -202,37 +496,33 @@ document.addEventListener('DOMContentLoaded', function() {
     const fileInput = document.getElementById('bl-file-input');
     const browseBtn = document.getElementById('browse-btn');
     const submitBtn = document.getElementById('submit-btn');
-    const filePreview = document.getElementById('file-preview');
+    const previewSection = document.getElementById('preview-section');
     const previewImage = document.getElementById('preview-image');
     const previewPdf = document.getElementById('preview-pdf');
     const fileName = document.getElementById('file-name');
     const fileSize = document.getElementById('file-size');
     const removeFile = document.getElementById('remove-file');
-    const progressContainer = document.getElementById('progress-container');
+    const progressSection = document.getElementById('progress-section');
     const progressFill = document.getElementById('progress-fill');
     const progressPercent = document.getElementById('progress-percent');
     const uploadForm = document.getElementById('upload-form');
 
-    const maxFileSize = 20 * 1024 * 1024; // 20 Mo
+    const maxFileSize = 20 * 1024 * 1024;
     const allowedTypes = ['image/jpeg', 'image/png', 'image/heic', 'image/heif', 'application/pdf'];
 
-    // Ouvrir le sélecteur de fichiers
-    browseBtn.addEventListener('click', () => fileInput.click());
-    dropZone.addEventListener('click', (e) => {
-        if (e.target === dropZone || e.target.closest('.drop-zone-icon')) {
-            fileInput.click();
-        }
-    });
-
-    // Drag & Drop
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        dropZone.addEventListener(eventName, preventDefaults);
-    });
-
-    function preventDefaults(e) {
-        e.preventDefault();
+    browseBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-    }
+        fileInput.click();
+    });
+
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+    });
 
     ['dragenter', 'dragover'].forEach(eventName => {
         dropZone.addEventListener(eventName, () => dropZone.classList.add('drag-over'));
@@ -244,84 +534,60 @@ document.addEventListener('DOMContentLoaded', function() {
 
     dropZone.addEventListener('drop', (e) => {
         const files = e.dataTransfer.files;
-        if (files.length > 0) {
-            handleFile(files[0]);
-        }
+        if (files.length > 0) handleFile(files[0]);
     });
 
-    // Changement de fichier via input
     fileInput.addEventListener('change', () => {
-        if (fileInput.files.length > 0) {
-            handleFile(fileInput.files[0]);
-        }
+        if (fileInput.files.length > 0) handleFile(fileInput.files[0]);
     });
 
-    // Supprimer le fichier
-    removeFile.addEventListener('click', () => {
-        resetFileInput();
-    });
+    removeFile.addEventListener('click', resetFileInput);
 
     function handleFile(file) {
-        // Validation côté client
-        if (!validateFile(file)) {
-            return;
-        }
+        if (!validateFile(file)) return;
 
-        // Mettre à jour l'input file
         const dataTransfer = new DataTransfer();
         dataTransfer.items.add(file);
         fileInput.files = dataTransfer.files;
 
-        // Afficher l'aperçu
         showPreview(file);
-
-        // Activer le bouton submit
         submitBtn.disabled = false;
         dropZone.classList.add('has-file');
     }
 
     function validateFile(file) {
-        // Vérifier le type
         if (!allowedTypes.includes(file.type) && !file.name.toLowerCase().endsWith('.heic')) {
-            alert('Format de fichier non supporté. Formats acceptés : JPEG, PNG, HEIC, PDF');
+            alert('Format non supporté. Utilisez JPEG, PNG, HEIC ou PDF.');
             return false;
         }
-
-        // Vérifier la taille
         if (file.size > maxFileSize) {
-            alert('Le fichier est trop volumineux. Taille maximale : 20 Mo');
+            alert('Fichier trop volumineux. Maximum 20 Mo.');
             return false;
         }
-
         return true;
     }
 
     function showPreview(file) {
-        filePreview.classList.remove('d-none');
-        fileName.textContent = file.name;
+        previewSection.classList.add('visible');
+        fileName.textContent = file.name.length > 30 ? file.name.substring(0, 27) + '...' : file.name;
         fileSize.textContent = formatFileSize(file.size);
 
         if (file.type === 'application/pdf') {
-            previewImage.classList.add('d-none');
-            previewPdf.classList.remove('d-none');
+            previewImage.style.display = 'none';
+            previewPdf.style.display = 'block';
         } else {
-            previewPdf.classList.add('d-none');
-            previewImage.classList.remove('d-none');
-
+            previewPdf.style.display = 'none';
+            previewImage.style.display = 'block';
             const reader = new FileReader();
-            reader.onload = (e) => {
-                previewImage.src = e.target.result;
-            };
+            reader.onload = (e) => previewImage.src = e.target.result;
             reader.readAsDataURL(file);
         }
     }
 
     function resetFileInput() {
         fileInput.value = '';
-        filePreview.classList.add('d-none');
+        previewSection.classList.remove('visible');
         previewImage.src = '';
-        previewImage.classList.add('d-none');
-        previewPdf.classList.add('d-none');
         submitBtn.disabled = true;
         dropZone.classList.remove('has-file');
     }
@@ -332,20 +598,10 @@ document.addEventListener('DOMContentLoaded', function() {
         return (bytes / (1024 * 1024)).toFixed(2) + ' Mo';
     }
 
-    // Upload avec progression (optionnel - pour une meilleure UX)
-    uploadForm.addEventListener('submit', function(e) {
-        if (!fileInput.files.length) {
-            e.preventDefault();
-            alert('Veuillez sélectionner un fichier');
-            return;
-        }
-
-        // Désactiver le bouton pendant l'upload
+    uploadForm.addEventListener('submit', function() {
+        if (!fileInput.files.length) return;
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Upload en cours...';
-
-        // Note: Pour un vrai indicateur de progression, il faudrait utiliser XMLHttpRequest
-        // au lieu du submit standard du formulaire. Ceci est une version simplifiée.
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyse en cours...';
     });
 });
 </script>

@@ -95,6 +95,7 @@
                     <div class="col-md-4">
                         <h6>Gestion des BL</h6>
                         <ul class="list-unstyled">
+                            <li><a href="{{ path('app_bl_upload') }}" class="text-primary fw-bold"><i class="fa fa-cloud-upload-alt me-2"></i>Uploader un BL (photo)</a></li>
                             <li><a href="{{ ea_url().setController('App\\Controller\\Admin\\BonLivraisonCrudController').setAction('new') }}"><i class="fa fa-plus me-2"></i>Nouveau bon de livraison</a></li>
                             <li><a href="{{ ea_url().setController('App\\Controller\\Admin\\AlerteControleCrudController').setAction('index') }}"><i class="fa fa-exclamation-triangle me-2"></i>Gérer les alertes</a></li>
                         </ul>
