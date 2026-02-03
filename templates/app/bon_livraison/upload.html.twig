@@ -73,7 +73,7 @@
                             </div>
                         </div>
 
-                        {{ form_widget(form.files) }}
+                        {{ form_widget(form.files, {'attr': {'id': 'bl-file-input', 'class': 'hidden'}}) }}
                         {{ form_errors(form.files) }}
                     </div>
 
@@ -118,8 +118,9 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const dropZone = document.getElementById('drop-zone');
-    const fileInput = document.getElementById('bl-file-input');
+    const fileInput = document.getElementById('bl-file-input') || document.querySelector('input[type="file"]');
     const browseBtn = document.getElementById('browse-btn');
+
     const submitBtn = document.getElementById('submit-btn');
     const previewSection = document.getElementById('preview-section');
     const filesList = document.getElementById('files-list');
@@ -135,6 +136,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Browse button click
     browseBtn.addEventListener('click', (e) => {
+        e.preventDefault();
         e.stopPropagation();
         fileInput.click();
     });
