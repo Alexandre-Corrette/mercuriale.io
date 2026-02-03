@@ -48,7 +48,7 @@ class DashboardController extends AbstractDashboardController
         yield MenuItem::linkToDashboard('Tableau de bord', 'fa fa-home');
 
         yield MenuItem::section('Gestion des BL');
-        yield MenuItem::linkToRoute('Uploader un BL', 'fa fa-cloud-upload-alt', 'app_bl_upload')
+        yield MenuItem::linkToUrl('Uploader un BL', 'fa fa-cloud-upload-alt', '/app/bl/upload')
             ->setCssClass('text-primary fw-bold');
         yield MenuItem::linkToCrud('Bons de livraison', 'fa fa-file-invoice', BonLivraison::class);
         yield MenuItem::linkToCrud('Lignes BL', 'fa fa-list', LigneBonLivraison::class);

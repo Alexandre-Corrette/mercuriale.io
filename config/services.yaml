@@ -7,6 +7,9 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    anthropic_api_key: '%env(ANTHROPIC_API_KEY)%'
+    anthropic_model: '%env(ANTHROPIC_MODEL)%'
+    anthropic_max_tokens: '%env(int:ANTHROPIC_MAX_TOKENS)%'
 
 services:
     # default configuration for services in *this* file
@@ -27,5 +30,15 @@ services:
             $environment: '%kernel.environment%'
 
     App\Service\Upload\BonLivraisonUploadService:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
+    App\Service\Ocr\AnthropicClient:
+        arguments:
+            $apiKey: '%anthropic_api_key%'
+            $model: '%anthropic_model%'
+            $maxTokens: '%anthropic_max_tokens%'
+
+    App\Service\Ocr\BonLivraisonExtractorService:
         arguments:
             $projectDir: '%kernel.project_dir%'
