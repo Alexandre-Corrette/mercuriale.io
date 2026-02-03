@@ -12,6 +12,8 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\All;
+use Symfony\Component\Validator\Constraints\Count;
 use Symfony\Component\Validator\Constraints\File;
 use Symfony\Component\Validator\Constraints\NotBlank;
 
@@ -39,23 +41,33 @@ class BonLivraisonUploadType extends AbstractType
                     'class' => 'form-select',
                 ],
             ])
-            ->add('file', FileType::class, [
-                'label' => 'Bon de livraison (image ou PDF)',
+            ->add('files', FileType::class, [
+                'label' => 'Bon de livraison (images ou PDF)',
                 'mapped' => false,
                 'required' => true,
+                'multiple' => true,
                 'constraints' => [
-                    new NotBlank(message: 'Veuillez sélectionner un fichier'),
-                    new File([
-                        'maxSize' => '20M',
-                        'mimeTypes' => [
-                            'image/jpeg',
-                            'image/png',
-                            'image/heic',
-                            'image/heif',
-                            'application/pdf',
+                    new Count([
+                        'min' => 1,
+                        'max' => 10,
+                        'minMessage' => 'Veuillez sélectionner au moins un fichier',
+                        'maxMessage' => 'Vous ne pouvez pas uploader plus de {{ limit }} fichiers',
+                    ]),
+                    new All([
+                        'constraints' => [
+                            new File([
+                                'maxSize' => '20M',
+                                'mimeTypes' => [
+                                    'image/jpeg',
+                                    'image/png',
+                                    'image/heic',
+                                    'image/heif',
+                                    'application/pdf',
+                                ],
+                                'mimeTypesMessage' => 'Formats acceptés : JPEG, PNG, HEIC, PDF',
+                                'maxSizeMessage' => 'Le fichier est trop volumineux ({{ size }} {{ suffix }}). Taille maximale : {{ limit }} {{ suffix }}.',
+                            ]),
                         ],
-                        'mimeTypesMessage' => 'Formats acceptés : JPEG, PNG, HEIC, PDF',
-                        'maxSizeMessage' => 'Le fichier est trop volumineux ({{ size }} {{ suffix }}). Taille maximale : {{ limit }} {{ suffix }}.',
                     ]),
                 ],
                 'attr' => [

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service\Upload;
 
+use App\DTO\UploadResult;
 use App\Entity\BonLivraison;
 use App\Entity\Etablissement;
 use App\Entity\Utilisateur;
@@ -49,23 +50,171 @@ class BonLivraisonUploadService
     ) {
     }
 
+    /**
+     * Upload un fichier unique (méthode conservée pour rétrocompatibilité).
+     */
     public function upload(UploadedFile $file, Etablissement $etablissement, Utilisateur $user): BonLivraison
     {
         // Valider le fichier
         $this->validateFile($file);
 
+        $bonLivraison = $this->uploadSingle($file, $etablissement, $user, true);
+
+        $this->logger->info('BL créé avec succès', [
+            'bl_id' => $bonLivraison->getId(),
+            'filename' => $bonLivraison->getImagePath(),
+            'etablissement_id' => $etablissement->getId(),
+            'user_id' => $user->getId(),
+        ]);
+
+        return $bonLivraison;
+    }
+
+    /**
+     * Upload multiple fichiers avec gestion des erreurs partielles.
+     *
+     * Stratégie : upload atomique par fichier
+     * - Chaque fichier est traité indépendamment
+     * - Les fichiers valides sont sauvegardés même si d'autres échouent
+     * - Un rapport détaillé des succès/échecs est retourné
+     *
+     * @param array<int, UploadedFile> $files
+     */
+    public function uploadMultiple(array $files, Etablissement $etablissement, Utilisateur $user): UploadResult
+    {
+        $successfulUploads = [];
+        $failedUploads = [];
+
+        // Pré-validation rapide de tous les fichiers (sans écriture)
+        $validatedFiles = $this->preValidateFiles($files);
+
+        foreach ($files as $index => $file) {
+            $filename = $file->getClientOriginalName();
+
+            // Vérifier si le fichier a échoué la pré-validation
+            if (isset($validatedFiles['errors'][$index])) {
+                $failedUploads[] = [
+                    'filename' => $filename,
+                    'error' => $validatedFiles['errors'][$index],
+                ];
+                continue;
+            }
+
+            try {
+                $bonLivraison = $this->uploadSingle($file, $etablissement, $user, false);
+                $successfulUploads[] = $bonLivraison;
+
+                $this->logger->info('Fichier uploadé avec succès', [
+                    'filename' => $filename,
+                    'bl_id' => $bonLivraison->getId(),
+                    'index' => $index + 1,
+                    'total' => count($files),
+                ]);
+            } catch (InvalidFileException $e) {
+                $failedUploads[] = [
+                    'filename' => $filename,
+                    'error' => $e->getMessage(),
+                ];
+
+                $this->logger->warning('Échec upload fichier', [
+                    'filename' => $filename,
+                    'error_type' => $e->getErrorType(),
+                    'error' => $e->getMessage(),
+                    'index' => $index + 1,
+                ]);
+            } catch (\Throwable $e) {
+                $failedUploads[] = [
+                    'filename' => $filename,
+                    'error' => 'Erreur inattendue lors du traitement du fichier.',
+                ];
+
+                $this->logger->error('Erreur inattendue upload', [
+                    'filename' => $filename,
+                    'exception' => $e::class,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        // Flush tous les BL en une seule transaction
+        if (!empty($successfulUploads)) {
+            $this->entityManager->flush();
+        }
+
+        $result = new UploadResult($successfulUploads, $failedUploads);
+
+        $this->logger->info('Upload multiple terminé', [
+            'total' => $result->getTotalCount(),
+            'success' => $result->getSuccessCount(),
+            'failures' => $result->getFailureCount(),
+            'etablissement_id' => $etablissement->getId(),
+            'user_id' => $user->getId(),
+        ]);
+
+        return $result;
+    }
+
+    /**
+     * Pré-validation rapide sans écriture sur disque.
+     *
+     * @param array<int, UploadedFile> $files
+     * @return array{valid: array<int, true>, errors: array<int, string>}
+     */
+    private function preValidateFiles(array $files): array
+    {
+        $result = ['valid' => [], 'errors' => []];
+
+        foreach ($files as $index => $file) {
+            try {
+                // Vérifications rapides sans écriture
+                if (!$file->isValid()) {
+                    throw new InvalidFileException(
+                        InvalidFileException::UPLOAD_ERROR,
+                        'Erreur d\'upload : ' . $file->getErrorMessage()
+                    );
+                }
+
+                if ($file->getSize() > self::MAX_FILE_SIZE) {
+                    throw new InvalidFileException(InvalidFileException::FILE_TOO_LARGE);
+                }
+
+                $this->validateMimeType($file);
+                $this->validateMagicBytes($file->getPathname());
+                $this->checkForSuspiciousContent($file->getPathname());
+
+                $result['valid'][$index] = true;
+            } catch (InvalidFileException $e) {
+                $result['errors'][$index] = $e->getMessage();
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Upload un seul fichier avec option de flush différé.
+     */
+    private function uploadSingle(
+        UploadedFile $file,
+        Etablissement $etablissement,
+        Utilisateur $user,
+        bool $flushImmediately = true
+    ): BonLivraison {
         // Générer un nom de fichier sécurisé
         $secureFilename = $this->generateSecureFilename($file);
 
         // Créer le répertoire si nécessaire
         $uploadDir = $this->getUploadDirectory();
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
+        $dateDir = dirname($secureFilename);
+        $fullUploadDir = $uploadDir . '/' . $dateDir;
+
+        if (!is_dir($fullUploadDir)) {
+            mkdir($fullUploadDir, 0755, true);
         }
 
         // Déplacer le fichier
         $targetPath = $uploadDir . '/' . $secureFilename;
-        $file->move($uploadDir, $secureFilename);
+        $file->move($fullUploadDir, basename($secureFilename));
 
         // Nettoyer les métadonnées EXIF
         $this->stripExifData($targetPath);
@@ -85,14 +234,10 @@ class BonLivraisonUploadService
         $bonLivraison->setDateLivraison(new \DateTimeImmutable());
 
         $this->entityManager->persist($bonLivraison);
-        $this->entityManager->flush();
 
-        $this->logger->info('BL créé avec succès', [
-            'bl_id' => $bonLivraison->getId(),
-            'filename' => $secureFilename,
-            'etablissement_id' => $etablissement->getId(),
-            'user_id' => $user->getId(),
-        ]);
+        if ($flushImmediately) {
+            $this->entityManager->flush();
+        }
 
         return $bonLivraison;
     }
