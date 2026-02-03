@@ -1,42 +1,18 @@
-# Cache and logs (Symfony2)
-/app/cache/*
-/app/logs/*
-!app/cache/.gitkeep
-!app/logs/.gitkeep
-
-# Email spool folder
-/app/spool/*
-
-# Cache, session files and logs (Symfony3)
-/var/cache/*
-/var/logs/*
-/var/sessions/*
-!var/cache/.gitkeep
-!var/logs/.gitkeep
-!var/sessions/.gitkeep
-
-# Logs (Symfony4)
-/var/log/*
-!var/log/.gitkeep
-
-# Parameters
-/app/config/parameters.yml
-/app/config/parameters.ini
+###> symfony/framework-bundle ###
+/.env.local
+/.env.local.php
+/.env.*.local
+/config/secrets/prod/prod.decrypt.private.php
+/public/bundles/
+/var/
+/vendor/
+###< symfony/framework-bundle ###
 
 # Managed by Composer
-/app/bootstrap.php.cache
-/var/bootstrap.php.cache
 /bin/*
 !bin/console
-!bin/symfony_requirements
-/vendor/
-
-# Assets and user uploads
-/web/bundles/
-/web/uploads/
 
 # PHPUnit
-/app/phpunit.xml
 /phpunit.xml
 
 # Build data
@@ -45,8 +21,35 @@
 # Composer PHAR
 /composer.phar
 
-# Backup entities generated with doctrine:generate:entities command
+# Backup entities generated with doctrine:generate:entities
 **/Entity/*~
 
-# Embedded web-server pid file
-/.web-server-pid
+###> phpunit/phpunit ###
+/phpunit.xml
+/.phpunit.cache/
+###< phpunit/phpunit ###
+
+###> symfony/asset-mapper ###
+/public/assets/
+/assets/vendor/
+###< symfony/asset-mapper ###
+
+###> lexik/jwt-authentication-bundle ###
+/config/jwt/*.pem
+###< lexik/jwt-authentication-bundle ###
+
+# Uploads (photos de BL)
+/public/uploads/
+
+# Node modules
+/node_modules/
+
+# PHPStan cache
+/.phpstan-cache/
+
+# Docker override
+/docker-compose.override.yml
+
+# HEIC images (raw uploads)
+*.heic
+*.HEIC

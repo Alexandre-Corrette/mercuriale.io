@@ -1,0 +1,17 @@
+includes:
+    - vendor/phpstan/phpstan-symfony/extension.neon
+    - vendor/phpstan/phpstan-doctrine/extension.neon
+
+parameters:
+    level: 6
+    paths:
+        - src
+    symfony:
+        containerXmlPath: var/cache/dev/App_KernelDevDebugContainer.xml
+    doctrine:
+        objectManagerLoader: tests/doctrine-orm-bootstrap.php
+    excludePaths:
+        - src/Kernel.php
+    reportUnmatchedIgnoredErrors: false
+    ignoreErrors:
+        - '#Class App\\Controller\\Admin\\.+ extends generic class .+ but does not specify its types#'

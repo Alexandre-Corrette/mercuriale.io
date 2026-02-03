@@ -1,0 +1,13 @@
+framework:
+    rate_limiter:
+        # Rate limiter for login attempts
+        login:
+            policy: sliding_window
+            limit: 5
+            interval: '15 minutes'
+
+        # Rate limiter for API endpoints
+        api:
+            policy: sliding_window
+            limit: 100
+            interval: '1 minute'
