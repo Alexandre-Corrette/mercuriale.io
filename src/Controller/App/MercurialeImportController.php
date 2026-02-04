@@ -329,6 +329,8 @@ class MercurialeImportController extends AbstractController
             $this->logger->error('Erreur import mercuriale', [
                 'importId' => $importId,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'previous' => $e->getPrevious() ? $e->getPrevious()->getMessage() : null,
             ]);
             $this->addFlash('error', 'Une erreur est survenue lors de l\'import.');
 

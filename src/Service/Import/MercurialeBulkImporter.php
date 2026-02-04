@@ -309,8 +309,8 @@ class MercurialeBulkImporter
         $this->entityManager->beginTransaction();
 
         try {
-            // Get default unit
-            $defaultUnit = $this->uniteRepository->findOneBy(['code' => 'PC']);
+            // Get default unit (code 'p' for Pièce)
+            $defaultUnit = $this->uniteRepository->findOneBy(['code' => 'p']);
 
             $batchCount = 0;
 
@@ -361,6 +361,8 @@ class MercurialeBulkImporter
                     $this->logger->error('Failed to import row', [
                         'row' => $rowNumber,
                         'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
+                        'rowData' => $row,
                     ]);
 
                     // If EntityManager is closed, abort the import
@@ -427,8 +429,9 @@ class MercurialeBulkImporter
             // Reset EntityManager if closed
             if (!$this->entityManager->isOpen()) {
                 $this->entityManager = $this->managerRegistry->resetManager();
-                // Re-fetch the import entity in the new EM context
-                $import = $this->importRepository->findByUuid($import->getIdAsString());
+                // Note: import entity is now detached but we only need to save status
+                // so we'll just log the error and let the import remain in its current state
+                $this->logger->warning('EntityManager was reset, import status may not be saved');
             }
 
             // Try to save the failed status
@@ -449,6 +452,7 @@ class MercurialeBulkImporter
             $this->logger->error('Import failed', [
                 'importId' => $import?->getIdAsString() ?? 'unknown',
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
             if ($e instanceof ImportException) {
