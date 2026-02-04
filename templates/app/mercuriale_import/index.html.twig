@@ -166,13 +166,18 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const dropZone = document.getElementById('drop-zone');
-    const fileInput = document.getElementById('file-input');
+    const uploadForm = document.getElementById('upload-form');
+    const fileInput = uploadForm.querySelector('input[type="file"]');
     const submitBtn = document.getElementById('submit-btn');
     const filePreview = document.getElementById('file-preview');
     const fileName = document.getElementById('file-name');
     const fileSize = document.getElementById('file-size');
     const removeFile = document.getElementById('remove-file');
-    const uploadForm = document.getElementById('upload-form');
+
+    if (!fileInput) {
+        console.error('File input not found');
+        return;
+    }
 
     const maxFileSize = 10 * 1024 * 1024;
     const allowedExtensions = ['csv', 'xlsx'];
