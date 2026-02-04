@@ -55,6 +55,8 @@ class DashboardController extends AbstractDashboardController
         yield MenuItem::linkToCrud('Alertes', 'fa fa-exclamation-triangle', AlerteControle::class);
 
         yield MenuItem::section('Mercuriale');
+        yield MenuItem::linkToUrl('Importer une mercuriale', 'fa fa-file-import', '/app/mercuriale/import')
+            ->setCssClass('text-primary fw-bold');
         yield MenuItem::linkToCrud('Prix négociés', 'fa fa-euro-sign', Mercuriale::class);
         yield MenuItem::linkToCrud('Produits fournisseur', 'fa fa-box', ProduitFournisseur::class);
 
