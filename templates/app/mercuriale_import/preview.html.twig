@@ -1,0 +1,204 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Preview Import - Mercuriale.io{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-gradient-to-br from-cream to-cream-dark py-8 px-4">
+    <div class="max-w-5xl mx-auto">
+        {# Header #}
+        <div class="text-center mb-8">
+            <h1 class="text-2xl font-bold text-navy mb-2">
+                <i class="fas fa-search mr-2"></i>Previsualisation de l'import
+            </h1>
+            <p class="text-gray-500">Verifiez les donnees avant de confirmer l'import</p>
+        </div>
+
+        {# Progress steps #}
+        <div class="flex items-center justify-center gap-4 mb-8">
+            <div class="flex items-center gap-2 text-green-600">
+                <div class="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center">
+                    <i class="fas fa-check"></i>
+                </div>
+                <span class="font-medium">Upload</span>
+            </div>
+            <div class="w-16 h-0.5 bg-green-600"></div>
+            <div class="flex items-center gap-2 text-green-600">
+                <div class="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center">
+                    <i class="fas fa-check"></i>
+                </div>
+                <span class="font-medium">Mapping</span>
+            </div>
+            <div class="w-16 h-0.5 bg-coral"></div>
+            <div class="flex items-center gap-2 text-coral">
+                <div class="w-8 h-8 rounded-full bg-coral text-white flex items-center justify-center">3</div>
+                <span class="font-medium">Preview</span>
+            </div>
+            <div class="w-16 h-0.5 bg-gray-300"></div>
+            <div class="flex items-center gap-2 text-gray-400">
+                <div class="w-8 h-8 rounded-full bg-gray-300 text-white flex items-center justify-center">4</div>
+                <span class="font-medium">Import</span>
+            </div>
+        </div>
+
+        {% if error %}
+            {# Error state #}
+            <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                <div class="p-8 text-center">
+                    <div class="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-exclamation-triangle text-2xl text-red-600"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-900 mb-2">Erreur lors de l'analyse</h2>
+                    <p class="text-gray-500 mb-6">{{ error }}</p>
+                    <a href="{{ path('app_mercuriale_import_mapping', {importId: import.idAsString}) }}" class="inline-flex items-center gap-2 px-6 py-3 bg-coral text-white font-semibold rounded-xl hover:bg-coral-dark transition-colors">
+                        <i class="fas fa-arrow-left"></i>
+                        Modifier le mapping
+                    </a>
+                </div>
+            </div>
+        {% elseif preview %}
+            {# Stats cards #}
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-white rounded-xl shadow-lg p-6 text-center">
+                    <div class="text-3xl font-bold text-navy">{{ preview.totalRows }}</div>
+                    <div class="text-gray-500">Lignes totales</div>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 text-center">
+                    <div class="text-3xl font-bold text-green-600">{{ preview.createCount }}</div>
+                    <div class="text-gray-500">Creations</div>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 text-center">
+                    <div class="text-3xl font-bold text-blue-600">{{ preview.updateCount }}</div>
+                    <div class="text-gray-500">Mises a jour</div>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 text-center">
+                    <div class="text-3xl font-bold text-{{ preview.errorRows > 0 ? 'red' : 'gray' }}-600">{{ preview.errorRows }}</div>
+                    <div class="text-gray-500">Erreurs</div>
+                </div>
+            </div>
+
+            {# Success rate #}
+            {% if preview.canProceed %}
+                <div class="bg-green-50 border border-green-200 rounded-xl p-4 mb-6 flex items-center gap-4">
+                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-check-circle text-xl text-green-600"></i>
+                    </div>
+                    <div>
+                        <div class="font-semibold text-green-800">Pret pour l'import</div>
+                        <div class="text-green-700">{{ preview.validRows }} lignes valides sur {{ preview.totalRows }} ({{ preview.successRate }}%)</div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 flex items-center gap-4">
+                    <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-times-circle text-xl text-red-600"></i>
+                    </div>
+                    <div>
+                        <div class="font-semibold text-red-800">Import impossible</div>
+                        <div class="text-red-700">Corrigez les erreurs avant de continuer</div>
+                    </div>
+                </div>
+            {% endif %}
+
+            {# Lines detail #}
+            <div class="bg-white rounded-2xl shadow-lg overflow-hidden mb-6">
+                <div class="p-6 border-b border-gray-100">
+                    <h2 class="text-lg font-bold text-navy">
+                        <i class="fas fa-list mr-2"></i>Detail des lignes
+                    </h2>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="bg-gray-50">
+                                <th class="px-4 py-3 text-left font-medium text-gray-500">Ligne</th>
+                                <th class="px-4 py-3 text-left font-medium text-gray-500">Action</th>
+                                <th class="px-4 py-3 text-left font-medium text-gray-500">Code</th>
+                                <th class="px-4 py-3 text-left font-medium text-gray-500">Designation</th>
+                                <th class="px-4 py-3 text-left font-medium text-gray-500">Unite</th>
+                                <th class="px-4 py-3 text-right font-medium text-gray-500">Prix</th>
+                                <th class="px-4 py-3 text-left font-medium text-gray-500">Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for line in preview.lines|slice(0, 100) %}
+                                <tr class="border-t border-gray-100 hover:bg-gray-50 {{ line.hasErrors ? 'bg-red-50' : '' }}">
+                                    <td class="px-4 py-3 text-gray-400">{{ line.row }}</td>
+                                    <td class="px-4 py-3">
+                                        {% if line.action == 'create' %}
+                                            <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">Creation</span>
+                                        {% elseif line.action == 'update' %}
+                                            <span class="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">Mise a jour</span>
+                                        {% elseif line.action == 'skip' %}
+                                            <span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">Ignore</span>
+                                        {% else %}
+                                            <span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">Erreur</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-4 py-3 font-mono text-gray-900">{{ line.codeFournisseur ?: '-' }}</td>
+                                    <td class="px-4 py-3 truncate max-w-[200px]" title="{{ line.designation }}">{{ line.designation ?: '-' }}</td>
+                                    <td class="px-4 py-3">{{ line.unite ?: '-' }}</td>
+                                    <td class="px-4 py-3 text-right font-mono">
+                                        {% if line.prix %}
+                                            {{ line.prix|number_format(4, ',', ' ') }} EUR
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        {% if line.hasErrors %}
+                                            <div class="text-red-600 text-xs">
+                                                {% for error in line.errors %}
+                                                    <div><i class="fas fa-times-circle mr-1"></i>{{ error.message }}</div>
+                                                {% endfor %}
+                                            </div>
+                                        {% elseif line.hasWarnings %}
+                                            <div class="text-amber-600 text-xs">
+                                                {% for warning in line.warnings %}
+                                                    <div><i class="fas fa-exclamation-triangle mr-1"></i>{{ warning.message }}</div>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            <span class="text-green-600"><i class="fas fa-check"></i></span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if preview.lines|length > 100 %}
+                    <div class="p-4 bg-gray-50 text-center text-sm text-gray-500">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Affichage limite aux 100 premieres lignes ({{ preview.lines|length }} lignes au total)
+                    </div>
+                {% endif %}
+            </div>
+
+            {# Actions #}
+            <div class="flex items-center justify-between">
+                <a href="{{ path('app_mercuriale_import_mapping', {importId: import.idAsString}) }}" class="inline-flex items-center gap-2 px-6 py-3 text-gray-600 hover:text-coral transition-colors">
+                    <i class="fas fa-arrow-left"></i>
+                    Modifier le mapping
+                </a>
+
+                {% if preview.canProceed %}
+                    <form action="{{ path('app_mercuriale_import_confirm', {importId: import.idAsString}) }}" method="post">
+                        <input type="hidden" name="_token" value="{{ csrf_token('confirm_import_' ~ import.idAsString) }}">
+                        <button type="submit" class="px-8 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold rounded-xl flex items-center gap-2 hover:shadow-lg transition-all" onclick="this.disabled=true; this.innerHTML='<i class=\'fas fa-spinner fa-spin mr-2\'></i>Import en cours...'; this.form.submit();">
+                            <i class="fas fa-check mr-1"></i>
+                            Confirmer l'import ({{ preview.validRows }} lignes)
+                        </button>
+                    </form>
+                {% else %}
+                    <button disabled class="px-8 py-3 bg-gray-300 text-gray-500 font-semibold rounded-xl cursor-not-allowed">
+                        <i class="fas fa-ban mr-1"></i>
+                        Import impossible
+                    </button>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
