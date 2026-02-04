@@ -29,6 +29,23 @@ class MercurialeBulkImporter
     private const BATCH_SIZE = 100;
     private const TIMEOUT_SECONDS = 60;
 
+    /**
+     * Generate a code from designation (used when code is missing).
+     */
+    private function generateCodeFromDesignation(string $designation): string
+    {
+        // Normalize: uppercase, remove accents, keep only alphanumeric
+        $code = mb_strtoupper($designation);
+        $code = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $code) ?: $code;
+        $code = preg_replace('/[^A-Z0-9]/', '', $code) ?? '';
+
+        // Truncate to max 20 chars and add hash suffix for uniqueness
+        $code = substr($code, 0, 15);
+        $hash = substr(md5($designation), 0, 4);
+
+        return $code . '_' . strtoupper($hash);
+    }
+
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly ProduitFournisseurRepository $produitFournisseurRepository,
@@ -81,6 +98,7 @@ class MercurialeBulkImporter
                 ImportPreviewLine::ACTION_UPDATE => ++$updateCount,
                 ImportPreviewLine::ACTION_SKIP => ++$skipCount,
                 ImportPreviewLine::ACTION_ERROR => ++$errorCount,
+                default => null, // Handle any unexpected action
             };
         }
 
@@ -121,6 +139,8 @@ class MercurialeBulkImporter
 
         // Validate mapped data
         $validation = $this->columnMapper->validateMappedRow($mappedData);
+
+        // Collect errors (blocking)
         if (!$validation['valid']) {
             foreach ($validation['errors'] as $error) {
                 $errors[] = new ImportError(
@@ -143,10 +163,28 @@ class MercurialeBulkImporter
             );
         }
 
+        // Collect warnings (non-blocking)
+        foreach ($validation['warnings'] ?? [] as $warning) {
+            $warnings[] = new ImportWarning(
+                row: $rowNumber,
+                column: $warning['field'],
+                message: $warning['message'],
+                value: $mappedData[$warning['field']] ?? null,
+            );
+        }
+
+        // Generate code from designation if missing
+        if (empty($mappedData['code_fournisseur']) && !empty($mappedData['designation'])) {
+            $mappedData['code_fournisseur'] = $this->generateCodeFromDesignation($mappedData['designation']);
+        }
+
+        // Use generated code for preview display
+        $displayCode = $mappedData['code_fournisseur'];
+
         // Check if product already exists
         $existingProduct = $this->produitFournisseurRepository->findOneBy([
             'fournisseur' => $fournisseur,
-            'codeFournisseur' => $mappedData['code_fournisseur'],
+            'codeFournisseur' => $displayCode,
         ]);
 
         $action = ImportPreviewLine::ACTION_CREATE;
@@ -171,11 +209,12 @@ class MercurialeBulkImporter
             if ($existingMercuriale !== null) {
                 $existingMercurialeId = $existingMercuriale->getId();
 
-                // Check if price is different
+                // Check if price is different (only if new price is valid)
                 $existingPrice = $existingMercuriale->getPrixNegocie();
                 $newPrice = $mappedData['prix'];
+                $newPriceIsValid = !empty($newPrice) && is_numeric($newPrice) && (float) $newPrice > 0;
 
-                if (bccomp($existingPrice, $newPrice, 4) === 0) {
+                if ($newPriceIsValid && bccomp($existingPrice, $newPrice, 4) === 0) {
                     $action = ImportPreviewLine::ACTION_SKIP;
                     $warnings[] = new ImportWarning(
                         row: $rowNumber,
@@ -200,10 +239,25 @@ class MercurialeBulkImporter
             }
         }
 
+        // Check if price is valid - if not, product will be created without mercuriale
+        $hasValidPrice = !empty($mappedData['prix'])
+            && is_numeric($mappedData['prix'])
+            && (float) $mappedData['prix'] > 0;
+
+        if (!$hasValidPrice && $action !== ImportPreviewLine::ACTION_SKIP) {
+            // No valid price but we can still create/update the product
+            $warnings[] = new ImportWarning(
+                row: $rowNumber,
+                column: 'prix',
+                message: 'Prix absent ou invalide - produit créé sans prix négocié',
+                value: $mappedData['prix'],
+            );
+        }
+
         return new ImportPreviewLine(
             row: $rowNumber,
             action: $action,
-            codeFournisseur: $mappedData['code_fournisseur'],
+            codeFournisseur: $displayCode,
             designation: $mappedData['designation'],
             unite: $mappedData['unite'],
             prix: $mappedData['prix'],
@@ -382,13 +436,18 @@ class MercurialeBulkImporter
     ): array {
         $mappedData = $this->columnMapper->mapRow($row, $config);
 
-        // Validate
+        // Validate - only check for blocking errors
         $validation = $this->columnMapper->validateMappedRow($mappedData);
         if (!$validation['valid']) {
             throw new \RuntimeException(implode(', ', array_map(
                 fn ($e) => $e['message'],
                 $validation['errors'],
             )));
+        }
+
+        // Generate code from designation if missing
+        if (empty($mappedData['code_fournisseur']) && !empty($mappedData['designation'])) {
+            $mappedData['code_fournisseur'] = $this->generateCodeFromDesignation($mappedData['designation']);
         }
 
         // Find or create product
@@ -408,23 +467,37 @@ class MercurialeBulkImporter
         }
 
         // Update product fields
-        $product->setDesignationFournisseur($mappedData['designation']);
+        if (!empty($mappedData['designation'])) {
+            $product->setDesignationFournisseur($mappedData['designation']);
+        }
 
-        // Set unit
+        // Set unit (use default if not found)
         $unit = null;
         if (!empty($mappedData['unite'])) {
             $unit = $this->columnMapper->resolveUnite($mappedData['unite']);
         }
         $product->setUniteAchat($unit ?? $defaultUnit);
 
-        // Set conditionnement
-        if (!empty($mappedData['conditionnement'])) {
+        // Set conditionnement only if valid
+        if (!empty($mappedData['conditionnement']) && is_numeric($mappedData['conditionnement'])) {
             $product->setConditionnement($mappedData['conditionnement']);
         }
 
         $this->entityManager->persist($product);
 
-        // Handle mercuriale (price)
+        // Handle mercuriale (price) - only if price is valid
+        $hasValidPrice = !empty($mappedData['prix'])
+            && is_numeric($mappedData['prix'])
+            && (float) $mappedData['prix'] > 0;
+
+        if (!$hasValidPrice) {
+            // No valid price - just create/update the product without mercuriale
+            return [
+                'action' => $productAction,
+                'mercuriale_action' => null,
+            ];
+        }
+
         $dateDebut = $mappedData['date_debut']
             ? new \DateTimeImmutable($mappedData['date_debut'])
             : new \DateTimeImmutable();

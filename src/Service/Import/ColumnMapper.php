@@ -295,44 +295,60 @@ class ColumnMapper
     /**
      * Validate mapped data for a single row.
      *
-     * @return array{valid: bool, errors: array<array{field: string, message: string}>}
+     * Returns errors (blocking) and warnings (non-blocking).
+     * Import can proceed with warnings but not with errors.
+     *
+     * @return array{valid: bool, errors: array<array{field: string, message: string}>, warnings: array<array{field: string, message: string}>}
      */
     public function validateMappedRow(array $mappedData): array
     {
         $errors = [];
+        $warnings = [];
 
-        // Required fields
-        if (empty($mappedData['code_fournisseur'])) {
-            $errors[] = ['field' => 'code_fournisseur', 'message' => 'Code fournisseur manquant'];
+        // We need at least a code OR a designation to identify the product
+        $hasCode = !empty($mappedData['code_fournisseur']);
+        $hasDesignation = !empty($mappedData['designation']);
+
+        if (!$hasCode && !$hasDesignation) {
+            $errors[] = ['field' => 'code_fournisseur', 'message' => 'Code fournisseur ou désignation requis'];
         }
 
-        if (empty($mappedData['designation'])) {
-            $errors[] = ['field' => 'designation', 'message' => 'Désignation manquante'];
+        // Missing code is a warning if we have designation
+        if (!$hasCode && $hasDesignation) {
+            $warnings[] = ['field' => 'code_fournisseur', 'message' => 'Code fournisseur manquant (sera généré)'];
         }
 
+        // Missing designation is a warning if we have code
+        if ($hasCode && !$hasDesignation) {
+            $warnings[] = ['field' => 'designation', 'message' => 'Désignation manquante'];
+        }
+
+        // Prix: warning if missing or invalid, not blocking
         if (empty($mappedData['prix'])) {
-            $errors[] = ['field' => 'prix', 'message' => 'Prix manquant'];
-        } elseif (!is_numeric($mappedData['prix']) || (float) $mappedData['prix'] <= 0) {
-            $errors[] = ['field' => 'prix', 'message' => 'Prix invalide (doit être un nombre positif)'];
+            $warnings[] = ['field' => 'prix', 'message' => 'Prix manquant (sera à renseigner)'];
+        } elseif (!is_numeric($mappedData['prix']) || (float) $mappedData['prix'] < 0) {
+            $warnings[] = ['field' => 'prix', 'message' => 'Prix invalide (sera ignoré)'];
         }
 
-        // Optional field validation
+        // Unite: warning if not recognized, will use default
         if (!empty($mappedData['unite'])) {
             $unit = $this->resolveUnite($mappedData['unite']);
             if ($unit === null) {
-                $errors[] = ['field' => 'unite', 'message' => sprintf('Unité "%s" non reconnue', $mappedData['unite'])];
+                $warnings[] = ['field' => 'unite', 'message' => sprintf('Unité "%s" non reconnue (unité par défaut utilisée)', $mappedData['unite'])];
             }
         }
 
+        // Conditionnement: warning if invalid
         if (!empty($mappedData['conditionnement'])) {
             if (!is_numeric($mappedData['conditionnement']) || (float) $mappedData['conditionnement'] <= 0) {
-                $errors[] = ['field' => 'conditionnement', 'message' => 'Conditionnement invalide'];
+                $warnings[] = ['field' => 'conditionnement', 'message' => 'Conditionnement invalide (sera ignoré)'];
             }
         }
 
         return [
             'valid' => empty($errors),
             'errors' => $errors,
+            'warnings' => $warnings,
         ];
     }
 }
