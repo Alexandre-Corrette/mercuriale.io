@@ -38,7 +38,19 @@
                     </div>
                 {% endfor %}
 
-                {{ form_start(form, {'attr': {'id': 'upload-form', 'novalidate': 'novalidate', 'data-turbo': 'false'}}) }}
+                {{ form_start(form, {'attr': {
+                    'id': 'upload-form',
+                    'novalidate': 'novalidate',
+                    'data-turbo': 'false',
+                    'data-controller': 'file-upload',
+                    'data-file-upload-max-size-value': '20971520',
+                    'data-file-upload-max-files-value': '10',
+                    'data-file-upload-allowed-types-value': '["image/jpeg", "image/png", "image/heic", "image/heif", "application/pdf"]',
+                    'data-file-upload-allowed-extensions-value': '[]',
+                    'data-file-upload-mode-value': 'multi',
+                    'data-file-upload-loading-text-value': 'Analyse en cours...',
+                    'data-action': 'submit->file-upload#submit'
+                }}) }}
 
                     {# Etablissement select #}
                     <div class="mb-6">
@@ -57,13 +69,13 @@
                             <i class="fas fa-camera mr-2"></i>Photos des bons de livraison
                         </label>
 
-                        <div id="drop-zone" class="border-2 border-dashed border-gray-300 rounded-2xl p-8 md:p-12 text-center cursor-pointer bg-gray-50 transition-all duration-300 hover:border-coral hover:bg-coral/10">
+                        <div data-file-upload-target="dropZone" class="border-2 border-dashed border-gray-300 rounded-2xl p-8 md:p-12 text-center cursor-pointer bg-gray-50 transition-all duration-300 hover:border-coral hover:bg-coral/10">
                             <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-navy to-navy-light rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110">
                                 <i class="fas fa-cloud-upload-alt text-3xl text-white"></i>
                             </div>
                             <h3 class="text-xl font-semibold text-gray-900 mb-2">Glissez vos photos ici</h3>
                             <p class="text-gray-500 mb-6">ou cliquez pour parcourir (jusqu'a 10 fichiers)</p>
-                            <button type="button" id="browse-btn" class="inline-flex items-center gap-2 px-6 py-3 bg-white border-2 border-coral text-coral font-semibold rounded-xl cursor-pointer transition-all hover:bg-coral hover:text-white">
+                            <button type="button" data-action="file-upload#browse" class="inline-flex items-center gap-2 px-6 py-3 bg-white border-2 border-coral text-coral font-semibold rounded-xl cursor-pointer transition-all hover:bg-coral hover:text-white">
                                 <i class="fas fa-folder-open"></i>
                                 Choisir des fichiers
                             </button>
@@ -73,27 +85,27 @@
                             </div>
                         </div>
 
-                        {{ form_widget(form.files, {'attr': {'id': 'bl-file-input', 'class': 'hidden'}}) }}
+                        {{ form_widget(form.files, {'attr': {'class': 'hidden', 'data-file-upload-target': 'input'}}) }}
                         {{ form_errors(form.files) }}
                     </div>
 
                     {# Preview section #}
-                    <div id="preview-section" class="hidden mt-6 p-6 bg-gray-50 rounded-2xl animate-fade-in">
+                    <div data-file-upload-target="preview" class="hidden mt-6 p-6 bg-gray-50 rounded-2xl animate-fade-in">
                         <div class="flex items-center justify-between mb-4">
                             <div class="font-semibold text-navy">
                                 <i class="fas fa-images mr-2"></i>
-                                <span id="files-count">0</span> fichier(s) selectionne(s)
+                                <span data-file-upload-target="filesCount">0</span> fichier(s) selectionne(s)
                             </div>
-                            <button type="button" id="clear-all" class="inline-flex items-center px-3 py-1.5 text-sm bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-all">
+                            <button type="button" data-action="file-upload#clearAll" class="inline-flex items-center px-3 py-1.5 text-sm bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-all">
                                 <i class="fas fa-trash-alt mr-2"></i>
                                 Tout supprimer
                             </button>
                         </div>
-                        <div id="files-list" class="flex flex-col gap-3"></div>
+                        <div data-file-upload-target="filesList" class="flex flex-col gap-3"></div>
                     </div>
 
                     {# Submit button #}
-                    <button type="submit" id="submit-btn" disabled class="w-full mt-6 px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-navy to-navy-light rounded-xl flex items-center justify-center gap-3 transition-all duration-300 hover:translate-y-[-2px] hover:shadow-xl hover:shadow-navy/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none">
+                    <button type="submit" data-file-upload-target="submit" disabled class="w-full mt-6 px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-navy to-navy-light rounded-xl flex items-center justify-center gap-3 transition-all duration-300 hover:translate-y-[-2px] hover:shadow-xl hover:shadow-navy/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none">
                         <i class="fas fa-magic text-xl"></i>
                         Analyser et extraire les donnees
                     </button>
@@ -111,228 +123,4 @@
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block javascripts %}
-{{ parent() }}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const dropZone = document.getElementById('drop-zone');
-    const fileInput = document.querySelector('input[type="file"]');
-    const browseBtn = document.getElementById('browse-btn');
-    const submitBtn = document.getElementById('submit-btn');
-    const previewSection = document.getElementById('preview-section');
-    const filesList = document.getElementById('files-list');
-    const filesCount = document.getElementById('files-count');
-    const clearAllBtn = document.getElementById('clear-all');
-    const uploadForm = document.getElementById('upload-form');
-
-    const maxFileSize = 20 * 1024 * 1024;
-    const maxFiles = 10;
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/heic', 'image/heif', 'application/pdf'];
-
-    let selectedFiles = [];
-
-    // Browse button click
-    browseBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        fileInput.click();
-    });
-
-    // Drop zone click
-    dropZone.addEventListener('click', () => fileInput.click());
-
-    // Drag and drop events
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        dropZone.addEventListener(eventName, (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-        });
-    });
-
-    ['dragenter', 'dragover'].forEach(eventName => {
-        dropZone.addEventListener(eventName, () => {
-            dropZone.classList.add('border-coral', 'bg-coral/10', 'scale-[1.01]');
-            dropZone.classList.remove('border-gray-300', 'bg-gray-50');
-        });
-    });
-
-    ['dragleave', 'drop'].forEach(eventName => {
-        dropZone.addEventListener(eventName, () => {
-            dropZone.classList.remove('border-coral', 'bg-coral/10', 'scale-[1.01]');
-            dropZone.classList.add('border-gray-300', 'bg-gray-50');
-        });
-    });
-
-    // Handle dropped files
-    dropZone.addEventListener('drop', (e) => {
-        const files = Array.from(e.dataTransfer.files);
-        handleFiles(files);
-    });
-
-    // Handle selected files
-    fileInput.addEventListener('change', () => {
-        const files = Array.from(fileInput.files);
-        handleFiles(files);
-    });
-
-    // Clear all button
-    clearAllBtn.addEventListener('click', clearAllFiles);
-
-    function handleFiles(files) {
-        const remainingSlots = maxFiles - selectedFiles.length;
-        const filesToAdd = files.slice(0, remainingSlots);
-
-        filesToAdd.forEach(file => {
-            const validation = validateFile(file);
-            if (validation.valid) {
-                selectedFiles.push({ file, valid: true, error: null });
-            } else {
-                selectedFiles.push({ file, valid: false, error: validation.error });
-            }
-        });
-
-        if (files.length > remainingSlots) {
-            alert(`Maximum ${maxFiles} fichiers. ${files.length - remainingSlots} fichier(s) ignore(s).`);
-        }
-
-        updateUI();
-    }
-
-    function validateFile(file) {
-        if (!allowedTypes.includes(file.type) && !file.name.toLowerCase().endsWith('.heic')) {
-            return { valid: false, error: 'Format non supporte' };
-        }
-        if (file.size > maxFileSize) {
-            return { valid: false, error: 'Fichier trop volumineux (max 20 Mo)' };
-        }
-        return { valid: true, error: null };
-    }
-
-    function updateUI() {
-        // Update file input
-        const dataTransfer = new DataTransfer();
-        selectedFiles.filter(f => f.valid).forEach(f => dataTransfer.items.add(f.file));
-        fileInput.files = dataTransfer.files;
-
-        // Update count
-        const validCount = selectedFiles.filter(f => f.valid).length;
-        filesCount.textContent = validCount;
-
-        // Show/hide preview section
-        if (selectedFiles.length > 0) {
-            previewSection.classList.remove('hidden');
-            dropZone.classList.add('border-green-500', 'border-solid', 'bg-green-50/50');
-            dropZone.classList.remove('border-dashed', 'border-gray-300');
-        } else {
-            previewSection.classList.add('hidden');
-            dropZone.classList.remove('border-green-500', 'border-solid', 'bg-green-50/50');
-            dropZone.classList.add('border-dashed', 'border-gray-300');
-        }
-
-        // Enable/disable submit
-        submitBtn.disabled = validCount === 0;
-
-        // Render file list
-        renderFileList();
-    }
-
-    function renderFileList() {
-        filesList.innerHTML = '';
-
-        selectedFiles.forEach((item, index) => {
-            const fileItem = document.createElement('div');
-            fileItem.className = 'flex items-center gap-4 p-3 bg-white rounded-xl shadow-sm';
-
-            // Preview thumbnail
-            const preview = document.createElement('div');
-            preview.className = 'w-14 h-14 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0 flex items-center justify-center';
-
-            if (item.file.type === 'application/pdf') {
-                preview.innerHTML = '<i class="fas fa-file-pdf text-2xl text-red-500"></i>';
-            } else if (item.file.type.startsWith('image/')) {
-                const img = document.createElement('img');
-                img.className = 'w-full h-full object-cover';
-                const reader = new FileReader();
-                reader.onload = (e) => img.src = e.target.result;
-                reader.readAsDataURL(item.file);
-                preview.appendChild(img);
-            } else {
-                preview.innerHTML = '<i class="fas fa-file text-2xl text-gray-400"></i>';
-            }
-
-            // File info
-            const info = document.createElement('div');
-            info.className = 'flex-1 min-w-0';
-
-            const name = document.createElement('div');
-            name.className = 'font-semibold text-gray-900 text-sm truncate';
-            name.textContent = item.file.name;
-
-            const size = document.createElement('div');
-            size.className = 'text-xs text-gray-500';
-            size.textContent = formatFileSize(item.file.size);
-
-            info.appendChild(name);
-            info.appendChild(size);
-
-            // Status
-            const status = document.createElement('div');
-            status.className = 'flex items-center gap-1 text-xs flex-shrink-0';
-
-            if (item.valid) {
-                status.className += ' text-green-600';
-                status.innerHTML = '<i class="fas fa-check-circle"></i><span>OK</span>';
-            } else {
-                status.className += ' text-red-600';
-                status.innerHTML = `<i class="fas fa-times-circle"></i><span>${item.error}</span>`;
-            }
-
-            // Remove button
-            const removeBtn = document.createElement('button');
-            removeBtn.type = 'button';
-            removeBtn.className = 'w-8 h-8 flex items-center justify-center bg-gray-100 rounded-lg text-gray-500 hover:bg-red-100 hover:text-red-600 transition-all flex-shrink-0';
-            removeBtn.innerHTML = '<i class="fas fa-times"></i>';
-            removeBtn.addEventListener('click', () => removeFile(index));
-
-            fileItem.appendChild(preview);
-            fileItem.appendChild(info);
-            fileItem.appendChild(status);
-            fileItem.appendChild(removeBtn);
-
-            filesList.appendChild(fileItem);
-        });
-    }
-
-    function removeFile(index) {
-        selectedFiles.splice(index, 1);
-        updateUI();
-    }
-
-    function clearAllFiles() {
-        selectedFiles = [];
-        updateUI();
-    }
-
-    function formatFileSize(bytes) {
-        if (bytes < 1024) return bytes + ' o';
-        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' Ko';
-        return (bytes / (1024 * 1024)).toFixed(2) + ' Mo';
-    }
-
-    // Form submit
-    uploadForm.addEventListener('submit', function(e) {
-        const validFiles = selectedFiles.filter(f => f.valid);
-
-        if (validFiles.length === 0) {
-            e.preventDefault();
-            return;
-        }
-
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyse en cours...';
-    });
-});
-</script>
 {% endblock %}

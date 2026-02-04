@@ -54,7 +54,7 @@
         {% endfor %}
 
         {# Main content - 2 columns #}
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" data-controller="image-modal">
             {# Left column - Image #}
             <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
                 <div class="p-4 bg-navy text-white font-semibold">
@@ -66,8 +66,7 @@
                             <img src="{{ path('app_bl_image', {id: bonLivraison.id}) }}"
                                  alt="Bon de livraison"
                                  class="w-full rounded-lg cursor-zoom-in"
-                                 id="bl-image"
-                                 onclick="openImageModal(this.src)">
+                                 data-action="click->image-modal#open">
                             <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all rounded-lg flex items-center justify-center">
                                 <i class="fas fa-search-plus text-white text-2xl opacity-0 group-hover:opacity-100 transition-opacity"></i>
                             </div>
@@ -98,32 +97,42 @@
                 <div class="p-4">
                     {% if needsExtraction %}
                         {# Extraction needed #}
-                        <div id="extraction-placeholder" class="text-center py-12">
-                            <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-navy to-navy-light rounded-full flex items-center justify-center">
-                                <i class="fas fa-magic text-3xl text-white"></i>
+                        <div data-controller="extraction" data-extraction-url-value="{{ path('app_bl_extraire', {id: bonLivraison.id}) }}">
+                            <div data-extraction-target="placeholder" class="text-center py-12">
+                                <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-navy to-navy-light rounded-full flex items-center justify-center">
+                                    <i class="fas fa-magic text-3xl text-white"></i>
+                                </div>
+                                <h3 class="text-xl font-semibold text-navy mb-2">Extraction automatique</h3>
+                                <p class="text-gray-500 mb-6">Cliquez pour extraire les données du bon de livraison via IA</p>
+                                <button type="button" data-action="extraction#start"
+                                        class="inline-flex items-center gap-2 px-6 py-3 bg-coral text-white font-semibold rounded-xl transition-all hover:bg-coral-dark">
+                                    <i class="fas fa-play"></i>
+                                    Lancer l'extraction
+                                </button>
                             </div>
-                            <h3 class="text-xl font-semibold text-navy mb-2">Extraction automatique</h3>
-                            <p class="text-gray-500 mb-6">Cliquez pour extraire les données du bon de livraison via IA</p>
-                            <button type="button" id="btn-extraire"
-                                    class="inline-flex items-center gap-2 px-6 py-3 bg-coral text-white font-semibold rounded-xl transition-all hover:bg-coral-dark">
-                                <i class="fas fa-play"></i>
-                                Lancer l'extraction
-                            </button>
-                        </div>
 
-                        {# Loading state #}
-                        <div id="extraction-loading" class="hidden text-center py-12">
-                            <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-navy to-navy-light rounded-full flex items-center justify-center animate-pulse">
-                                <i class="fas fa-spinner fa-spin text-3xl text-white"></i>
+                            {# Loading state #}
+                            <div data-extraction-target="loading" class="hidden text-center py-12">
+                                <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-navy to-navy-light rounded-full flex items-center justify-center animate-pulse">
+                                    <i class="fas fa-spinner fa-spin text-3xl text-white"></i>
+                                </div>
+                                <h3 class="text-xl font-semibold text-navy mb-2">Extraction en cours...</h3>
+                                <p class="text-gray-500">Analyse de l'image par l'IA, veuillez patienter</p>
                             </div>
-                            <h3 class="text-xl font-semibold text-navy mb-2">Extraction en cours...</h3>
-                            <p class="text-gray-500">Analyse de l'image par l'IA, veuillez patienter</p>
                         </div>
                     {% else %}
                         {# Show extracted data #}
                         {% include 'app/bon_livraison/_extraction_data.html.twig' %}
                     {% endif %}
                 </div>
+            </div>
+
+            {# Image modal #}
+            <div data-image-modal-target="modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4" data-action="click->image-modal#close">
+                <img src="" alt="Bon de livraison" class="max-w-full max-h-full object-contain" data-image-modal-target="image">
+                <button class="absolute top-4 right-4 text-white text-3xl hover:text-gray-300" data-action="image-modal#close">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
         </div>
 
@@ -167,74 +176,4 @@
         {% endif %}
     </div>
 </div>
-
-{# Image modal #}
-<div id="image-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4" onclick="closeImageModal()">
-    <img src="" alt="Bon de livraison" class="max-w-full max-h-full object-contain" id="modal-image">
-    <button class="absolute top-4 right-4 text-white text-3xl hover:text-gray-300" onclick="closeImageModal()">
-        <i class="fas fa-times"></i>
-    </button>
-</div>
-{% endblock %}
-
-{% block javascripts %}
-{{ parent() }}
-<script>
-function openImageModal(src) {
-    document.getElementById('modal-image').src = src;
-    document.getElementById('image-modal').classList.remove('hidden');
-    document.getElementById('image-modal').classList.add('flex');
-}
-
-function closeImageModal() {
-    document.getElementById('image-modal').classList.add('hidden');
-    document.getElementById('image-modal').classList.remove('flex');
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    {% if needsExtraction %}
-    const btnExtraire = document.getElementById('btn-extraire');
-    if (btnExtraire) {
-        btnExtraire.addEventListener('click', async function() {
-            const placeholder = document.getElementById('extraction-placeholder');
-            const loading = document.getElementById('extraction-loading');
-
-            placeholder.classList.add('hidden');
-            loading.classList.remove('hidden');
-
-            try {
-                const response = await fetch('{{ path('app_bl_extraire', {id: bonLivraison.id}) }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    window.location.href = data.redirectUrl;
-                } else {
-                    loading.classList.add('hidden');
-                    placeholder.classList.remove('hidden');
-                    alert('Erreur lors de l\'extraction:\n' + (data.errors || []).join('\n'));
-                }
-            } catch (error) {
-                loading.classList.add('hidden');
-                placeholder.classList.remove('hidden');
-                alert('Erreur de connexion: ' + error.message);
-            }
-        });
-    }
-    {% endif %}
-
-    // Keyboard shortcut for closing modal
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            closeImageModal();
-        }
-    });
-});
-</script>
 {% endblock %}

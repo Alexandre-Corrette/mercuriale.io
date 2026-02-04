@@ -78,7 +78,7 @@ class DashboardController extends AbstractDashboardController
         yield MenuItem::linkToCrud('Conversions', 'fa fa-exchange-alt', ConversionUnite::class);
 
         yield MenuItem::section('');
-        yield MenuItem::linkToUrl('Retour à l\'app', 'fa fa-arrow-left', '/app/dashboard');
+        yield MenuItem::linkToUrl('Uploader un BL', 'fa fa-arrow-left', '/app/bl/upload');
         yield MenuItem::linkToLogout('Déconnexion', 'fa fa-sign-out-alt');
     }
 
