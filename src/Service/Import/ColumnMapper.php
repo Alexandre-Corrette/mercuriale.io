@@ -12,71 +12,73 @@ use Psr\Log\LoggerInterface;
 class ColumnMapper
 {
     /**
-     * Mapping of common unit strings to standard codes.
+     * Mapping of common unit strings to database codes.
+     * Database codes are: kg, g, L, cL, mL, p, bq, bt, ct, lot
      */
     private const UNITE_MAPPING = [
-        // Kilogramme
-        'kg' => 'KG',
-        'kilo' => 'KG',
-        'kilogramme' => 'KG',
-        'kilogrammes' => 'KG',
+        // Kilogramme (code: kg)
+        'kg' => 'kg',
+        'kilo' => 'kg',
+        'kilogramme' => 'kg',
+        'kilogrammes' => 'kg',
 
-        // Litre
+        // Gramme (code: g)
+        'g' => 'g',
+        'gr' => 'g',
+        'gramme' => 'g',
+        'grammes' => 'g',
+
+        // Litre (code: L)
         'l' => 'L',
         'litre' => 'L',
         'litres' => 'L',
         'lt' => 'L',
 
-        // Pièce
-        'pc' => 'PC',
-        'pce' => 'PC',
-        'piece' => 'PC',
-        'pièce' => 'PC',
-        'pieces' => 'PC',
-        'pièces' => 'PC',
-        'u' => 'PC',
-        'unite' => 'PC',
-        'unité' => 'PC',
-        'unites' => 'PC',
-        'unités' => 'PC',
+        // Centilitre (code: cL)
+        'cl' => 'cL',
+        'centilitre' => 'cL',
+        'centilitres' => 'cL',
 
-        // Carton
-        'ct' => 'CT',
-        'crt' => 'CT',
-        'carton' => 'CT',
-        'cartons' => 'CT',
+        // Millilitre (code: mL)
+        'ml' => 'mL',
+        'millilitre' => 'mL',
+        'millilitres' => 'mL',
 
-        // Boîte
-        'bt' => 'BT',
-        'bte' => 'BT',
-        'boite' => 'BT',
-        'boîte' => 'BT',
-        'boites' => 'BT',
-        'boîtes' => 'BT',
+        // Pièce (code: p)
+        'p' => 'p',
+        'pc' => 'p',
+        'pce' => 'p',
+        'piece' => 'p',
+        'pièce' => 'p',
+        'pieces' => 'p',
+        'pièces' => 'p',
+        'u' => 'p',
+        'unite' => 'p',
+        'unité' => 'p',
+        'unites' => 'p',
+        'unités' => 'p',
 
-        // Sachet
-        'sac' => 'SAC',
-        'sachet' => 'SAC',
-        'sachets' => 'SAC',
+        // Carton (code: ct)
+        'ct' => 'ct',
+        'crt' => 'ct',
+        'carton' => 'ct',
+        'cartons' => 'ct',
 
-        // Barquette
-        'bq' => 'BQ',
-        'barquette' => 'BQ',
-        'barquettes' => 'BQ',
+        // Bouteille (code: bt)
+        'bt' => 'bt',
+        'bte' => 'bt',
+        'btl' => 'bt',
+        'bouteille' => 'bt',
+        'bouteilles' => 'bt',
 
-        // Bouteille
-        'btl' => 'BTL',
-        'bouteille' => 'BTL',
-        'bouteilles' => 'BTL',
+        // Barquette (code: bq)
+        'bq' => 'bq',
+        'barquette' => 'bq',
+        'barquettes' => 'bq',
 
-        // Pack
-        'pack' => 'PACK',
-        'packs' => 'PACK',
-        'pk' => 'PACK',
-
-        // Lot
-        'lot' => 'LOT',
-        'lots' => 'LOT',
+        // Lot (code: lot)
+        'lot' => 'lot',
+        'lots' => 'lot',
     ];
 
     /** @var array<string, Unite>|null */
@@ -220,16 +222,21 @@ class ColumnMapper
             return self::UNITE_MAPPING[$normalized];
         }
 
-        // Check if it's already a valid unit code
-        $upperValue = strtoupper(trim($value));
+        // Check if it's already a valid unit code (exact match)
+        $trimmedValue = trim($value);
         $units = $this->getUnitesCache();
 
-        if (isset($units[$upperValue])) {
-            return $upperValue;
+        if (isset($units[$trimmedValue])) {
+            return $trimmedValue;
         }
 
-        // Return as-is in uppercase, will be validated later
-        return $upperValue;
+        // Try lowercase version
+        if (isset($units[$normalized])) {
+            return $normalized;
+        }
+
+        // Return as-is, will be validated later
+        return $trimmedValue;
     }
 
     /**
