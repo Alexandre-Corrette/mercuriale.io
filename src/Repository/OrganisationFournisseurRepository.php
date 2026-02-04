@@ -25,14 +25,14 @@ class OrganisationFournisseurRepository extends ServiceEntityRepository
      */
     public function findByOrganisation(Organisation $organisation, bool $actifOnly = true): array
     {
-        $qb = $this->createQueryBuilder('of')
-            ->join('of.fournisseur', 'f')
-            ->where('of.organisation = :organisation')
+        $qb = $this->createQueryBuilder('orgf')
+            ->join('orgf.fournisseur', 'f')
+            ->where('orgf.organisation = :organisation')
             ->setParameter('organisation', $organisation)
             ->orderBy('f.nom', 'ASC');
 
         if ($actifOnly) {
-            $qb->andWhere('of.actif = :actif')
+            $qb->andWhere('orgf.actif = :actif')
                 ->setParameter('actif', true);
         }
 
@@ -44,14 +44,14 @@ class OrganisationFournisseurRepository extends ServiceEntityRepository
      */
     public function findByFournisseur(Fournisseur $fournisseur, bool $actifOnly = true): array
     {
-        $qb = $this->createQueryBuilder('of')
-            ->join('of.organisation', 'o')
-            ->where('of.fournisseur = :fournisseur')
+        $qb = $this->createQueryBuilder('orgf')
+            ->join('orgf.organisation', 'o')
+            ->where('orgf.fournisseur = :fournisseur')
             ->setParameter('fournisseur', $fournisseur)
             ->orderBy('o.nom', 'ASC');
 
         if ($actifOnly) {
-            $qb->andWhere('of.actif = :actif')
+            $qb->andWhere('orgf.actif = :actif')
                 ->setParameter('actif', true);
         }
 
@@ -63,14 +63,14 @@ class OrganisationFournisseurRepository extends ServiceEntityRepository
         Fournisseur $fournisseur,
         bool $actifOnly = true
     ): ?OrganisationFournisseur {
-        $qb = $this->createQueryBuilder('of')
-            ->where('of.organisation = :organisation')
-            ->andWhere('of.fournisseur = :fournisseur')
+        $qb = $this->createQueryBuilder('orgf')
+            ->where('orgf.organisation = :organisation')
+            ->andWhere('orgf.fournisseur = :fournisseur')
             ->setParameter('organisation', $organisation)
             ->setParameter('fournisseur', $fournisseur);
 
         if ($actifOnly) {
-            $qb->andWhere('of.actif = :actif')
+            $qb->andWhere('orgf.actif = :actif')
                 ->setParameter('actif', true);
         }
 

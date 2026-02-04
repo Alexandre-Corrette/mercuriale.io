@@ -27,9 +27,9 @@ class FournisseurRepository extends ServiceEntityRepository
     public function findByOrganisation(Organisation $organisation): array
     {
         return $this->createQueryBuilder('f')
-            ->innerJoin('f.organisationFournisseurs', 'of')
-            ->where('of.organisation = :organisation')
-            ->andWhere('of.actif = :actif')
+            ->innerJoin('f.organisationFournisseurs', 'orgf')
+            ->where('orgf.organisation = :organisation')
+            ->andWhere('orgf.actif = :actif')
             ->andWhere('f.actif = :fournisseurActif')
             ->setParameter('organisation', $organisation)
             ->setParameter('actif', true)
@@ -66,9 +66,9 @@ class FournisseurRepository extends ServiceEntityRepository
 
         $organisation = $user->getOrganisation();
         if ($organisation !== null) {
-            $qb->innerJoin('f.organisationFournisseurs', 'of')
-                ->andWhere('of.organisation = :organisation')
-                ->andWhere('of.actif = :actif')
+            $qb->innerJoin('f.organisationFournisseurs', 'orgf')
+                ->andWhere('orgf.organisation = :organisation')
+                ->andWhere('orgf.actif = :actif')
                 ->setParameter('organisation', $organisation)
                 ->setParameter('actif', true);
         } else {
