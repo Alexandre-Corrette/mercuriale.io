@@ -22,6 +22,7 @@ use App\Repository\MercurialeRepository;
 use App\Repository\ProduitFournisseurRepository;
 use App\Repository\UniteRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
 use Psr\Log\LoggerInterface;
 
 class MercurialeBulkImporter
@@ -47,7 +48,8 @@ class MercurialeBulkImporter
     }
 
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private EntityManagerInterface $entityManager,
+        private readonly ManagerRegistry $managerRegistry,
         private readonly ProduitFournisseurRepository $produitFournisseurRepository,
         private readonly MercurialeRepository $mercurialeRepository,
         private readonly UniteRepository $uniteRepository,
@@ -360,6 +362,16 @@ class MercurialeBulkImporter
                         'row' => $rowNumber,
                         'error' => $e->getMessage(),
                     ]);
+
+                    // If EntityManager is closed, abort the import
+                    if (!$this->entityManager->isOpen()) {
+                        $this->logger->error('EntityManager closed during import, aborting');
+                        throw new ImportException(
+                            ImportException::ERROR_IMPORT_FAILED,
+                            sprintf('Import interrompu à la ligne %d : %s', $rowNumber, $e->getMessage()),
+                            $e,
+                        );
+                    }
                 }
 
                 ++$batchCount;
@@ -401,16 +413,41 @@ class MercurialeBulkImporter
 
             return $result;
         } catch (\Exception $e) {
-            $this->entityManager->rollback();
+            // Try to rollback if transaction is still active
+            try {
+                if ($this->entityManager->getConnection()->isTransactionActive()) {
+                    $this->entityManager->rollback();
+                }
+            } catch (\Exception $rollbackException) {
+                $this->logger->warning('Could not rollback transaction', [
+                    'error' => $rollbackException->getMessage(),
+                ]);
+            }
 
-            $import->setStatus(StatutImport::FAILED);
-            $import->setImportResult([
-                'error' => $e->getMessage(),
-            ]);
-            $this->entityManager->flush();
+            // Reset EntityManager if closed
+            if (!$this->entityManager->isOpen()) {
+                $this->entityManager = $this->managerRegistry->resetManager();
+                // Re-fetch the import entity in the new EM context
+                $import = $this->importRepository->findByUuid($import->getIdAsString());
+            }
+
+            // Try to save the failed status
+            try {
+                if ($import !== null) {
+                    $import->setStatus(StatutImport::FAILED);
+                    $import->setImportResult([
+                        'error' => $e->getMessage(),
+                    ]);
+                    $this->entityManager->flush();
+                }
+            } catch (\Exception $statusException) {
+                $this->logger->warning('Could not save failed import status', [
+                    'error' => $statusException->getMessage(),
+                ]);
+            }
 
             $this->logger->error('Import failed', [
-                'importId' => $import->getIdAsString(),
+                'importId' => $import?->getIdAsString() ?? 'unknown',
                 'error' => $e->getMessage(),
             ]);
 
