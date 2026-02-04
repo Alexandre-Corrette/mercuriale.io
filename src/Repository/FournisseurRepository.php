@@ -26,7 +26,17 @@ class FournisseurRepository extends ServiceEntityRepository
      */
     public function findByOrganisation(Organisation $organisation): array
     {
-        return $this->findBy(['organisation' => $organisation, 'actif' => true], ['nom' => 'ASC']);
+        return $this->createQueryBuilder('f')
+            ->innerJoin('f.organisationFournisseurs', 'of')
+            ->where('of.organisation = :organisation')
+            ->andWhere('of.actif = :actif')
+            ->andWhere('f.actif = :fournisseurActif')
+            ->setParameter('organisation', $organisation)
+            ->setParameter('actif', true)
+            ->setParameter('fournisseurActif', true)
+            ->orderBy('f.nom', 'ASC')
+            ->getQuery()
+            ->getResult();
     }
 
     /**
@@ -39,13 +49,13 @@ class FournisseurRepository extends ServiceEntityRepository
 
     /**
      * Retourne un QueryBuilder filtré par les accès de l'utilisateur.
-     * Un utilisateur voit les fournisseurs de son organisation.
+     * Un utilisateur voit les fournisseurs associés à son organisation via OrganisationFournisseur.
      */
     public function createQueryBuilderForUserAccess(?Utilisateur $user): QueryBuilder
     {
         $qb = $this->createQueryBuilder('f')
-            ->where('f.actif = :actif')
-            ->setParameter('actif', true)
+            ->where('f.actif = :fournisseurActif')
+            ->setParameter('fournisseurActif', true)
             ->orderBy('f.nom', 'ASC');
 
         if ($user === null) {
@@ -56,8 +66,11 @@ class FournisseurRepository extends ServiceEntityRepository
 
         $organisation = $user->getOrganisation();
         if ($organisation !== null) {
-            $qb->andWhere('f.organisation = :organisation')
-                ->setParameter('organisation', $organisation);
+            $qb->innerJoin('f.organisationFournisseurs', 'of')
+                ->andWhere('of.organisation = :organisation')
+                ->andWhere('of.actif = :actif')
+                ->setParameter('organisation', $organisation)
+                ->setParameter('actif', true);
         } else {
             $qb->andWhere('1 = 0');
         }
