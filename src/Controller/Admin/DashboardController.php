@@ -13,6 +13,7 @@ use App\Entity\Fournisseur;
 use App\Entity\LigneBonLivraison;
 use App\Entity\Mercuriale;
 use App\Entity\Organisation;
+use App\Entity\OrganisationFournisseur;
 use App\Entity\Produit;
 use App\Entity\ProduitFournisseur;
 use App\Entity\Unite;
@@ -64,6 +65,7 @@ class DashboardController extends AbstractDashboardController
         yield MenuItem::linkToCrud('Produits', 'fa fa-apple-whole', Produit::class);
         yield MenuItem::linkToCrud('Catégories', 'fa fa-folder', CategorieProduit::class);
         yield MenuItem::linkToCrud('Fournisseurs', 'fa fa-truck', Fournisseur::class);
+        yield MenuItem::linkToCrud('Associations Fournisseurs', 'fa fa-link', OrganisationFournisseur::class);
 
         yield MenuItem::section('Configuration');
         yield MenuItem::linkToCrud('Établissements', 'fa fa-building', Etablissement::class);

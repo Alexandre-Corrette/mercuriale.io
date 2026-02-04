@@ -6,6 +6,7 @@ namespace App\Security\Voter;
 
 use App\Entity\Fournisseur;
 use App\Entity\Utilisateur;
+use App\Repository\OrganisationFournisseurRepository;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 
@@ -17,6 +18,11 @@ class FournisseurVoter extends Voter
     public const VIEW = 'VIEW';
     public const EDIT = 'EDIT';
     public const IMPORT = 'IMPORT';
+
+    public function __construct(
+        private readonly OrganisationFournisseurRepository $organisationFournisseurRepository,
+    ) {
+    }
 
     protected function supports(string $attribute, mixed $subject): bool
     {
@@ -36,12 +42,13 @@ class FournisseurVoter extends Voter
         $fournisseur = $subject;
 
         // Verify user has an organisation
-        if ($user->getOrganisation() === null) {
+        $organisation = $user->getOrganisation();
+        if ($organisation === null) {
             return false;
         }
 
-        // Verify fournisseur belongs to user's organisation
-        if ($fournisseur->getOrganisation()?->getId() !== $user->getOrganisation()->getId()) {
+        // Verify organisation has access to this fournisseur via OrganisationFournisseur
+        if (!$this->organisationFournisseurRepository->hasAccess($organisation, $fournisseur)) {
             return false;
         }
 

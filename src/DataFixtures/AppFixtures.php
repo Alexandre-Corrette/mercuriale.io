@@ -9,6 +9,7 @@ use App\Entity\ConversionUnite;
 use App\Entity\Etablissement;
 use App\Entity\Fournisseur;
 use App\Entity\Organisation;
+use App\Entity\OrganisationFournisseur;
 use App\Entity\Unite;
 use App\Entity\Utilisateur;
 use App\Entity\UtilisateurEtablissement;
@@ -44,10 +45,13 @@ class AppFixtures extends Fixture
         // 5. Établissements
         $etablissements = $this->createEtablissements($manager, $organisation);
 
-        // 6. Fournisseur
-        $fournisseur = $this->createFournisseur($manager, $organisation);
+        // 6. Fournisseurs (indépendants)
+        $fournisseurs = $this->createFournisseurs($manager);
 
-        // 7. Utilisateur admin
+        // 7. Associations Organisation-Fournisseur
+        $this->createOrganisationFournisseurs($manager, $organisation, $fournisseurs);
+
+        // 8. Utilisateur admin
         $admin = $this->createAdmin($manager, $organisation, $etablissements);
 
         $manager->flush();
@@ -187,21 +191,79 @@ class AppFixtures extends Fixture
         return $etablissements;
     }
 
-    private function createFournisseur(ObjectManager $manager, Organisation $organisation): Fournisseur
+    /**
+     * @return Fournisseur[]
+     */
+    private function createFournisseurs(ObjectManager $manager): array
     {
-        $fournisseur = new Fournisseur();
-        $fournisseur->setOrganisation($organisation);
-        $fournisseur->setNom('FoodFlow');
-        $fournisseur->setCode('FOODFLOW');
-        $fournisseur->setAdresse('40 rue des Martyrs');
-        $fournisseur->setCodePostal('75009');
-        $fournisseur->setVille('Paris');
-        $fournisseur->setEmail('compta@foodflow.fr');
-        $fournisseur->setSiret('92169611800014');
-        $fournisseur->setActif(true);
-        $manager->persist($fournisseur);
+        $fournisseursData = [
+            [
+                'nom' => 'FoodFlow',
+                'code' => 'FOODFLOW',
+                'adresse' => '40 rue des Martyrs',
+                'codePostal' => '75009',
+                'ville' => 'Paris',
+                'email' => 'compta@foodflow.fr',
+                'siret' => '92169611800014',
+            ],
+            [
+                'nom' => 'Metro',
+                'code' => 'METRO',
+                'adresse' => '5 rue des Grands Prés',
+                'codePostal' => '92000',
+                'ville' => 'Nanterre',
+                'email' => 'contact@metro.fr',
+                'siret' => '30978893400015',
+            ],
+            [
+                'nom' => 'Pomona',
+                'code' => 'POMONA',
+                'adresse' => '1 rue de la Logistique',
+                'codePostal' => '94500',
+                'ville' => 'Champigny-sur-Marne',
+                'email' => 'service.client@pomona.fr',
+                'siret' => '34343424300012',
+            ],
+        ];
 
-        return $fournisseur;
+        $fournisseurs = [];
+        foreach ($fournisseursData as $data) {
+            $fournisseur = new Fournisseur();
+            $fournisseur->setNom($data['nom']);
+            $fournisseur->setCode($data['code']);
+            $fournisseur->setAdresse($data['adresse']);
+            $fournisseur->setCodePostal($data['codePostal']);
+            $fournisseur->setVille($data['ville']);
+            $fournisseur->setEmail($data['email']);
+            $fournisseur->setSiret($data['siret']);
+            $fournisseur->setActif(true);
+            $manager->persist($fournisseur);
+            $fournisseurs[] = $fournisseur;
+        }
+
+        return $fournisseurs;
+    }
+
+    /**
+     * @param Fournisseur[] $fournisseurs
+     */
+    private function createOrganisationFournisseurs(ObjectManager $manager, Organisation $organisation, array $fournisseurs): void
+    {
+        foreach ($fournisseurs as $fournisseur) {
+            $orgFournisseur = new OrganisationFournisseur();
+            $orgFournisseur->setOrganisation($organisation);
+            $orgFournisseur->setFournisseur($fournisseur);
+            $orgFournisseur->setActif(true);
+
+            // Add some sample data for the first fournisseur
+            if ($fournisseur->getCode() === 'FOODFLOW') {
+                $orgFournisseur->setCodeClient('CLI-HORAO-001');
+                $orgFournisseur->setContactCommercial('Jean Dupont');
+                $orgFournisseur->setEmailCommande('commandes@foodflow.fr');
+            }
+
+            $manager->persist($orgFournisseur);
+        }
     }
 
     /**
