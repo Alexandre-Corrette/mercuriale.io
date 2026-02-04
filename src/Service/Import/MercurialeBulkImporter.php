@@ -543,26 +543,28 @@ class MercurialeBulkImporter
             ? new \DateTimeImmutable($mappedData['date_fin'])
             : null;
 
-        // Check for existing mercuriale
-        $existingMercuriale = $this->mercurialeRepository->findPrixValide(
-            $product,
-            $etablissement,
-            $dateDebut,
-        );
-
         $mercurialeAction = null;
 
-        if ($existingMercuriale !== null) {
-            // Check if price is different
-            if (bccomp($existingMercuriale->getPrixNegocie(), $mappedData['prix'], 4) === 0) {
-                // Same price, skip
-                return ['action' => 'skipped', 'mercuriale_action' => null];
-            }
+        // Only check for existing mercuriale if product already exists (has an ID)
+        if ($productAction === 'product_updated' && $product->getId() !== null) {
+            $existingMercuriale = $this->mercurialeRepository->findPrixValide(
+                $product,
+                $etablissement,
+                $dateDebut,
+            );
 
-            // End the existing mercuriale
-            $previousDay = $dateDebut->modify('-1 day');
-            $existingMercuriale->setDateFin($previousDay);
-            $mercurialeAction = 'updated';
+            if ($existingMercuriale !== null) {
+                // Check if price is different
+                if (bccomp($existingMercuriale->getPrixNegocie(), $mappedData['prix'], 4) === 0) {
+                    // Same price, skip
+                    return ['action' => 'skipped', 'mercuriale_action' => null];
+                }
+
+                // End the existing mercuriale
+                $previousDay = $dateDebut->modify('-1 day');
+                $existingMercuriale->setDateFin($previousDay);
+                $mercurialeAction = 'updated';
+            }
         }
 
         // Create new mercuriale
