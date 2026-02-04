@@ -38,7 +38,33 @@
                     </div>
                 {% endfor %}
 
-                {{ form_start(form, {'attr': {'id': 'upload-form', 'novalidate': 'novalidate'}}) }}
+                {{ form_start(form, {'attr': {
+                    'id': 'upload-form',
+                    'novalidate': 'novalidate',
+                    'data-controller': 'file-upload',
+                    'data-file-upload-max-size-value': '10485760',
+                    'data-file-upload-max-files-value': '1',
+                    'data-file-upload-allowed-types-value': '[]',
+                    'data-file-upload-allowed-extensions-value': '["csv", "xlsx"]',
+                    'data-file-upload-mode-value': 'single',
+                    'data-file-upload-loading-text-value': 'Analyse en cours...',
+                    'data-action': 'submit->file-upload#submit'
+                }}) }}
+
+                    {# Global form errors #}
+                    {% if form.vars.errors|length > 0 %}
+                        <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl">
+                            <div class="flex items-center gap-2 text-red-800 font-semibold mb-2">
+                                <i class="fas fa-exclamation-circle"></i>
+                                Erreurs de validation
+                            </div>
+                            <ul class="list-disc list-inside text-red-700 text-sm">
+                                {% for error in form.vars.errors %}
+                                    <li>{{ error.message }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
 
                     {# Fournisseur select #}
                     <div class="mb-6">
@@ -72,7 +98,7 @@
                             <i class="fas fa-file-excel mr-2"></i>Fichier mercuriale
                         </label>
 
-                        <div id="drop-zone" class="border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center cursor-pointer bg-gray-50 transition-all duration-300 hover:border-coral hover:bg-coral/10">
+                        <div data-file-upload-target="dropZone" class="border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center cursor-pointer bg-gray-50 transition-all duration-300 hover:border-coral hover:bg-coral/10">
                             <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-navy to-navy-light rounded-full flex items-center justify-center">
                                 <i class="fas fa-cloud-upload-alt text-2xl text-white"></i>
                             </div>
@@ -84,27 +110,24 @@
                             </div>
                         </div>
 
-                        <div id="file-preview" class="hidden mt-4 p-4 bg-gray-50 rounded-xl">
+                        <div data-file-upload-target="preview" class="hidden mt-4 p-4 bg-gray-50 rounded-xl">
                             <div class="flex items-center gap-4">
                                 <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                                     <i class="fas fa-file-excel text-xl text-green-600"></i>
                                 </div>
-                                <div class="flex-1 min-w-0">
-                                    <div id="file-name" class="font-semibold text-gray-900 truncate"></div>
-                                    <div id="file-size" class="text-sm text-gray-500"></div>
-                                </div>
-                                <button type="button" id="remove-file" class="w-8 h-8 flex items-center justify-center bg-white rounded-lg text-gray-500 hover:bg-red-100 hover:text-red-600 transition-all">
+                                <div class="flex-1 min-w-0" data-file-upload-target="filesList"></div>
+                                <button type="button" data-action="file-upload#clearAll" class="w-8 h-8 flex items-center justify-center bg-white rounded-lg text-gray-500 hover:bg-red-100 hover:text-red-600 transition-all">
                                     <i class="fas fa-times"></i>
                                 </button>
                             </div>
                         </div>
 
-                        {{ form_widget(form.file, {'attr': {'id': 'file-input', 'class': 'hidden'}}) }}
+                        {{ form_widget(form.file, {'attr': {'class': 'hidden', 'data-file-upload-target': 'input'}}) }}
                         {{ form_errors(form.file) }}
                     </div>
 
                     {# Submit button #}
-                    <button type="submit" id="submit-btn" disabled class="w-full px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-navy to-navy-light rounded-xl flex items-center justify-center gap-3 transition-all duration-300 hover:translate-y-[-2px] hover:shadow-xl hover:shadow-navy/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none">
+                    <button type="submit" data-file-upload-target="submit" disabled class="w-full px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-navy to-navy-light rounded-xl flex items-center justify-center gap-3 transition-all duration-300 hover:translate-y-[-2px] hover:shadow-xl hover:shadow-navy/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none">
                         <i class="fas fa-upload text-xl"></i>
                         Analyser le fichier
                     </button>
@@ -159,121 +182,4 @@
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block javascripts %}
-{{ parent() }}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const dropZone = document.getElementById('drop-zone');
-    const uploadForm = document.getElementById('upload-form');
-    const fileInput = uploadForm.querySelector('input[type="file"]');
-    const submitBtn = document.getElementById('submit-btn');
-    const filePreview = document.getElementById('file-preview');
-    const fileName = document.getElementById('file-name');
-    const fileSize = document.getElementById('file-size');
-    const removeFile = document.getElementById('remove-file');
-
-    if (!fileInput) {
-        console.error('File input not found');
-        return;
-    }
-
-    const maxFileSize = 10 * 1024 * 1024;
-    const allowedExtensions = ['csv', 'xlsx'];
-
-    // Drop zone click
-    dropZone.addEventListener('click', () => fileInput.click());
-
-    // Drag and drop events
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        dropZone.addEventListener(eventName, (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-        });
-    });
-
-    ['dragenter', 'dragover'].forEach(eventName => {
-        dropZone.addEventListener(eventName, () => {
-            dropZone.classList.add('border-coral', 'bg-coral/10');
-            dropZone.classList.remove('border-gray-300', 'bg-gray-50');
-        });
-    });
-
-    ['dragleave', 'drop'].forEach(eventName => {
-        dropZone.addEventListener(eventName, () => {
-            dropZone.classList.remove('border-coral', 'bg-coral/10');
-            dropZone.classList.add('border-gray-300', 'bg-gray-50');
-        });
-    });
-
-    // Handle dropped files
-    dropZone.addEventListener('drop', (e) => {
-        const files = e.dataTransfer.files;
-        if (files.length > 0) {
-            handleFile(files[0]);
-        }
-    });
-
-    // Handle selected files
-    fileInput.addEventListener('change', () => {
-        if (fileInput.files.length > 0) {
-            handleFile(fileInput.files[0]);
-        }
-    });
-
-    // Remove file
-    removeFile.addEventListener('click', () => {
-        fileInput.value = '';
-        updateUI(null);
-    });
-
-    function handleFile(file) {
-        const ext = file.name.split('.').pop().toLowerCase();
-
-        if (!allowedExtensions.includes(ext)) {
-            alert('Format non supporte. Utilisez un fichier CSV ou XLSX.');
-            return;
-        }
-
-        if (file.size > maxFileSize) {
-            alert('Fichier trop volumineux (maximum 10 Mo).');
-            return;
-        }
-
-        // Update file input
-        const dataTransfer = new DataTransfer();
-        dataTransfer.items.add(file);
-        fileInput.files = dataTransfer.files;
-
-        updateUI(file);
-    }
-
-    function updateUI(file) {
-        if (file) {
-            fileName.textContent = file.name;
-            fileSize.textContent = formatFileSize(file.size);
-            filePreview.classList.remove('hidden');
-            dropZone.classList.add('hidden');
-            submitBtn.disabled = false;
-        } else {
-            filePreview.classList.add('hidden');
-            dropZone.classList.remove('hidden');
-            submitBtn.disabled = true;
-        }
-    }
-
-    function formatFileSize(bytes) {
-        if (bytes < 1024) return bytes + ' o';
-        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' Ko';
-        return (bytes / (1024 * 1024)).toFixed(2) + ' Mo';
-    }
-
-    // Form submit
-    uploadForm.addEventListener('submit', function() {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyse en cours...';
-    });
-});
-</script>
 {% endblock %}
