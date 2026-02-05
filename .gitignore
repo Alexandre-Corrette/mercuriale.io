@@ -53,3 +53,4 @@
 # HEIC images (raw uploads)
 *.heic
 *.HEIC
+!/var/tailwind/
