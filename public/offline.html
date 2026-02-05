@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="theme-color" content="#2E7D32">
+    <title>Mercuriale.io — Hors connexion</title>
+    <link rel="stylesheet" href="/css/offline.css">
+</head>
+<body>
+    <div class="logo">M</div>
+    <h1>Vous êtes hors connexion</h1>
+    <p>Pas de panique, vos données en attente seront synchronisées dès le retour du réseau.</p>
+    <div class="status">
+        <strong id="pending-count">—</strong>
+        opérations en attente de synchronisation
+    </div>
+    <button class="btn-retry" onclick="window.location.reload()">
+        Réessayer
+    </button>
+    <script>
+        // TODO Sprint 2 : lire le compteur depuis IndexedDB (sync_queue)
+        // Pour l'instant, afficher un placeholder
+        document.getElementById('pending-count').textContent = '0';
+    </script>
+</body>
+</html>

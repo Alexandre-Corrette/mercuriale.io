@@ -1,0 +1,32 @@
+{
+  "name": "Mercuriale.io",
+  "short_name": "Mercuriale",
+  "description": "Gestion de mercuriale et contrôle des livraisons",
+  "start_url": "/admin",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1B2A4A",
+  "theme_color": "#2E7D32",
+  "lang": "fr-FR",
+  "categories": ["business", "food"],
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
