@@ -123,4 +123,13 @@
         </div>
     </div>
 </div>
+
+<script type="module">
+    import { loadReferentiels } from '{{ asset('js/referentielsLoader.js') }}';
+
+    // Charger les référentiels au chargement de la page
+    document.addEventListener('DOMContentLoaded', async () => {
+        await loadReferentiels();
+    });
+</script>
 {% endblock %}

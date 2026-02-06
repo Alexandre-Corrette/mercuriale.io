@@ -14,7 +14,7 @@
  * - Kill switch : si /api/sw/status retourne {active: false}, le SW se désenregistre
  */
 
-var CACHE_VERSION = 'mercuriale-v1.0.0';
+var CACHE_VERSION = 'mercuriale-v1.1.0';
 var APP_SHELL_CACHE = CACHE_VERSION + '-shell';
 
 // Fichiers de l'App Shell à pré-cacher
@@ -91,7 +91,29 @@ self.addEventListener('fetch', function (event) {
         return;
     }
 
-    // Requêtes API : Network Only pour l'instant (le cache API viendra au Sprint 2)
+    // API Référentiels : Network First avec fallback cache
+    if (url.pathname === '/api/referentiels/offline') {
+        event.respondWith(
+            fetch(request)
+                .then(function (response) {
+                    // Mettre en cache la réponse
+                    if (response.ok) {
+                        var responseClone = response.clone();
+                        caches.open(APP_SHELL_CACHE).then(function (cache) {
+                            cache.put(request, responseClone);
+                        });
+                    }
+                    return response;
+                })
+                .catch(function () {
+                    // Fallback sur le cache
+                    return caches.match(request);
+                })
+        );
+        return;
+    }
+
+    // Autres requêtes API : Network Only
     if (url.pathname.startsWith('/api/')) {
         return;
     }
