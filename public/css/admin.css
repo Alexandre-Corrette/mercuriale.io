@@ -330,19 +330,9 @@
    Sous-menus EasyAdmin — Styles améliorés
    ============================================= */
 
-/* Sous-menus : icône de chevron pour feedback visuel */
+/* Sous-menus : masquer les chevrons en double (EasyAdmin en fournit déjà) */
 .sidebar .menu-item.has-submenu > a::after {
-    content: '\f078'; /* fa-chevron-down */
-    font-family: 'Font Awesome 6 Free';
-    font-weight: 900;
-    font-size: 0.6rem;
-    margin-left: auto;
-    transition: transform 0.2s ease;
-    opacity: 0.6;
-}
-
-.sidebar .menu-item.has-submenu.expanded > a::after {
-    transform: rotate(180deg);
+    display: none;
 }
 
 /* Items de sous-menu : indentation + style discret */

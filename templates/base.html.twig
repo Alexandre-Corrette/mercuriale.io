@@ -24,7 +24,24 @@
         {% endblock %}
     </head>
     <body>
-        {% block body %}{% endblock %}
+        <div data-controller="network-status">
+            {# Bandeau offline #}
+            <div data-network-status-target="banner"
+                 class="hidden bg-amber-500 text-white px-4 py-2 text-center text-sm font-medium">
+                <i class="fas fa-wifi-slash mr-2"></i>
+                Mode hors connexion — Les photos seront envoyées automatiquement au retour du réseau
+                <a href="/app/pending" class="ml-4 underline hover:no-underline">
+                    Voir les BL en attente
+                    <span data-network-status-target="pendingCount"
+                          data-pending-wrapper
+                          class="hidden ml-1 bg-white text-amber-600 px-2 py-0.5 rounded-full text-xs font-bold">
+                        0
+                    </span>
+                </a>
+            </div>
+
+            {% block body %}{% endblock %}
+        </div>
 
         {# ── PWA Service Worker Registration ── #}
         <script src="{{ asset('js/sw-register.js') }}"></script>
