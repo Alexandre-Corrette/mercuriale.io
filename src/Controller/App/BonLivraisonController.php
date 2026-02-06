@@ -229,7 +229,7 @@ class BonLivraisonController extends AbstractController
     public function valider(BonLivraison $bonLivraison, Request $request): Response
     {
         // Vérifier l'accès via le Voter
-        if (!$this->isGranted('EDIT', $bonLivraison->getEtablissement())) {
+        if (!$this->isGranted('MANAGE', $bonLivraison->getEtablissement())) {
             throw $this->createAccessDeniedException();
         }
 
@@ -280,7 +280,7 @@ class BonLivraisonController extends AbstractController
     public function rejeter(BonLivraison $bonLivraison, Request $request): Response
     {
         // Vérifier l'accès via le Voter
-        if (!$this->isGranted('EDIT', $bonLivraison->getEtablissement())) {
+        if (!$this->isGranted('MANAGE', $bonLivraison->getEtablissement())) {
             throw $this->createAccessDeniedException();
         }
 
@@ -324,7 +324,7 @@ class BonLivraisonController extends AbstractController
         Request $request,
     ): JsonResponse {
         // Vérifier l'accès via le Voter
-        if (!$this->isGranted('EDIT', $bonLivraison->getEtablissement())) {
+        if (!$this->isGranted('MANAGE', $bonLivraison->getEtablissement())) {
             return new JsonResponse(['error' => 'Accès refusé'], Response::HTTP_FORBIDDEN);
         }
 

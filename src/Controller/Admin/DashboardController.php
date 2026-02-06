@@ -58,7 +58,7 @@ class DashboardController extends AbstractDashboardController
             ->setCssClass('menu-item-highlight');
 
         yield MenuItem::linkToCrud('Bons de livraison', 'fas fa-file-invoice', BonLivraison::class)
-            ->setDefaultSort(['dateReception' => 'DESC']);
+            ->setDefaultSort(['dateLivraison' => 'DESC']);
 
         yield MenuItem::linkToCrud('Lignes BL', 'fas fa-list', LigneBonLivraison::class);
 
