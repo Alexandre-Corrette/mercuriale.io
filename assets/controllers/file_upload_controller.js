@@ -1,4 +1,6 @@
 import { Controller } from '@hotwired/stimulus';
+import { addPendingBL, addPendingPhoto, countPendingBLs } from '../js/db.js';
+import { compressImage } from '../js/imageCompressor.js';
 
 /**
  * File Upload Controller
@@ -301,7 +303,11 @@ export default class extends Controller {
         return (bytes / (1024 * 1024)).toFixed(2) + ' Mo';
     }
 
-    submit(event) {
+    isOnline() {
+        return navigator.onLine;
+    }
+
+    async submit(event) {
         const validFiles = this.selectedFiles.filter(f => f.valid);
 
         if (validFiles.length === 0) {
@@ -309,9 +315,116 @@ export default class extends Controller {
             return;
         }
 
+        // Si online, comportement normal (submit du form)
+        if (this.isOnline()) {
+            if (this.hasSubmitTarget) {
+                this.submitTarget.disabled = true;
+                this.submitTarget.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${this.loadingTextValue}`;
+            }
+            return; // Laisse le form se soumettre normalement
+        }
+
+        // Mode OFFLINE : stocker localement
+        event.preventDefault();
+
+        const etablissementSelect = document.querySelector('[name*="etablissement"]');
+        const etablissementId = etablissementSelect?.value;
+        const etablissementNom = etablissementSelect?.options[etablissementSelect.selectedIndex]?.text;
+
+        if (!etablissementId) {
+            this.showError('Veuillez sélectionner un établissement');
+            return;
+        }
+
+        this.setLoading(true, 'Enregistrement local...');
+
+        try {
+            for (const item of validFiles) {
+                // Compresser l'image
+                const compressed = await compressImage(item.file);
+
+                // Créer l'entrée BL
+                const pendingBLId = await addPendingBL({
+                    etablissementId: parseInt(etablissementId),
+                    etablissementNom,
+                    fournisseurId: null, // Sera déterminé après OCR
+                    fournisseurNom: null
+                });
+
+                // Stocker la photo compressée
+                await addPendingPhoto(pendingBLId, compressed.blob, item.file.name);
+            }
+
+            // Afficher confirmation
+            this.showOfflineSuccess(validFiles.length);
+
+            // Reset du formulaire
+            this.clearAll();
+
+            // Mettre à jour le badge si présent
+            this.updatePendingBadge();
+
+        } catch (error) {
+            console.error('[Offline] Erreur stockage:', error);
+            this.showError('Erreur lors de l\'enregistrement local : ' + error.message);
+        } finally {
+            this.setLoading(false);
+        }
+    }
+
+    setLoading(loading, text = null) {
         if (this.hasSubmitTarget) {
-            this.submitTarget.disabled = true;
-            this.submitTarget.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${this.loadingTextValue}`;
+            this.submitTarget.disabled = loading;
+            if (loading && text) {
+                this.submitTarget.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${text}`;
+            } else if (!loading) {
+                this.submitTarget.innerHTML = `<i class="fas fa-search"></i> ${this.submitTextValue}`;
+            }
+        }
+    }
+
+    showError(message) {
+        const alert = document.createElement('div');
+        alert.className = 'flex items-center gap-3 p-4 mb-4 bg-red-50 text-red-800 border border-red-200 rounded-xl';
+        alert.innerHTML = `
+            <i class="fas fa-exclamation-circle"></i>
+            <span>${message}</span>
+            <button type="button" class="ml-auto text-red-600 hover:text-red-800" onclick="this.parentElement.remove()">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        this.element.parentNode.insertBefore(alert, this.element);
+        setTimeout(() => alert.remove(), 10000);
+    }
+
+    showOfflineSuccess(count) {
+        const message = count === 1
+            ? 'Photo enregistrée localement — sera envoyée dès que le réseau sera disponible'
+            : `${count} photos enregistrées localement — seront envoyées dès que le réseau sera disponible`;
+
+        const alert = document.createElement('div');
+        alert.className = 'flex items-center gap-3 p-4 mb-4 bg-blue-50 text-blue-800 border border-blue-200 rounded-xl';
+        alert.innerHTML = `
+            <i class="fas fa-cloud-upload-alt"></i>
+            <span>${message}</span>
+            <a href="/app/pending" class="ml-auto text-blue-600 hover:text-blue-800 font-medium">
+                Voir les BL en attente →
+            </a>
+        `;
+
+        this.element.parentNode.insertBefore(alert, this.element);
+        setTimeout(() => alert.remove(), 10000);
+    }
+
+    async updatePendingBadge() {
+        try {
+            const count = await countPendingBLs();
+            document.querySelectorAll('[data-pending-badge]').forEach(badge => {
+                badge.textContent = count;
+                badge.classList.toggle('hidden', count === 0);
+            });
+        } catch (e) {
+            console.error('[FileUpload] Erreur mise à jour badge:', e);
         }
     }
 }
