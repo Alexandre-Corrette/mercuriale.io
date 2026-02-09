@@ -14,12 +14,14 @@ use App\Entity\Etablissement;
 use App\Entity\Fournisseur;
 use App\Entity\Mercuriale;
 use App\Entity\MercurialeImport;
+use App\Entity\Produit;
 use App\Entity\ProduitFournisseur;
 use App\Entity\Utilisateur;
 use App\Enum\StatutImport;
 use App\Exception\Import\ImportException;
 use App\Repository\MercurialeRepository;
 use App\Repository\ProduitFournisseurRepository;
+use App\Repository\ProduitRepository;
 use App\Repository\UniteRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
@@ -51,6 +53,7 @@ class MercurialeBulkImporter
         private EntityManagerInterface $entityManager,
         private readonly ManagerRegistry $managerRegistry,
         private readonly ProduitFournisseurRepository $produitFournisseurRepository,
+        private readonly ProduitRepository $produitRepository,
         private readonly MercurialeRepository $mercurialeRepository,
         private readonly UniteRepository $uniteRepository,
         private readonly ColumnMapper $columnMapper,
@@ -525,6 +528,19 @@ class MercurialeBulkImporter
         }
 
         $this->entityManager->persist($product);
+
+        // Auto-create or link Produit (internal catalog) if missing
+        if ($product->getProduit() === null && !empty($mappedData['designation'])) {
+            $produit = $this->produitRepository->findOneBy(['nom' => $mappedData['designation']]);
+            if ($produit === null) {
+                $produit = new Produit();
+                $produit->setNom($mappedData['designation']);
+                $produit->setUniteBase($product->getUniteAchat());
+                $produit->setCodeInterne($mappedData['code_fournisseur']);
+                $this->entityManager->persist($produit);
+            }
+            $product->setProduit($produit);
+        }
 
         // Handle mercuriale (price) - only if price is valid
         $hasValidPrice = !empty($mappedData['prix'])
