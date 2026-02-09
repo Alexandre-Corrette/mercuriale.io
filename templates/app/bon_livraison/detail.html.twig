@@ -1,0 +1,64 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}BL #{{ blId }} - Mercuriale.io{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/bl-consultation.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-gradient-to-br from-cream to-cream-dark py-6 px-4"
+     data-controller="bl-detail"
+     data-bl-detail-bl-id-value="{{ blId }}">
+    <div class="max-w-5xl mx-auto">
+        {# Header #}
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-navy" data-bl-detail-target="header">
+                    <i class="fas fa-file-invoice mr-2"></i>
+                    Bon de livraison
+                </h1>
+            </div>
+            <a href="{{ path('app_bl_list') }}" class="text-gray-500 hover:text-navy">
+                <i class="fas fa-arrow-left mr-1"></i> Retour à la liste
+            </a>
+        </div>
+
+        {# Cache status #}
+        <div data-bl-detail-target="cacheStatus"></div>
+
+        {# Loading state #}
+        <div data-bl-detail-target="loading" class="bl-loading">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span>Chargement du bon de livraison...</span>
+        </div>
+
+        {# Content (filled by Stimulus controller) #}
+        <div data-bl-detail-target="data" class="hidden">
+            {# Two-column layout: image left, data right #}
+            <div class="bl-detail-layout">
+                {# Image column #}
+                <div data-bl-detail-target="image" class="bl-image-container">
+                    <div class="bl-image-placeholder">
+                        <i class="fas fa-image"></i>
+                        <span>Image non disponible</span>
+                    </div>
+                </div>
+
+                {# Data column #}
+                <div>
+                    {# BL Header info #}
+                    <div data-bl-detail-target="info" class="bl-detail-header">
+                    </div>
+
+                    {# Lines table #}
+                    <div data-bl-detail-target="lines" class="bl-detail-table-wrapper mt-6">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

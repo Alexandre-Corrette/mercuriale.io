@@ -18,6 +18,12 @@ framework:
             limit: 10
             interval: '1 minute'
 
+        # Rate limiter for BL read/consultation (60 per minute per user)
+        bl_read:
+            policy: sliding_window
+            limit: 60
+            interval: '1 minute'
+
         # Rate limiter for mercuriale imports (5 per hour per user)
         mercuriale_import:
             policy: sliding_window
