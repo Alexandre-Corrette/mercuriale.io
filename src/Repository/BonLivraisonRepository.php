@@ -7,6 +7,7 @@ namespace App\Repository;
 use App\Entity\BonLivraison;
 use App\Entity\Etablissement;
 use App\Entity\Fournisseur;
+use App\Entity\Utilisateur;
 use App\Enum\StatutBonLivraison;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -70,5 +71,54 @@ class BonLivraisonRepository extends ServiceEntityRepository
     public function findWithAnomalies(): array
     {
         return $this->findBy(['statut' => StatutBonLivraison::ANOMALIE], ['dateLivraison' => 'DESC']);
+    }
+
+    /**
+     * @return BonLivraison[]
+     */
+    public function findValidatedForUser(Utilisateur $user, ?int $etablissementId = null, ?\DateTimeImmutable $since = null, int $limit = 50): array
+    {
+        $qb = $this->createQueryBuilder('bl')
+            ->select('bl', 'l', 'a', 'f', 'e', 'u')
+            ->leftJoin('bl.lignes', 'l')
+            ->leftJoin('l.alertes', 'a')
+            ->leftJoin('l.unite', 'u')
+            ->leftJoin('bl.fournisseur', 'f')
+            ->innerJoin('bl.etablissement', 'e')
+            ->where('bl.statut IN (:statuts)')
+            ->setParameter('statuts', [StatutBonLivraison::VALIDE, StatutBonLivraison::ANOMALIE])
+            ->orderBy('bl.validatedAt', 'DESC')
+            ->addOrderBy('l.ordre', 'ASC')
+            ->setMaxResults($limit);
+
+        // Scope by user access (same pattern as EtablissementRepository::createQueryBuilderForUserAccess)
+        if (in_array('ROLE_ADMIN', $user->getRoles(), true)) {
+            $organisation = $user->getOrganisation();
+            if ($organisation !== null) {
+                $qb->andWhere('e.organisation = :organisation')
+                    ->setParameter('organisation', $organisation);
+            } else {
+                $qb->andWhere('1 = 0');
+            }
+        } else {
+            $qb->innerJoin('e.utilisateurEtablissements', 'ue')
+                ->andWhere('ue.utilisateur = :user')
+                ->setParameter('user', $user);
+        }
+
+        $qb->andWhere('e.actif = :actif')
+            ->setParameter('actif', true);
+
+        if ($etablissementId !== null) {
+            $qb->andWhere('bl.etablissement = :etablissementId')
+                ->setParameter('etablissementId', $etablissementId);
+        }
+
+        if ($since !== null) {
+            $qb->andWhere('bl.validatedAt >= :since')
+                ->setParameter('since', $since);
+        }
+
+        return $qb->getQuery()->getResult();
     }
 }
