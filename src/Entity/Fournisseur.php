@@ -13,7 +13,6 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: FournisseurRepository::class)]
 #[ORM\Table(name: 'fournisseur')]
-#[ORM\Index(columns: ['organisation_id'], name: 'idx_fournisseur_organisation')]
 #[ORM\HasLifecycleCallbacks]
 class Fournisseur
 {
@@ -23,11 +22,6 @@ class Fournisseur
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
-
-    #[ORM\ManyToOne(targetEntity: Organisation::class, inversedBy: 'fournisseurs')]
-    #[ORM\JoinColumn(nullable: false)]
-    #[Assert\NotNull(message: 'L\'organisation est obligatoire')]
-    private ?Organisation $organisation = null;
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: 'Le nom du fournisseur est obligatoire')]
@@ -67,6 +61,10 @@ class Fournisseur
     #[ORM\Column(options: ['default' => true])]
     private bool $actif = true;
 
+    /** @var Collection<int, OrganisationFournisseur> */
+    #[ORM\OneToMany(targetEntity: OrganisationFournisseur::class, mappedBy: 'fournisseur', orphanRemoval: true)]
+    private Collection $organisationFournisseurs;
+
     /** @var Collection<int, ProduitFournisseur> */
     #[ORM\OneToMany(targetEntity: ProduitFournisseur::class, mappedBy: 'fournisseur')]
     private Collection $produitsFournisseur;
@@ -77,6 +75,7 @@ class Fournisseur
 
     public function __construct()
     {
+        $this->organisationFournisseurs = new ArrayCollection();
         $this->produitsFournisseur = new ArrayCollection();
         $this->bonsLivraison = new ArrayCollection();
     }
@@ -84,18 +83,6 @@ class Fournisseur
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function getOrganisation(): ?Organisation
-    {
-        return $this->organisation;
-    }
-
-    public function setOrganisation(?Organisation $organisation): static
-    {
-        $this->organisation = $organisation;
-
-        return $this;
     }
 
     public function getNom(): ?string
@@ -202,6 +189,35 @@ class Fournisseur
     public function setActif(bool $actif): static
     {
         $this->actif = $actif;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, OrganisationFournisseur>
+     */
+    public function getOrganisationFournisseurs(): Collection
+    {
+        return $this->organisationFournisseurs;
+    }
+
+    public function addOrganisationFournisseur(OrganisationFournisseur $organisationFournisseur): static
+    {
+        if (!$this->organisationFournisseurs->contains($organisationFournisseur)) {
+            $this->organisationFournisseurs->add($organisationFournisseur);
+            $organisationFournisseur->setFournisseur($this);
+        }
+
+        return $this;
+    }
+
+    public function removeOrganisationFournisseur(OrganisationFournisseur $organisationFournisseur): static
+    {
+        if ($this->organisationFournisseurs->removeElement($organisationFournisseur)) {
+            if ($organisationFournisseur->getFournisseur() === $this) {
+                $organisationFournisseur->setFournisseur(null);
+            }
+        }
 
         return $this;
     }

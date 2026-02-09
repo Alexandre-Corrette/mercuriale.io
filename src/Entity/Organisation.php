@@ -41,15 +41,15 @@ class Organisation
     #[ORM\OneToMany(targetEntity: Utilisateur::class, mappedBy: 'organisation', orphanRemoval: true)]
     private Collection $utilisateurs;
 
-    /** @var Collection<int, Fournisseur> */
-    #[ORM\OneToMany(targetEntity: Fournisseur::class, mappedBy: 'organisation', orphanRemoval: true)]
-    private Collection $fournisseurs;
+    /** @var Collection<int, OrganisationFournisseur> */
+    #[ORM\OneToMany(targetEntity: OrganisationFournisseur::class, mappedBy: 'organisation', orphanRemoval: true)]
+    private Collection $organisationFournisseurs;
 
     public function __construct()
     {
         $this->etablissements = new ArrayCollection();
         $this->utilisateurs = new ArrayCollection();
-        $this->fournisseurs = new ArrayCollection();
+        $this->organisationFournisseurs = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -140,28 +140,28 @@ class Organisation
     }
 
     /**
-     * @return Collection<int, Fournisseur>
+     * @return Collection<int, OrganisationFournisseur>
      */
-    public function getFournisseurs(): Collection
+    public function getOrganisationFournisseurs(): Collection
     {
-        return $this->fournisseurs;
+        return $this->organisationFournisseurs;
     }
 
-    public function addFournisseur(Fournisseur $fournisseur): static
+    public function addOrganisationFournisseur(OrganisationFournisseur $organisationFournisseur): static
     {
-        if (!$this->fournisseurs->contains($fournisseur)) {
-            $this->fournisseurs->add($fournisseur);
-            $fournisseur->setOrganisation($this);
+        if (!$this->organisationFournisseurs->contains($organisationFournisseur)) {
+            $this->organisationFournisseurs->add($organisationFournisseur);
+            $organisationFournisseur->setOrganisation($this);
         }
 
         return $this;
     }
 
-    public function removeFournisseur(Fournisseur $fournisseur): static
+    public function removeOrganisationFournisseur(OrganisationFournisseur $organisationFournisseur): static
     {
-        if ($this->fournisseurs->removeElement($fournisseur)) {
-            if ($fournisseur->getOrganisation() === $this) {
-                $fournisseur->setOrganisation(null);
+        if ($this->organisationFournisseurs->removeElement($organisationFournisseur)) {
+            if ($organisationFournisseur->getOrganisation() === $this) {
+                $organisationFournisseur->setOrganisation(null);
             }
         }
 

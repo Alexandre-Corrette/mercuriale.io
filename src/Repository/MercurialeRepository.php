@@ -59,4 +59,31 @@ class MercurialeRepository extends ServiceEntityRepository
 
         return $qb->getQuery()->getResult();
     }
+
+    /**
+     * Trouve le prix mercuriale valide pour un produit fournisseur.
+     * Si etablissement est null, cherche uniquement les prix groupe.
+     */
+    public function findPrixValide(
+        ProduitFournisseur $produitFournisseur,
+        ?Etablissement $etablissement,
+        \DateTimeInterface $date,
+    ): ?Mercuriale {
+        $qb = $this->createQueryBuilder('m')
+            ->where('m.produitFournisseur = :pf')
+            ->andWhere('m.dateDebut <= :date')
+            ->andWhere('m.dateFin IS NULL OR m.dateFin >= :date')
+            ->setParameter('pf', $produitFournisseur)
+            ->setParameter('date', $date)
+            ->setMaxResults(1);
+
+        if ($etablissement !== null) {
+            $qb->andWhere('m.etablissement = :etablissement')
+                ->setParameter('etablissement', $etablissement);
+        } else {
+            $qb->andWhere('m.etablissement IS NULL');
+        }
+
+        return $qb->getQuery()->getOneOrNullResult();
+    }
 }

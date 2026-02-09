@@ -1,3 +1,14 @@
-body {
-    background-color: skyblue;
+@import "tailwindcss";
+
+@theme {
+    --color-navy: #1e3a5f;
+    --color-navy-light: #2c4a6e;
+    --color-navy-dark: #152a47;
+    --color-coral: #f07560;
+    --color-coral-light: #f59485;
+    --color-coral-dark: #e55a43;
+    --color-gold: #d4a84b;
+    --color-gold-light: #e0be6e;
+    --color-cream: #f5f0e6;
+    --color-cream-dark: #e8e0d0;
 }

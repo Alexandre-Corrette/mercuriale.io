@@ -1,24 +1,211 @@
 /* Custom styles for Mercuriale.io Admin */
+/* Color palette from logo:
+   - Navy blue: #1e3a5f
+   - Coral: #f07560
+   - Gold/Mustard: #d4a84b
+   - Cream: #f5f0e6
+*/
+
+:root {
+    --mercuriale-navy: #1e3a5f;
+    --mercuriale-navy-light: #2c4a6e;
+    --mercuriale-navy-dark: #152a47;
+    --mercuriale-coral: #f07560;
+    --mercuriale-coral-light: #f59485;
+    --mercuriale-coral-dark: #e55a43;
+    --mercuriale-gold: #d4a84b;
+    --mercuriale-gold-light: #e0be6e;
+    --mercuriale-cream: #f5f0e6;
+    --mercuriale-cream-dark: #e8e0d0;
+}
+
+/* EasyAdmin overrides */
+:root {
+    --sidebar-bg: var(--mercuriale-navy);
+    --sidebar-menu-item-active-bg: var(--mercuriale-coral);
+    --link-color: var(--mercuriale-navy);
+    --link-hover-color: var(--mercuriale-coral);
+    --primary-color: var(--mercuriale-navy);
+    --text-primary-color: var(--mercuriale-navy);
+}
+
+/* Sidebar styling */
+.sidebar {
+    background: linear-gradient(180deg, var(--mercuriale-navy) 0%, var(--mercuriale-navy-dark) 100%) !important;
+}
+
+.sidebar .sidebar-logo {
+    background-color: rgba(255, 255, 255, 0.95);
+    border-bottom: 2px solid var(--mercuriale-coral);
+    padding: 0.75rem !important;
+}
+
+.sidebar .menu-item a {
+    border-radius: 0.5rem;
+    margin: 0.25rem 0.5rem;
+    transition: all 0.2s ease;
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-weight: 500;
+}
+
+.sidebar .menu-item a:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    transform: translateX(3px);
+    color: white !important;
+}
+
+.sidebar .menu-item.active > a {
+    background-color: transparent !important;
+    color: var(--mercuriale-gold) !important;
+    font-weight: 700;
+}
+
+.sidebar .menu-item .menu-icon {
+    color: var(--mercuriale-gold) !important;
+}
+
+.sidebar .menu-section {
+    color: var(--mercuriale-coral) !important;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    padding: 1rem 1rem 0.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: 0.5rem;
+}
+
+.sidebar .menu-section:first-of-type {
+    border-top: none;
+    margin-top: 0;
+}
+
+/* Header styling */
+.wrapper .content-top {
+    background-color: var(--mercuriale-cream);
+    border-bottom: 2px solid var(--mercuriale-coral);
+}
 
 /* Dashboard cards */
 .card {
-    border-radius: 0.5rem;
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-    transition: transform 0.2s ease-in-out;
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+    border: none;
+    overflow: hidden;
 }
 
 .card:hover {
-    transform: translateY(-2px);
+    transform: translateY(-4px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 .card-footer {
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: rgba(0, 0, 0, 0.08);
     border-top: none;
+}
+
+/* Custom card colors using logo palette */
+.card.card-navy {
+    background: linear-gradient(135deg, var(--mercuriale-navy) 0%, var(--mercuriale-navy-light) 100%) !important;
+    color: white !important;
+}
+
+.card.card-navy h6,
+.card.card-navy h2,
+.card.card-navy i {
+    color: white !important;
+}
+
+.card.card-coral {
+    background: linear-gradient(135deg, var(--mercuriale-coral) 0%, var(--mercuriale-coral-light) 100%) !important;
+    color: white !important;
+}
+
+.card.card-coral h6,
+.card.card-coral h2,
+.card.card-coral i {
+    color: white !important;
+}
+
+.card.card-gold {
+    background: linear-gradient(135deg, var(--mercuriale-gold) 0%, var(--mercuriale-gold-light) 100%) !important;
+    color: var(--mercuriale-navy) !important;
+}
+
+.card.card-gold h6,
+.card.card-gold h2,
+.card.card-gold i,
+.card.card-gold a {
+    color: var(--mercuriale-navy) !important;
+}
+
+.card.card-navy-light {
+    background: linear-gradient(135deg, var(--mercuriale-navy-light) 0%, #3d5a7e 100%) !important;
+    color: white !important;
+}
+
+.card.card-navy-light h6,
+.card.card-navy-light h2,
+.card.card-navy-light i {
+    color: white !important;
+}
+
+.card.bg-primary {
+    background: linear-gradient(135deg, var(--mercuriale-navy) 0%, var(--mercuriale-navy-light) 100%) !important;
+}
+
+.card.bg-warning {
+    background: linear-gradient(135deg, var(--mercuriale-gold) 0%, var(--mercuriale-gold-light) 100%) !important;
+}
+
+.card.bg-success {
+    background: linear-gradient(135deg, #2d6a4f 0%, #40916c 100%) !important;
+}
+
+.card.bg-info {
+    background: linear-gradient(135deg, var(--mercuriale-coral) 0%, var(--mercuriale-coral-light) 100%) !important;
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: var(--mercuriale-navy);
+    border-color: var(--mercuriale-navy);
+}
+
+.btn-primary:hover {
+    background-color: var(--mercuriale-navy-light);
+    border-color: var(--mercuriale-navy-light);
+}
+
+.btn-secondary {
+    background-color: var(--mercuriale-coral);
+    border-color: var(--mercuriale-coral);
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: var(--mercuriale-coral-dark);
+    border-color: var(--mercuriale-coral-dark);
+    color: white;
 }
 
 /* Badge customization */
 .badge {
     font-weight: 500;
+    border-radius: 0.5rem;
+}
+
+.badge.bg-primary {
+    background-color: var(--mercuriale-navy) !important;
+}
+
+.badge.bg-warning {
+    background-color: var(--mercuriale-gold) !important;
+}
+
+.badge.bg-danger {
+    background-color: var(--mercuriale-coral) !important;
 }
 
 /* Table improvements */
@@ -27,34 +214,183 @@
     text-transform: uppercase;
     font-size: 0.75rem;
     letter-spacing: 0.05em;
+    color: var(--mercuriale-navy);
+    background-color: var(--mercuriale-cream);
 }
 
-/* Sidebar improvements */
-.sidebar .menu-item a {
-    border-radius: 0.25rem;
-    margin: 0.125rem 0;
-}
-
-.sidebar .menu-item a:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(245, 240, 230, 0.3);
 }
 
 /* Form improvements */
-.form-control:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--mercuriale-coral);
+    box-shadow: 0 0 0 0.2rem rgba(240, 117, 96, 0.25);
 }
 
 /* Quick links */
 .list-unstyled li {
     padding: 0.5rem 0;
+    border-bottom: 1px solid var(--mercuriale-cream-dark);
+}
+
+.list-unstyled li:last-child {
+    border-bottom: none;
 }
 
 .list-unstyled li a {
-    color: #495057;
+    color: var(--mercuriale-navy);
     text-decoration: none;
+    transition: all 0.2s ease;
 }
 
 .list-unstyled li a:hover {
-    color: #007bff;
+    color: var(--mercuriale-coral);
+    padding-left: 5px;
+}
+
+.list-unstyled li a i {
+    color: var(--mercuriale-gold);
+}
+
+/* Page content background */
+.content-wrapper {
+    background-color: var(--mercuriale-cream);
+}
+
+/* Action buttons in tables */
+.action-new,
+.btn-action-new {
+    background-color: var(--mercuriale-coral) !important;
+    border-color: var(--mercuriale-coral) !important;
+    color: white !important;
+}
+
+.action-new:hover,
+.btn-action-new:hover {
+    background-color: var(--mercuriale-coral-dark) !important;
+    border-color: var(--mercuriale-coral-dark) !important;
+}
+
+/* Pagination */
+.page-link {
+    color: var(--mercuriale-navy);
+}
+
+.page-item.active .page-link {
+    background-color: var(--mercuriale-navy);
+    border-color: var(--mercuriale-navy);
+}
+
+/* Alerts */
+.alert-info {
+    background-color: rgba(30, 58, 95, 0.1);
+    border-color: var(--mercuriale-navy);
+    color: var(--mercuriale-navy);
+}
+
+.alert-warning {
+    background-color: rgba(212, 168, 75, 0.15);
+    border-color: var(--mercuriale-gold);
+    color: #8a6d1f;
+}
+
+.alert-danger {
+    background-color: rgba(240, 117, 96, 0.1);
+    border-color: var(--mercuriale-coral);
+    color: var(--mercuriale-coral-dark);
+}
+
+/* Dashboard welcome title */
+.content-wrapper h1 {
+    color: var(--mercuriale-navy);
+    font-weight: 700;
+}
+
+/* Accès rapide card header */
+.card-header {
+    background-color: var(--mercuriale-navy);
+    color: white;
+    border-radius: 1rem 1rem 0 0 !important;
+}
+
+.card-header h5 {
+    margin: 0;
+    font-weight: 600;
+}
+
+/* Logo in sidebar */
+.sidebar-logo img {
+    max-height: 45px;
+    border-radius: 8px;
+}
+
+/* =============================================
+   Sous-menus EasyAdmin — Styles améliorés
+   ============================================= */
+
+/* Sous-menus : masquer les chevrons en double (EasyAdmin en fournit déjà) */
+.sidebar .menu-item.has-submenu > a::after {
+    display: none;
+}
+
+/* Items de sous-menu : indentation + style discret */
+.sidebar .submenu .menu-item a {
+    padding-left: 2.5rem !important;
+    font-size: 0.85rem;
+    opacity: 0.85;
+    transition: opacity 0.15s ease, padding-left 0.15s ease;
+}
+
+.sidebar .submenu .menu-item a:hover {
+    opacity: 1;
+    padding-left: 2.8rem !important;
+}
+
+/* Submenu container */
+.sidebar .submenu {
+    background-color: rgba(0, 0, 0, 0.15);
+    border-radius: 0.5rem;
+    margin: 0.25rem 0.5rem;
+    padding: 0.25rem 0;
+}
+
+/* Highlight items (actions principales) */
+.sidebar .menu-item-highlight a {
+    background: linear-gradient(135deg, var(--mercuriale-coral) 0%, var(--mercuriale-coral-dark) 100%) !important;
+    color: white !important;
+    font-weight: 600 !important;
+}
+
+.sidebar .menu-item-highlight a:hover {
+    background: linear-gradient(135deg, var(--mercuriale-coral-dark) 0%, #d04a33 100%) !important;
+    transform: translateX(3px);
+}
+
+.sidebar .menu-item-highlight .menu-icon {
+    color: white !important;
+}
+
+/* Section ADMINISTRATION : bordure dorée pour la distinguer */
+.sidebar .menu-section:last-of-type {
+    margin-top: 1rem;
+}
+
+/* Amélioration du submenu toggle */
+.sidebar .menu-item.has-submenu > a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Animation d'ouverture du submenu */
+.sidebar .submenu {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.3s ease-out;
+}
+
+.sidebar .menu-item.has-submenu.expanded .submenu {
+    max-height: 500px;
 }
