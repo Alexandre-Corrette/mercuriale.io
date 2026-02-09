@@ -62,6 +62,7 @@ class UtilisateurCrudController extends AbstractCrudController
                 'Utilisateur' => 'ROLE_USER',
                 'Manager' => 'ROLE_MANAGER',
                 'Administrateur' => 'ROLE_ADMIN',
+                'Super Admin' => 'ROLE_SUPER_ADMIN',
             ])
             ->allowMultipleChoices()
             ->setRequired(true);

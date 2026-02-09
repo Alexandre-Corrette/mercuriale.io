@@ -49,6 +49,7 @@ security:
 
     # Role hierarchy
     role_hierarchy:
+        ROLE_SUPER_ADMIN: ROLE_ADMIN
         ROLE_ADMIN: ROLE_MANAGER
         ROLE_MANAGER: ROLE_USER
 
