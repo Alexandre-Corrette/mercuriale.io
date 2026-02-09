@@ -7,15 +7,36 @@ namespace App\Repository;
 use App\Entity\RefreshToken;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Gesdinet\JWTRefreshTokenBundle\Doctrine\RefreshTokenRepositoryInterface;
 
 /**
  * @extends ServiceEntityRepository<RefreshToken>
+ *
+ * @implements RefreshTokenRepositoryInterface<RefreshToken>
  */
-class RefreshTokenRepository extends ServiceEntityRepository
+class RefreshTokenRepository extends ServiceEntityRepository implements RefreshTokenRepositoryInterface
 {
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, RefreshToken::class);
+    }
+
+    /**
+     * @return RefreshToken[]
+     */
+    public function findInvalid($datetime = null): array
+    {
+        $qb = $this->createQueryBuilder('rt');
+
+        if ($datetime !== null) {
+            $qb->where('rt.valid < :datetime')
+                ->setParameter('datetime', $datetime);
+        } else {
+            $qb->where('rt.valid < :now')
+                ->setParameter('now', new \DateTime());
+        }
+
+        return $qb->getQuery()->getResult();
     }
 
     /**

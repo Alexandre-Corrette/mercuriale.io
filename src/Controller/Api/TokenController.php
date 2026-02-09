@@ -21,6 +21,14 @@ class TokenController extends AbstractController
     ) {
     }
 
+    #[Route('/api/login', name: 'api_login', methods: ['POST'])]
+    public function login(): never
+    {
+        // This method is intercepted by the json_login authenticator.
+        // It should never be reached.
+        throw new \LogicException('This should never be reached.');
+    }
+
     #[Route('/api/token/revoke', name: 'api_token_revoke', methods: ['POST'])]
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function revoke(Request $request): JsonResponse
