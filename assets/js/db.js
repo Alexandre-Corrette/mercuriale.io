@@ -115,6 +115,28 @@ export async function checkStorageQuota() {
     return null;
 }
 
+// Helper : incrémenter le retryCount d'un BL (atomique)
+export async function incrementRetryCount(id) {
+    return await db.pendingBL.where('id').equals(id).modify(bl => {
+        bl.retryCount = (bl.retryCount || 0) + 1;
+        bl.updatedAt = new Date().toISOString();
+    });
+}
+
+// Helper : récupérer les BL prêts à synchroniser (PENDING + FAILED avec retryCount < 3) avec photos jointes
+export async function getBLsReadyToSync() {
+    const bls = await db.pendingBL
+        .where('status')
+        .anyOf([BL_STATUS.PENDING, BL_STATUS.FAILED])
+        .filter(bl => (bl.retryCount || 0) < 3)
+        .toArray();
+
+    return await Promise.all(bls.map(async (bl) => {
+        const photos = await db.pendingPhotos.where('pendingBLId').equals(bl.id).toArray();
+        return { ...bl, photos };
+    }));
+}
+
 // Cache des référentiels
 export async function cacheReferentiels(key, data) {
     await db.referentiels.put({
