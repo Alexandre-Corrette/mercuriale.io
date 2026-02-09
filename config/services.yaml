@@ -50,3 +50,13 @@ services:
     App\Security\JwtAuthenticationProvider:
         arguments:
             $jwtAccessTokenTtl: '%jwt_access_token_ttl%'
+
+    App\Service\PushNotificationService:
+        arguments:
+            $vapidPublicKey: '%env(VAPID_PUBLIC_KEY)%'
+            $vapidPrivateKey: '%env(VAPID_PRIVATE_KEY)%'
+            $vapidSubject: '%env(VAPID_SUBJECT)%'
+
+    App\Twig\Extension\PushNotificationExtension:
+        arguments:
+            $vapidPublicKey: '%env(VAPID_PUBLIC_KEY)%'

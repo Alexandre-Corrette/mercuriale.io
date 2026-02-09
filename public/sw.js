@@ -14,7 +14,7 @@
  * - Kill switch : si /api/sw/status retourne {active: false}, le SW se désenregistre
  */
 
-var CACHE_VERSION = 'mercuriale-v1.2.0';
+var CACHE_VERSION = 'mercuriale-v1.3.0';
 var APP_SHELL_CACHE = CACHE_VERSION + '-shell';
 
 // Fichiers de l'App Shell à pré-cacher
@@ -27,7 +27,8 @@ var APP_SHELL_FILES = [
     '/manifest.json',
     '/icons/icon-192x192.png',
     '/icons/icon-512x512.png',
-    '/css/admin.css'
+    '/css/admin.css',
+    '/css/push-notification.css'
 ];
 
 // ── INSTALL ──
@@ -161,6 +162,59 @@ self.addEventListener('fetch', function (event) {
         );
         return;
     }
+});
+
+// ── PUSH NOTIFICATIONS ──
+self.addEventListener('push', function (event) {
+    if (!event.data) {
+        return;
+    }
+
+    var payload;
+    try {
+        payload = event.data.json();
+    } catch (e) {
+        console.warn('[SW] Push payload invalide:', e);
+        return;
+    }
+
+    var title = payload.title || 'Mercuriale';
+    var options = {
+        body: payload.body || '',
+        icon: payload.icon || '/icons/icon-192x192.png',
+        badge: payload.badge || '/icons/icon-192x192.png',
+        tag: payload.tag || 'mercuriale-default',
+        data: {
+            url: payload.url || '/'
+        }
+    };
+
+    event.waitUntil(
+        self.registration.showNotification(title, options)
+    );
+});
+
+self.addEventListener('notificationclick', function (event) {
+    event.notification.close();
+
+    var url = (event.notification.data && event.notification.data.url) || '/';
+
+    event.waitUntil(
+        self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+            .then(function (clientList) {
+                // Focus existing tab if one is open on the same origin
+                for (var i = 0; i < clientList.length; i++) {
+                    var client = clientList[i];
+                    if (new URL(client.url).origin === self.location.origin && 'focus' in client) {
+                        client.focus();
+                        client.navigate(url);
+                        return;
+                    }
+                }
+                // No existing tab — open new window
+                return self.clients.openWindow(url);
+            })
+    );
 });
 
 // ── HELPERS ──
