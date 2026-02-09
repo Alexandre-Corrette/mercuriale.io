@@ -11,3 +11,15 @@ framework:
             policy: sliding_window
             limit: 100
             interval: '1 minute'
+
+        # Rate limiter for BL uploads (10 per minute per user)
+        bl_upload:
+            policy: sliding_window
+            limit: 10
+            interval: '1 minute'
+
+        # Rate limiter for mercuriale imports (5 per hour per user)
+        mercuriale_import:
+            policy: sliding_window
+            limit: 5
+            interval: '1 hour'

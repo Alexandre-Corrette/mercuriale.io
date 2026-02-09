@@ -13,17 +13,11 @@ class HomeController extends AbstractController
     #[Route('/', name: 'app_home')]
     public function index(): Response
     {
-        // Redirect to login or dashboard based on authentication
+        // Redirect to login or admin based on authentication
         if ($this->getUser()) {
-            return $this->redirectToRoute('app_dashboard');
+            return $this->redirectToRoute('admin');
         }
 
         return $this->redirectToRoute('app_login');
-    }
-
-    #[Route('/app/dashboard', name: 'app_dashboard')]
-    public function dashboard(): Response
-    {
-        return $this->render('app/dashboard/index.html.twig');
     }
 }

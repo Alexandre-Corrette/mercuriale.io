@@ -1,0 +1,79 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Validation BL #{{ bonLivraison.id }} - Mercuriale.io{% endblock %}
+
+{% block body %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-image me-2 text-primary"></i>
+                        Image du bon de livraison
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if bonLivraison.imagePath %}
+                        <img src="{{ path('app_bl_image', {'id': bonLivraison.id}) }}"
+                             alt="Bon de livraison"
+                             class="img-fluid w-100">
+                    {% else %}
+                        <div class="p-5 text-center text-muted">
+                            <i class="fas fa-image fa-3x mb-3"></i>
+                            <p>Aucune image</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-magic me-2 text-primary"></i>
+                        Données extraites
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        L'extraction OCR sera implémentée dans une prochaine étape.
+                    </div>
+
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Établissement</dt>
+                        <dd class="col-sm-8">{{ bonLivraison.etablissement.nom }}</dd>
+
+                        <dt class="col-sm-4">Date livraison</dt>
+                        <dd class="col-sm-8">{{ bonLivraison.dateLivraison|date('d/m/Y') }}</dd>
+
+                        <dt class="col-sm-4">Statut</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge bg-secondary">{{ bonLivraison.statut.value }}</span>
+                        </dd>
+
+                        <dt class="col-sm-4">Créé par</dt>
+                        <dd class="col-sm-8">{{ bonLivraison.createdBy.email ?? '-' }}</dd>
+
+                        <dt class="col-sm-4">Créé le</dt>
+                        <dd class="col-sm-8">{{ bonLivraison.createdAt|date('d/m/Y H:i') }}</dd>
+                    </dl>
+                </div>
+                <div class="card-footer bg-white">
+                    <div class="d-flex gap-2">
+                        <a href="{{ path('app_bl_upload') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Retour
+                        </a>
+                        <button type="button" class="btn btn-primary" disabled>
+                            <i class="fas fa-check me-2"></i>
+                            Valider (bientôt disponible)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

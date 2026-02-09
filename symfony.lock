@@ -73,6 +73,15 @@
             "config/routes/easyadmin.yaml"
         ]
     },
+    "gesdinet/jwt-refresh-token-bundle": {
+        "version": "1.5",
+        "recipe": {
+            "repo": "github.com/symfony/recipes-contrib",
+            "branch": "main",
+            "version": "1.0",
+            "ref": "2390b4ed5c195e0b3f6dea45221f3b7c0af523a0"
+        }
+    },
     "lexik/jwt-authentication-bundle": {
         "version": "3.2",
         "recipe": {
@@ -397,6 +406,18 @@
         },
         "files": [
             "config/packages/messenger.yaml"
+        ]
+    },
+    "symfonycasts/tailwind-bundle": {
+        "version": "0.12",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "0.8",
+            "ref": "d0bd0276f74de90adfaa4c6cd74cc0caacd77e0a"
+        },
+        "files": [
+            "config/packages/symfonycasts_tailwind.yaml"
         ]
     },
     "twig/extra-bundle": {

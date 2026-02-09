@@ -1,0 +1,39 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Dependencies (will be installed in container)
+/vendor
+/node_modules
+
+# Build artifacts
+/var
+/public/build
+
+# Local config
+.env.local
+.env.*.local
+docker-compose.yml
+docker-compose.override.yml
+
+# Development files
+.php-cs-fixer.cache
+phpunit.xml
+phpstan.neon
+.php_cs.cache
+
+# macOS
+.DS_Store
+
+# Tests
+/tests
+
+# Documentation
+*.md
+!README.md

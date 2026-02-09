@@ -7,6 +7,10 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    anthropic_api_key: '%env(ANTHROPIC_API_KEY)%'
+    anthropic_model: '%env(ANTHROPIC_MODEL)%'
+    anthropic_max_tokens: '%env(int:ANTHROPIC_MAX_TOKENS)%'
+    jwt_access_token_ttl: 900
 
 services:
     # default configuration for services in *this* file
@@ -25,3 +29,34 @@ services:
     App\EventListener\SecurityHeadersListener:
         arguments:
             $environment: '%kernel.environment%'
+
+    App\Service\Upload\BonLivraisonUploadService:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
+    App\Service\Ocr\AnthropicClient:
+        arguments:
+            $apiKey: '%anthropic_api_key%'
+            $model: '%anthropic_model%'
+            $maxTokens: '%anthropic_max_tokens%'
+
+    App\Service\Ocr\BonLivraisonExtractorService:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
+    App\Security\AuthenticationProviderInterface:
+        alias: App\Security\JwtAuthenticationProvider
+
+    App\Security\JwtAuthenticationProvider:
+        arguments:
+            $jwtAccessTokenTtl: '%jwt_access_token_ttl%'
+
+    App\Service\PushNotificationService:
+        arguments:
+            $vapidPublicKey: '%env(VAPID_PUBLIC_KEY)%'
+            $vapidPrivateKey: '%env(VAPID_PRIVATE_KEY)%'
+            $vapidSubject: '%env(VAPID_SUBJECT)%'
+
+    App\Twig\Extension\PushNotificationExtension:
+        arguments:
+            $vapidPublicKey: '%env(VAPID_PUBLIC_KEY)%'
