@@ -11,6 +11,16 @@ db.version(1).stores({
     referentiels: 'key, updatedAt'
 });
 
+db.version(2).stores({
+    pendingBL: '++id, etablissementId, fournisseurId, status, createdAt',
+    pendingPhotos: '++id, pendingBLId',
+    referentiels: 'key, updatedAt',
+    // Cache des BL validés pour consultation offline (id = server BL id, not auto-increment)
+    cachedBLs: 'id, etablissementId, statut, validatedAt, cachedAt',
+    // Images des BL cachés (1:1 avec BL, stocke le blob)
+    cachedBLImages: 'blId, cachedAt, lastAccessedAt'
+});
+
 // Statuts possibles
 export const BL_STATUS = {
     PENDING: 'PENDING',       // En attente de réseau
@@ -155,4 +165,93 @@ export async function getCachedReferentiels(key, maxAgeHours = 24) {
 
     if (age > maxAge) return null; // Expiré
     return cached.data;
+}
+
+// ── Cache BL validés ──
+
+const BL_SYNC_TIME_KEY = 'lastBLSyncTime';
+
+export async function cacheBLs(bls) {
+    const now = new Date().toISOString();
+    await db.cachedBLs.bulkPut(
+        bls.map(bl => ({
+            id: bl.id,
+            etablissementId: bl.etablissement.id,
+            statut: bl.statut,
+            validatedAt: bl.validatedAt,
+            cachedAt: now,
+            data: bl,
+        }))
+    );
+}
+
+export async function getCachedBLs(etablissementId) {
+    let query = db.cachedBLs.orderBy('validatedAt').reverse();
+    if (etablissementId) {
+        query = db.cachedBLs.where('etablissementId').equals(etablissementId).reverse();
+    }
+    const results = await query.toArray();
+    if (etablissementId) {
+        results.sort((a, b) => (b.validatedAt || '').localeCompare(a.validatedAt || ''));
+    }
+    return results.map(r => r.data);
+}
+
+export async function getCachedBL(blId) {
+    const cached = await db.cachedBLs.get(blId);
+    return cached ? cached.data : null;
+}
+
+export async function cacheBLImage(blId, blob) {
+    const now = new Date().toISOString();
+    await db.cachedBLImages.put({
+        blId,
+        blob,
+        cachedAt: now,
+        lastAccessedAt: now,
+    });
+}
+
+export async function getCachedBLImage(blId) {
+    const cached = await db.cachedBLImages.get(blId);
+    if (cached) {
+        // Update last accessed time
+        await db.cachedBLImages.update(blId, { lastAccessedAt: new Date().toISOString() });
+        return cached.blob;
+    }
+    return null;
+}
+
+export async function getLastBLSyncTime() {
+    const record = await db.referentiels.get(BL_SYNC_TIME_KEY);
+    return record ? record.data : null;
+}
+
+export async function setLastBLSyncTime(isoString) {
+    await db.referentiels.put({
+        key: BL_SYNC_TIME_KEY,
+        data: isoString,
+        updatedAt: isoString,
+    });
+}
+
+export async function evictOldBLImages(max = 50) {
+    const count = await db.cachedBLImages.count();
+    if (count <= max) return 0;
+
+    const toEvict = count - max;
+    const oldest = await db.cachedBLImages.orderBy('lastAccessedAt').limit(toEvict).toArray();
+    const ids = oldest.map(img => img.blId);
+    await db.cachedBLImages.bulkDelete(ids);
+    return ids.length;
+}
+
+export async function countCachedBLs() {
+    return await db.cachedBLs.count();
+}
+
+export async function clearBLCache() {
+    await db.cachedBLs.clear();
+    await db.cachedBLImages.clear();
+    await db.referentiels.delete(BL_SYNC_TIME_KEY);
 }

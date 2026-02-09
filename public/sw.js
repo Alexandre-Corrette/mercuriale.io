@@ -1,11 +1,14 @@
 /**
  * Mercuriale.io — Service Worker
- * Version : 1.0.0-sprint1
+ * Version : 1.4.0
  *
  * STRATÉGIES DE CACHE :
  * - App Shell (CSS, JS, icônes) : Cache First
  * - Pages HTML : Network First avec fallback offline.html
- * - API calls : Network Only (pas de cache API pour l'instant)
+ * - API /bons-livraison (list) : Network First avec fallback cache
+ * - API /bons-livraison/{id}/image : Cache First (immutable after validation)
+ * - API referentiels : Network First avec fallback cache
+ * - Autres API : Network Only
  *
  * SÉCURITÉ :
  * - Versioning strict du cache (CACHE_VERSION)
@@ -14,7 +17,7 @@
  * - Kill switch : si /api/sw/status retourne {active: false}, le SW se désenregistre
  */
 
-var CACHE_VERSION = 'mercuriale-v1.3.0';
+var CACHE_VERSION = 'mercuriale-v1.4.0';
 var APP_SHELL_CACHE = CACHE_VERSION + '-shell';
 
 // Fichiers de l'App Shell à pré-cacher
@@ -28,7 +31,8 @@ var APP_SHELL_FILES = [
     '/icons/icon-192x192.png',
     '/icons/icon-512x512.png',
     '/css/admin.css',
-    '/css/push-notification.css'
+    '/css/push-notification.css',
+    '/css/bl-consultation.css'
 ];
 
 // ── INSTALL ──
@@ -108,6 +112,45 @@ self.addEventListener('fetch', function (event) {
                 })
                 .catch(function () {
                     // Fallback sur le cache
+                    return caches.match(request);
+                })
+        );
+        return;
+    }
+
+    // API BL images : Cache First (images are immutable after validation)
+    if (url.pathname.match(/^\/api\/bons-livraison\/\d+\/image$/)) {
+        event.respondWith(
+            caches.match(request)
+                .then(function (cached) {
+                    return cached || fetch(request).then(function (response) {
+                        if (response.ok) {
+                            var responseClone = response.clone();
+                            caches.open(APP_SHELL_CACHE).then(function (cache) {
+                                cache.put(request, responseClone);
+                            });
+                        }
+                        return response;
+                    });
+                })
+        );
+        return;
+    }
+
+    // API BL list : Network First avec fallback cache
+    if (url.pathname === '/api/bons-livraison') {
+        event.respondWith(
+            fetch(request)
+                .then(function (response) {
+                    if (response.ok) {
+                        var responseClone = response.clone();
+                        caches.open(APP_SHELL_CACHE).then(function (cache) {
+                            cache.put(request, responseClone);
+                        });
+                    }
+                    return response;
+                })
+                .catch(function () {
                     return caches.match(request);
                 })
         );

@@ -1,0 +1,67 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Bons de livraison - Mercuriale.io{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/bl-consultation.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-gradient-to-br from-cream to-cream-dark py-6 px-4"
+     data-controller="bl-list">
+    <div class="max-w-3xl mx-auto">
+        {# Header #}
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-navy">
+                    <i class="fas fa-file-invoice mr-2"></i>
+                    Bons de livraison
+                </h1>
+                <p class="text-gray-500 mt-1">
+                    <span data-bl-list-target="count">0</span> bon(s) de livraison
+                </p>
+            </div>
+            <a href="{{ path('admin') }}" class="text-gray-500 hover:text-navy">
+                <i class="fas fa-arrow-left mr-1"></i> Retour
+            </a>
+        </div>
+
+        {# Cache status banner #}
+        <div data-bl-list-target="cacheStatus"></div>
+
+        {# Filter bar #}
+        <div class="bl-filter-bar">
+            <select data-bl-list-target="filter" data-action="bl-list#filterChanged">
+                <option value="">Tous les établissements</option>
+            </select>
+            <button type="button"
+                    data-bl-list-target="refreshBtn"
+                    data-action="bl-list#refresh"
+                    class="bl-refresh-btn">
+                <i class="fas fa-sync-alt"></i>
+                Actualiser
+            </button>
+        </div>
+
+        {# Loading state #}
+        <div data-bl-list-target="loading" class="bl-loading">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span>Chargement des bons de livraison...</span>
+        </div>
+
+        {# Empty state #}
+        <div data-bl-list-target="emptyState" class="bl-empty-state hidden">
+            <div class="bl-empty-state__icon">
+                <i class="fas fa-file-invoice"></i>
+            </div>
+            <h3 class="bl-empty-state__title">Aucun bon de livraison</h3>
+            <p class="bl-empty-state__text">Aucun BL validé trouvé pour cet établissement.</p>
+        </div>
+
+        {# List container #}
+        <div data-bl-list-target="list" class="space-y-3 hidden"></div>
+    </div>
+</div>
+{% endblock %}

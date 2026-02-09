@@ -15,7 +15,7 @@ const MAX_RETRIES = 3;
  * Get a JWT access token, refreshing if needed.
  * Uses the HttpOnly refresh_token cookie (sent automatically for same-origin).
  */
-async function getJwtToken() {
+export async function getJwtToken() {
     // Return cached token if still valid (with 60s safety margin)
     if (_cachedToken && Date.now() < _tokenExpiresAt - 60000) {
         return _cachedToken;
