@@ -85,11 +85,14 @@
             "assets:install %PUBLIC_DIR%": "symfony-cmd",
             "importmap:install": "symfony-cmd"
         },
+        "jwt-keys-permissions": "if [ -f config/jwt/private.pem ]; then chmod 600 config/jwt/private.pem; fi",
         "post-install-cmd": [
-            "@auto-scripts"
+            "@auto-scripts",
+            "@jwt-keys-permissions"
         ],
         "post-update-cmd": [
-            "@auto-scripts"
+            "@auto-scripts",
+            "@jwt-keys-permissions"
         ]
     },
     "conflict": {
