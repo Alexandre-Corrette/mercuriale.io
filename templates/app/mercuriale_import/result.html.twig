@@ -98,10 +98,10 @@
                         <div class="text-sm text-gray-600 space-y-1">
                             <div><strong>Fichier :</strong> {{ import.originalFilename }}</div>
                             <div><strong>Fournisseur :</strong> {{ import.fournisseur.nom }}</div>
-                            {% if import.etablissement %}
-                                <div><strong>Etablissement :</strong> {{ import.etablissement.nom }}</div>
+                            {% if import.etablissements|length > 0 %}
+                                <div><strong>Établissements :</strong> {{ import.etablissements|map(e => e.nom)|join(', ') }}</div>
                             {% else %}
-                                <div><strong>Scope :</strong> Prix groupe (tous etablissements)</div>
+                                <div><strong>Scope :</strong> Prix groupe (tous établissements)</div>
                             {% endif %}
                             <div><strong>Date :</strong> {{ import.createdAt|date('d/m/Y H:i') }}</div>
                         </div>

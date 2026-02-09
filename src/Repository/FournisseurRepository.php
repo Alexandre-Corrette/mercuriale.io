@@ -49,11 +49,13 @@ class FournisseurRepository extends ServiceEntityRepository
 
     /**
      * Retourne un QueryBuilder filtré par les accès de l'utilisateur.
-     * Un utilisateur voit les fournisseurs associés à son organisation via OrganisationFournisseur.
+     * Un utilisateur voit les fournisseurs associés à son organisation via OrganisationFournisseur
+     * OU liés directement à un établissement accessible via fournisseur_etablissement.
      */
     public function createQueryBuilderForUserAccess(?Utilisateur $user): QueryBuilder
     {
         $qb = $this->createQueryBuilder('f')
+            ->select('DISTINCT f')
             ->where('f.actif = :fournisseurActif')
             ->setParameter('fournisseurActif', true)
             ->orderBy('f.nom', 'ASC');
@@ -66,9 +68,9 @@ class FournisseurRepository extends ServiceEntityRepository
 
         $organisation = $user->getOrganisation();
         if ($organisation !== null) {
-            $qb->innerJoin('f.organisationFournisseurs', 'orgf')
-                ->andWhere('orgf.organisation = :organisation')
-                ->andWhere('orgf.actif = :actif')
+            $qb->leftJoin('f.organisationFournisseurs', 'orgf', 'WITH', 'orgf.organisation = :organisation AND orgf.actif = :actif')
+                ->leftJoin('f.etablissements', 'etab', 'WITH', 'etab.organisation = :organisation AND etab.actif = true')
+                ->andWhere('orgf.id IS NOT NULL OR etab.id IS NOT NULL')
                 ->setParameter('organisation', $organisation)
                 ->setParameter('actif', true);
         } else {

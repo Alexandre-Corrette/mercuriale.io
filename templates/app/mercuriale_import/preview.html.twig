@@ -40,6 +40,26 @@
             </div>
         </div>
 
+        {# Import info #}
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden mb-6">
+            <div class="p-4 bg-navy text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="font-semibold">{{ import.originalFilename }}</span>
+                        <span class="text-cream/80 ml-2">
+                            {{ import.fournisseur.nom }}
+                            {% if import.etablissements|length > 0 %}
+                                - {{ import.etablissements|map(e => e.nom)|join(', ') }}
+                            {% else %}
+                                - Prix groupe
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="text-cream/80">{{ import.totalRows }} lignes</div>
+                </div>
+            </div>
+        </div>
+
         {% if error %}
             {# Error state #}
             <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
