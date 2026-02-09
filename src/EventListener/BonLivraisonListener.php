@@ -7,6 +7,7 @@ namespace App\EventListener;
 use App\Entity\BonLivraison;
 use App\Enum\StatutBonLivraison;
 use App\Service\Controle\ControleService;
+use App\Service\PushNotificationService;
 use Doctrine\Bundle\DoctrineBundle\Attribute\AsDoctrineListener;
 use Doctrine\ORM\Event\PostUpdateEventArgs;
 use Doctrine\ORM\Event\PreUpdateEventArgs;
@@ -21,6 +22,7 @@ class BonLivraisonListener
 
     public function __construct(
         private readonly ControleService $controleService,
+        private readonly PushNotificationService $pushNotificationService,
         private readonly LoggerInterface $logger,
     ) {
     }
@@ -83,12 +85,49 @@ class BonLivraisonListener
                 'bl_id' => $blId,
                 'nombre_alertes' => $nombreAlertes,
             ]);
+
+            // Send push notification to the BL creator
+            $this->sendPushNotification($entity, $nombreAlertes);
         } catch (\Exception $e) {
             $this->logger->error('Erreur contrôle automatique BL', [
                 'bl_id' => $blId,
                 'error' => $e->getMessage(),
             ]);
             // Ne pas relancer l'exception pour ne pas bloquer la transaction
+        }
+    }
+
+    private function sendPushNotification(BonLivraison $bl, int $nombreAlertes): void
+    {
+        $creator = $bl->getCreatedBy();
+        if ($creator === null) {
+            return;
+        }
+
+        try {
+            $blRef = (string) $bl;
+            $blUrl = '/admin?crudAction=detail&crudControllerFqcn=App%5CController%5CAdmin%5CBonLivraisonCrudController&entityId=' . $bl->getId();
+
+            if ($nombreAlertes === 0) {
+                $this->pushNotificationService->sendToUser(
+                    $creator,
+                    'BL validé',
+                    sprintf('Votre %s a été validé sans anomalie.', $blRef),
+                    $blUrl,
+                );
+            } else {
+                $this->pushNotificationService->sendToUser(
+                    $creator,
+                    'Anomalie détectée',
+                    sprintf('Anomalie détectée sur %s (%d alerte%s).', $blRef, $nombreAlertes, $nombreAlertes > 1 ? 's' : ''),
+                    $blUrl,
+                );
+            }
+        } catch (\Exception $e) {
+            $this->logger->error('Erreur envoi notification push', [
+                'bl_id' => $bl->getId(),
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 }
