@@ -1,17 +1,23 @@
 import { Controller } from '@hotwired/stimulus';
 import { countPendingBLs } from '../js/db.js';
+import { syncAll } from '../js/syncManager.js';
 
 export default class extends Controller {
     static targets = ['banner', 'pendingCount'];
 
     connect() {
+        this._lastSyncTime = 0;
         this.updateStatus();
 
         this.onlineHandler = () => this.handleOnline();
         this.offlineHandler = () => this.handleOffline();
+        this.syncStatusHandler = () => this.updatePendingCount();
+        this.swSyncHandler = () => this.triggerSync();
 
         window.addEventListener('online', this.onlineHandler);
         window.addEventListener('offline', this.offlineHandler);
+        window.addEventListener('sync-status-changed', this.syncStatusHandler);
+        window.addEventListener('sw-sync-triggered', this.swSyncHandler);
 
         // Vérifier périodiquement le nombre de BL en attente
         this.updatePendingCount();
@@ -21,6 +27,8 @@ export default class extends Controller {
     disconnect() {
         window.removeEventListener('online', this.onlineHandler);
         window.removeEventListener('offline', this.offlineHandler);
+        window.removeEventListener('sync-status-changed', this.syncStatusHandler);
+        window.removeEventListener('sw-sync-triggered', this.swSyncHandler);
         clearInterval(this.pendingInterval);
     }
 
@@ -71,8 +79,18 @@ export default class extends Controller {
     }
 
     async triggerSync() {
-        // On implémentera le Background Sync au Sprint 3
-        // Pour l'instant, juste un log
-        console.log('[NetworkStatus] Réseau disponible — sync à implémenter Sprint 3');
+        // Debounce : pas de re-trigger dans les 5 secondes
+        const now = Date.now();
+        if (now - this._lastSyncTime < 5000) {
+            return;
+        }
+        this._lastSyncTime = now;
+
+        try {
+            await syncAll();
+            await this.updatePendingCount();
+        } catch (e) {
+            console.error('[NetworkStatus] Erreur sync:', e);
+        }
     }
 }

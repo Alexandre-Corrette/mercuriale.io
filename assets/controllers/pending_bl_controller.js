@@ -1,5 +1,6 @@
 import { Controller } from '@hotwired/stimulus';
 import { db, getPendingBLs, deletePendingBL, updateBLStatus, checkStorageQuota, BL_STATUS } from '../js/db.js';
+import { syncAll as syncManagerSyncAll, syncOne as syncManagerSyncOne } from '../js/syncManager.js';
 
 export default class extends Controller {
     static targets = ['list', 'count', 'emptyState', 'actions', 'networkStatus', 'storageQuota'];
@@ -12,8 +13,10 @@ export default class extends Controller {
         // Écouter les changements de réseau
         this.onlineHandler = () => this.updateNetworkStatus();
         this.offlineHandler = () => this.updateNetworkStatus();
+        this.syncStatusHandler = () => this.loadPendingBLs();
         window.addEventListener('online', this.onlineHandler);
         window.addEventListener('offline', this.offlineHandler);
+        window.addEventListener('sync-status-changed', this.syncStatusHandler);
 
         // Rafraîchir toutes les 10 secondes
         this.refreshInterval = setInterval(() => this.loadPendingBLs(), 10000);
@@ -22,6 +25,7 @@ export default class extends Controller {
     disconnect() {
         window.removeEventListener('online', this.onlineHandler);
         window.removeEventListener('offline', this.offlineHandler);
+        window.removeEventListener('sync-status-changed', this.syncStatusHandler);
         clearInterval(this.refreshInterval);
     }
 
@@ -200,13 +204,23 @@ export default class extends Controller {
 
     async retry(event) {
         const blId = parseInt(event.currentTarget.dataset.blId);
-        await updateBLStatus(blId, BL_STATUS.PENDING);
+
+        if (!navigator.onLine) {
+            await updateBLStatus(blId, BL_STATUS.PENDING);
+            await this.loadPendingBLs();
+            return;
+        }
+
+        await syncManagerSyncOne(blId);
         await this.loadPendingBLs();
-        // La vraie synchro sera implémentée au Sprint 3
     }
 
     async syncAll() {
-        // Implémenté au Sprint 3 avec Background Sync
-        alert('La synchronisation automatique sera disponible prochainement.');
+        if (!navigator.onLine) {
+            return;
+        }
+
+        await syncManagerSyncAll();
+        await this.loadPendingBLs();
     }
 }

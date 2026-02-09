@@ -45,12 +45,36 @@
                     console.error('[PWA] Échec enregistrement Service Worker :', error);
                 });
 
+            // Écouter les messages du Service Worker
+            navigator.serviceWorker.addEventListener('message', function (event) {
+                if (event.data && event.data.type === 'SYNC_TRIGGERED') {
+                    console.info('[PWA] Sync déclenchée par le Service Worker');
+                    window.dispatchEvent(new CustomEvent('sw-sync-triggered'));
+                }
+            });
+
             // Détection du changement online/offline
             window.addEventListener('online', function () {
                 document.documentElement.classList.remove('pwa-offline');
                 document.documentElement.classList.add('pwa-online');
                 console.info('[PWA] Connexion rétablie');
-                // TODO Sprint 2 : déclencher la synchronisation
+
+                // Background Sync : demander au SW d'enregistrer la sync
+                if (registration.sync) {
+                    registration.sync.register('sync-pending-bls')
+                        .then(function () {
+                            console.info('[PWA] Background Sync enregistrée');
+                        })
+                        .catch(function (err) {
+                            console.warn('[PWA] Background Sync non disponible:', err);
+                            // Safari fallback : déclencher la sync directement
+                            window.dispatchEvent(new CustomEvent('sw-sync-triggered'));
+                        });
+                } else {
+                    // Safari / navigateurs sans Background Sync API
+                    console.info('[PWA] Background Sync non supportée, fallback online event');
+                    window.dispatchEvent(new CustomEvent('sw-sync-triggered'));
+                }
             });
 
             window.addEventListener('offline', function () {

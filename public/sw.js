@@ -14,7 +14,7 @@
  * - Kill switch : si /api/sw/status retourne {active: false}, le SW se désenregistre
  */
 
-var CACHE_VERSION = 'mercuriale-v1.1.0';
+var CACHE_VERSION = 'mercuriale-v1.2.0';
 var APP_SHELL_CACHE = CACHE_VERSION + '-shell';
 
 // Fichiers de l'App Shell à pré-cacher
@@ -171,13 +171,36 @@ function isAppShellRequest(pathname) {
     });
 }
 
-// ── KILL SWITCH (Sécurité) ──
-// Vérifie périodiquement si le SW doit se désactiver
-// Sera activé au Sprint 6 via l'endpoint /api/sw/status
-// self.addEventListener('message', function (event) {
-//     if (event.data && event.data.type === 'KILL_SW') {
-//         self.registration.unregister().then(function () {
-//             console.warn('[SW] Service Worker désinstallé par kill switch');
-//         });
-//     }
-// });
+// ── BACKGROUND SYNC ──
+self.addEventListener('sync', function (event) {
+    if (event.tag === 'sync-pending-bls') {
+        console.info('[SW] Background Sync déclenché : sync-pending-bls');
+        event.waitUntil(
+            self.clients.matchAll({ type: 'window', includeUncontrolled: false })
+                .then(function (clients) {
+                    clients.forEach(function (client) {
+                        client.postMessage({ type: 'SYNC_TRIGGERED' });
+                    });
+                })
+        );
+    }
+});
+
+// ── MESSAGE HANDLER ──
+self.addEventListener('message', function (event) {
+    if (event.data && event.data.type === 'REQUEST_SYNC') {
+        console.info('[SW] Sync demandée par le client');
+        if (self.registration.sync) {
+            self.registration.sync.register('sync-pending-bls').catch(function (err) {
+                console.warn('[SW] Impossible d\'enregistrer la sync:', err);
+            });
+        }
+    }
+
+    // Kill switch (sera activé au Sprint 6 via /api/sw/status)
+    // if (event.data && event.data.type === 'KILL_SW') {
+    //     self.registration.unregister().then(function () {
+    //         console.warn('[SW] Service Worker désinstallé par kill switch');
+    //     });
+    // }
+});
