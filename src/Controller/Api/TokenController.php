@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Controller\Api;
 
-use App\Repository\RefreshTokenRepository;
 use App\Repository\UtilisateurRepository;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Security\AuthenticationProviderInterface;
+use App\Security\Exception\InvalidTokenException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -17,8 +17,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class TokenController extends AbstractController
 {
     public function __construct(
-        private readonly RefreshTokenRepository $refreshTokenRepository,
-        private readonly EntityManagerInterface $entityManager,
+        private readonly AuthenticationProviderInterface $authenticationProvider,
     ) {
     }
 
@@ -36,17 +35,14 @@ class TokenController extends AbstractController
             );
         }
 
-        $token = $this->refreshTokenRepository->findOneBy(['refreshToken' => $tokenValue]);
-
-        if ($token === null) {
+        try {
+            $this->authenticationProvider->revokeToken($tokenValue);
+        } catch (InvalidTokenException $e) {
             return $this->json(
-                ['code' => Response::HTTP_NOT_FOUND, 'message' => 'Refresh token not found.'],
+                ['code' => Response::HTTP_NOT_FOUND, 'message' => $e->getMessage()],
                 Response::HTTP_NOT_FOUND,
             );
         }
-
-        $token->revoke();
-        $this->entityManager->flush();
 
         $response = $this->json(['message' => 'Refresh token revoked successfully.']);
         $response->headers->clearCookie('refresh_token', '/api/token/refresh');
@@ -69,7 +65,7 @@ class TokenController extends AbstractController
             );
         }
 
-        $count = $this->refreshTokenRepository->revokeAllForUser($user->getUserIdentifier());
+        $count = $this->authenticationProvider->revokeAllUserTokens($user);
 
         return $this->json([
             'message' => sprintf('%d refresh token(s) revoked for user %s.', $count, $user->getEmail()),

@@ -10,6 +10,7 @@ parameters:
     anthropic_api_key: '%env(ANTHROPIC_API_KEY)%'
     anthropic_model: '%env(ANTHROPIC_MODEL)%'
     anthropic_max_tokens: '%env(int:ANTHROPIC_MAX_TOKENS)%'
+    jwt_access_token_ttl: 900
 
 services:
     # default configuration for services in *this* file
@@ -42,3 +43,10 @@ services:
     App\Service\Ocr\BonLivraisonExtractorService:
         arguments:
             $projectDir: '%kernel.project_dir%'
+
+    App\Security\AuthenticationProviderInterface:
+        alias: App\Security\JwtAuthenticationProvider
+
+    App\Security\JwtAuthenticationProvider:
+        arguments:
+            $jwtAccessTokenTtl: '%jwt_access_token_ttl%'
