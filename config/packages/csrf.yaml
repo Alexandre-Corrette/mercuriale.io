@@ -9,3 +9,6 @@ framework:
             - submit
             - authenticate
             - logout
+            - mercuriale_import_upload
+            - mercuriale_column_mapping
+            - bl_upload
