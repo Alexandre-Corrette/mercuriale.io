@@ -15,10 +15,13 @@ use App\Enum\StatutImport;
 use App\Exception\Import\ImportException;
 use App\Repository\MercurialeRepository;
 use App\Repository\ProduitFournisseurRepository;
+use App\Repository\ProduitRepository;
 use App\Repository\UniteRepository;
 use App\Service\Import\ColumnMapper;
 use App\Service\Import\MercurialeBulkImporter;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -26,7 +29,9 @@ use Psr\Log\LoggerInterface;
 class MercurialeBulkImporterTest extends TestCase
 {
     private MockObject&EntityManagerInterface $entityManager;
+    private MockObject&ManagerRegistry $managerRegistry;
     private MockObject&ProduitFournisseurRepository $produitFournisseurRepository;
+    private MockObject&ProduitRepository $produitRepository;
     private MockObject&MercurialeRepository $mercurialeRepository;
     private MockObject&UniteRepository $uniteRepository;
     private MockObject&ColumnMapper $columnMapper;
@@ -36,7 +41,9 @@ class MercurialeBulkImporterTest extends TestCase
     protected function setUp(): void
     {
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
+        $this->managerRegistry = $this->createMock(ManagerRegistry::class);
         $this->produitFournisseurRepository = $this->createMock(ProduitFournisseurRepository::class);
+        $this->produitRepository = $this->createMock(ProduitRepository::class);
         $this->mercurialeRepository = $this->createMock(MercurialeRepository::class);
         $this->uniteRepository = $this->createMock(UniteRepository::class);
         $this->columnMapper = $this->createMock(ColumnMapper::class);
@@ -44,7 +51,9 @@ class MercurialeBulkImporterTest extends TestCase
 
         $this->importer = new MercurialeBulkImporter(
             $this->entityManager,
+            $this->managerRegistry,
             $this->produitFournisseurRepository,
+            $this->produitRepository,
             $this->mercurialeRepository,
             $this->uniteRepository,
             $this->columnMapper,
@@ -209,7 +218,7 @@ class MercurialeBulkImporterTest extends TestCase
         $import = $this->createMock(MercurialeImport::class);
         $import->method('canBeProcessed')->willReturn(true);
         $import->method('getFournisseur')->willReturn($fournisseur);
-        $import->method('getEtablissement')->willReturn(null);
+        $import->method('getEtablissements')->willReturn(new ArrayCollection());
         $import->method('getCreatedBy')->willReturn($user);
         $import->method('getParsedData')->willReturn([
             'headers' => ['Code', 'Designation', 'Prix'],

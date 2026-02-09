@@ -7,6 +7,8 @@ namespace App\Entity;
 use App\Entity\Trait\TimestampableTrait;
 use App\Enum\StatutImport;
 use App\Repository\MercurialeImportRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
@@ -15,7 +17,6 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Entity(repositoryClass: MercurialeImportRepository::class)]
 #[ORM\Table(name: 'mercuriale_import')]
 #[ORM\Index(columns: ['fournisseur_id'], name: 'idx_mercuriale_import_fournisseur')]
-#[ORM\Index(columns: ['etablissement_id'], name: 'idx_mercuriale_import_etablissement')]
 #[ORM\Index(columns: ['status'], name: 'idx_mercuriale_import_status')]
 #[ORM\Index(columns: ['expires_at'], name: 'idx_mercuriale_import_expires')]
 #[ORM\HasLifecycleCallbacks]
@@ -32,9 +33,10 @@ class MercurialeImport
     #[Assert\NotNull(message: 'Le fournisseur est obligatoire')]
     private ?Fournisseur $fournisseur = null;
 
-    #[ORM\ManyToOne(targetEntity: Etablissement::class)]
-    #[ORM\JoinColumn(nullable: true)]
-    private ?Etablissement $etablissement = null;
+    /** @var Collection<int, Etablissement> */
+    #[ORM\ManyToMany(targetEntity: Etablissement::class)]
+    #[ORM\JoinTable(name: 'mercuriale_import_etablissement')]
+    private Collection $etablissements;
 
     #[ORM\ManyToOne(targetEntity: Utilisateur::class)]
     #[ORM\JoinColumn(nullable: false)]
@@ -72,6 +74,7 @@ class MercurialeImport
     public function __construct()
     {
         $this->id = Uuid::v4();
+        $this->etablissements = new ArrayCollection();
         $this->expiresAt = new \DateTimeImmutable('+1 hour');
     }
 
@@ -97,14 +100,26 @@ class MercurialeImport
         return $this;
     }
 
-    public function getEtablissement(): ?Etablissement
+    /**
+     * @return Collection<int, Etablissement>
+     */
+    public function getEtablissements(): Collection
     {
-        return $this->etablissement;
+        return $this->etablissements;
     }
 
-    public function setEtablissement(?Etablissement $etablissement): static
+    public function addEtablissement(Etablissement $etablissement): static
     {
-        $this->etablissement = $etablissement;
+        if (!$this->etablissements->contains($etablissement)) {
+            $this->etablissements->add($etablissement);
+        }
+
+        return $this;
+    }
+
+    public function removeEtablissement(Etablissement $etablissement): static
+    {
+        $this->etablissements->removeElement($etablissement);
 
         return $this;
     }
