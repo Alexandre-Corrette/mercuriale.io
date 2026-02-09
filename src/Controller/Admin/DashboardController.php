@@ -78,7 +78,8 @@ class DashboardController extends AbstractDashboardController
             ->setPermission('ROLE_MANAGER')
             ->setSubItems([
                 MenuItem::linkToCrud('Fournisseurs', 'fas fa-truck', Fournisseur::class),
-                MenuItem::linkToCrud('Associations Fournisseurs', 'fas fa-link', OrganisationFournisseur::class),
+                MenuItem::linkToCrud('Associations Fournisseurs', 'fas fa-link', OrganisationFournisseur::class)
+                    ->setPermission('ROLE_SUPER_ADMIN'),
                 MenuItem::linkToCrud('Produits fournisseur', 'fas fa-box', ProduitFournisseur::class),
                 MenuItem::linkToCrud('Mercuriale (prix)', 'fas fa-tags', Mercuriale::class)
                     ->setDefaultSort(['dateDebut' => 'DESC']),
