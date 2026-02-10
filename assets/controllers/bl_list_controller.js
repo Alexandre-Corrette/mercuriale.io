@@ -1,12 +1,14 @@
 import { Controller } from '@hotwired/stimulus';
 import { getBLList, refreshBLCache } from '../js/blCacheManager.js';
 import { getCachedReferentiels, getLastBLSyncTime } from '../js/db.js';
+import { isOnline } from '../js/networkProbe.js';
 
 export default class extends Controller {
     static targets = ['list', 'count', 'emptyState', 'loading', 'cacheStatus', 'filter', 'refreshBtn'];
 
     async connect() {
         this._selectedEtablissement = null;
+        this._autoRefreshTimer = null;
 
         await this.populateFilter();
         await this.loadBLs();
@@ -14,23 +16,45 @@ export default class extends Controller {
         this.onlineHandler = () => this.onOnline();
         this.offlineHandler = () => this.updateCacheStatus();
         this.cacheUpdatedHandler = () => this.loadBLsFromCache();
+        this.visibilityHandler = () => this.onVisibilityChange();
         window.addEventListener('online', this.onlineHandler);
         window.addEventListener('offline', this.offlineHandler);
         window.addEventListener('bl-cache-updated', this.cacheUpdatedHandler);
+        document.addEventListener('visibilitychange', this.visibilityHandler);
 
-        // Auto-refresh every 5 minutes when visible
-        this.autoRefreshInterval = setInterval(() => {
-            if (!document.hidden && navigator.onLine) {
-                this.loadBLs();
-            }
-        }, 5 * 60 * 1000);
+        this.scheduleAutoRefresh();
     }
 
     disconnect() {
         window.removeEventListener('online', this.onlineHandler);
         window.removeEventListener('offline', this.offlineHandler);
         window.removeEventListener('bl-cache-updated', this.cacheUpdatedHandler);
-        clearInterval(this.autoRefreshInterval);
+        document.removeEventListener('visibilitychange', this.visibilityHandler);
+        this.cancelAutoRefresh();
+    }
+
+    scheduleAutoRefresh() {
+        this.cancelAutoRefresh();
+        this._autoRefreshTimer = setInterval(async () => {
+            if (!document.hidden && await isOnline()) {
+                this.loadBLs();
+            }
+        }, 5 * 60 * 1000);
+    }
+
+    cancelAutoRefresh() {
+        if (this._autoRefreshTimer) {
+            clearInterval(this._autoRefreshTimer);
+            this._autoRefreshTimer = null;
+        }
+    }
+
+    onVisibilityChange() {
+        if (document.hidden) {
+            this.cancelAutoRefresh();
+        } else {
+            this.scheduleAutoRefresh();
+        }
     }
 
     async onOnline() {
@@ -152,7 +176,7 @@ export default class extends Controller {
 
     async updateCacheStatus() {
         const lastSync = await getLastBLSyncTime();
-        const isOnline = navigator.onLine;
+        const online = await isOnline();
 
         if (!lastSync) {
             this.cacheStatusTarget.innerHTML = '';
@@ -167,7 +191,7 @@ export default class extends Controller {
 
         let bannerClass, icon, text;
 
-        if (!isOnline) {
+        if (!online) {
             bannerClass = 'bl-cache-banner--offline';
             icon = 'wifi-slash';
             text = 'Mode hors connexion — Données en cache';

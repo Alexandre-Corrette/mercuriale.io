@@ -41,19 +41,17 @@ class MercurialeImportUploadType extends AbstractType
                     'class' => 'form-select',
                 ],
             ])
-            ->add('etablissement', EntityType::class, [
+            ->add('etablissements', EntityType::class, [
                 'class' => Etablissement::class,
                 'choice_label' => 'nom',
-                'label' => 'Établissement (optionnel)',
-                'placeholder' => 'Prix groupe (tous établissements)',
+                'label' => 'Établissements (optionnel)',
                 'required' => false,
+                'multiple' => true,
+                'expanded' => true,
                 'query_builder' => function (EtablissementRepository $repo) use ($user) {
                     return $repo->createQueryBuilderForUserAccess($user);
                 },
-                'attr' => [
-                    'class' => 'form-select',
-                ],
-                'help' => 'Laissez vide pour appliquer les prix à tous les établissements du groupe',
+                'help' => 'Cochez les établissements concernés. Laissez vide pour appliquer les prix à tous (prix groupe).',
             ])
             ->add('file', FileType::class, [
                 'label' => 'Fichier mercuriale (CSV ou Excel)',

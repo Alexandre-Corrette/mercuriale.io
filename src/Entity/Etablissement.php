@@ -67,10 +67,15 @@ class Etablissement
     #[ORM\OneToMany(targetEntity: BonLivraison::class, mappedBy: 'etablissement')]
     private Collection $bonsLivraison;
 
+    /** @var Collection<int, Fournisseur> */
+    #[ORM\ManyToMany(targetEntity: Fournisseur::class, mappedBy: 'etablissements')]
+    private Collection $fournisseurs;
+
     public function __construct()
     {
         $this->utilisateurEtablissements = new ArrayCollection();
         $this->bonsLivraison = new ArrayCollection();
+        $this->fournisseurs = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -188,6 +193,33 @@ class Etablissement
     public function getBonsLivraison(): Collection
     {
         return $this->bonsLivraison;
+    }
+
+    /**
+     * @return Collection<int, Fournisseur>
+     */
+    public function getFournisseurs(): Collection
+    {
+        return $this->fournisseurs;
+    }
+
+    public function addFournisseur(Fournisseur $fournisseur): static
+    {
+        if (!$this->fournisseurs->contains($fournisseur)) {
+            $this->fournisseurs->add($fournisseur);
+            $fournisseur->addEtablissement($this);
+        }
+
+        return $this;
+    }
+
+    public function removeFournisseur(Fournisseur $fournisseur): static
+    {
+        if ($this->fournisseurs->removeElement($fournisseur)) {
+            $fournisseur->removeEtablissement($this);
+        }
+
+        return $this;
     }
 
     public function getAdresseComplete(): string

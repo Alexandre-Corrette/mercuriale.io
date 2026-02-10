@@ -28,4 +28,7 @@ return [
     'dexie' => [
         'version' => '4.3.0',
     ],
+    'networkProbe' => [
+        'path' => './assets/js/networkProbe.js',
+    ],
 ];

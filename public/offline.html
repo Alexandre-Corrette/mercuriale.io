@@ -15,13 +15,9 @@
         <strong id="pending-count">—</strong>
         opérations en attente de synchronisation
     </div>
-    <button class="btn-retry" onclick="window.location.reload()">
+    <button class="btn-retry" id="retry-btn">
         Réessayer
     </button>
-    <script>
-        // TODO Sprint 2 : lire le compteur depuis IndexedDB (sync_queue)
-        // Pour l'instant, afficher un placeholder
-        document.getElementById('pending-count').textContent = '0';
-    </script>
+    <script src="/js/offline-retry.js"></script>
 </body>
 </html>

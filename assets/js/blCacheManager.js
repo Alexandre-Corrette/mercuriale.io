@@ -3,6 +3,7 @@ import {
     cacheBLs, getCachedBLs, getCachedBL, cacheBLImage,
     getCachedBLImage, getLastBLSyncTime, setLastBLSyncTime, evictOldBLImages
 } from './db.js';
+import { isOnline } from './networkProbe.js';
 
 const MIN_REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
 const IMAGE_PREFETCH_COUNT = 10;
@@ -21,7 +22,7 @@ function notifyUI() {
  */
 export async function refreshBLCache({ force = false, etablissementId = null } = {}) {
     if (_refreshing) return;
-    if (!navigator.onLine) return;
+    if (!await isOnline()) return;
 
     // Skip if synced recently (unless force)
     if (!force) {
@@ -127,7 +128,7 @@ export async function getBLImage(blId) {
     if (cached) return cached;
 
     // Try API if online
-    if (!navigator.onLine) return null;
+    if (!await isOnline()) return null;
 
     try {
         const token = await getJwtToken();
