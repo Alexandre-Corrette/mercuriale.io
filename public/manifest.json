@@ -3,12 +3,15 @@
   "short_name": "Mercuriale",
   "description": "Gestion de mercuriale et contrôle des livraisons",
   "start_url": "/admin",
+  "scope": "/",
+  "id": "/admin",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#1B2A4A",
   "theme_color": "#2E7D32",
   "lang": "fr-FR",
   "categories": ["business", "food"],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/icons/icon-192x192.png",
@@ -27,6 +30,48 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/icons/screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Tableau de bord Mercuriale.io"
+    },
+    {
+      "src": "/icons/screenshot-narrow.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Scanner un bon de livraison"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Scanner un BL",
+      "short_name": "Scanner",
+      "url": "/app/bl/upload",
+      "icons": [
+        {
+          "src": "/icons/icon-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "BL en attente",
+      "short_name": "En attente",
+      "url": "/app/pending",
+      "icons": [
+        {
+          "src": "/icons/icon-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     }
   ]
 }

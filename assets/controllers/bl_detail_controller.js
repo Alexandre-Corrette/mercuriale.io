@@ -1,13 +1,22 @@
 import { Controller } from '@hotwired/stimulus';
 import { getBLDetail, getBLImage } from '../js/blCacheManager.js';
 import { getLastBLSyncTime } from '../js/db.js';
+import { isOnline } from '../js/networkProbe.js';
 
 export default class extends Controller {
     static values = { blId: Number };
     static targets = ['header', 'image', 'data', 'loading', 'cacheStatus', 'info', 'lines'];
 
     async connect() {
+        this._objectUrls = [];
         await this.loadBL();
+    }
+
+    disconnect() {
+        for (const url of this._objectUrls) {
+            URL.revokeObjectURL(url);
+        }
+        this._objectUrls = [];
     }
 
     async loadBL() {
@@ -190,10 +199,10 @@ export default class extends Controller {
         const blob = await getBLImage(bl.id);
         if (blob) {
             const url = URL.createObjectURL(blob);
+            this._objectUrls.push(url);
             const img = document.createElement('img');
             img.src = url;
             img.alt = `BL ${bl.numeroBl || bl.id}`;
-            img.onload = () => URL.revokeObjectURL(url);
             this.imageTarget.innerHTML = '';
             this.imageTarget.appendChild(img);
         }
@@ -201,9 +210,9 @@ export default class extends Controller {
 
     async updateCacheStatus() {
         const lastSync = await getLastBLSyncTime();
-        const isOnline = navigator.onLine;
+        const online = await isOnline();
 
-        if (!isOnline && lastSync) {
+        if (!online && lastSync) {
             const timeStr = new Date(lastSync).toLocaleString('fr-FR', {
                 day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
             });
