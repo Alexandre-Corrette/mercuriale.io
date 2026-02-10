@@ -1,11 +1,14 @@
 import { Controller } from '@hotwired/stimulus';
 import { db, getPendingBLs, deletePendingBL, updateBLStatus, checkStorageQuota, BL_STATUS } from '../js/db.js';
 import { syncAll as syncManagerSyncAll, syncOne as syncManagerSyncOne } from '../js/syncManager.js';
+import { isOnline } from '../js/networkProbe.js';
 
 export default class extends Controller {
     static targets = ['list', 'count', 'emptyState', 'actions', 'networkStatus', 'storageQuota'];
 
     async connect() {
+        this._objectUrls = [];
+
         await this.loadPendingBLs();
         this.updateNetworkStatus();
         this.updateStorageQuota();
@@ -27,6 +30,16 @@ export default class extends Controller {
         window.removeEventListener('offline', this.offlineHandler);
         window.removeEventListener('sync-status-changed', this.syncStatusHandler);
         clearInterval(this.refreshInterval);
+
+        // Revoke all ObjectURLs to prevent memory leaks
+        this._revokeAllObjectUrls();
+    }
+
+    _revokeAllObjectUrls() {
+        for (const url of this._objectUrls) {
+            URL.revokeObjectURL(url);
+        }
+        this._objectUrls = [];
     }
 
     async loadPendingBLs() {
@@ -38,6 +51,9 @@ export default class extends Controller {
                 const photos = await db.pendingPhotos.where('pendingBLId').equals(bl.id).toArray();
                 return { ...bl, photos };
             }));
+
+            // Revoke previous ObjectURLs before re-rendering
+            this._revokeAllObjectUrls();
 
             this.renderList(blsWithPhotos);
             this.countTarget.textContent = bls.length;
@@ -131,7 +147,6 @@ export default class extends Controller {
     }
 
     async loadThumbnails() {
-        // Charger les miniatures depuis IndexedDB
         const thumbnails = this.element.querySelectorAll('[data-thumbnail-photo-id]');
         for (const img of thumbnails) {
             const photoId = parseInt(img.dataset.thumbnailPhotoId);
@@ -139,9 +154,8 @@ export default class extends Controller {
                 const photo = await db.pendingPhotos.get(photoId);
                 if (photo?.blob) {
                     const url = URL.createObjectURL(photo.blob);
+                    this._objectUrls.push(url);
                     img.src = url;
-                    // Libérer l'URL après chargement
-                    img.onload = () => URL.revokeObjectURL(url);
                 }
             } catch (e) {
                 console.error('[PendingBL] Erreur chargement miniature:', e);
@@ -149,9 +163,9 @@ export default class extends Controller {
         }
     }
 
-    updateNetworkStatus() {
-        const isOnline = navigator.onLine;
-        this.networkStatusTarget.innerHTML = isOnline ? `
+    async updateNetworkStatus() {
+        const online = await isOnline();
+        this.networkStatusTarget.innerHTML = online ? `
             <div class="flex items-center gap-3 p-4 bg-green-50 text-green-800 border border-green-200 rounded-xl">
                 <i class="fas fa-wifi"></i>
                 <span>Connecté — La synchronisation est active</span>
@@ -205,7 +219,7 @@ export default class extends Controller {
     async retry(event) {
         const blId = parseInt(event.currentTarget.dataset.blId);
 
-        if (!navigator.onLine) {
+        if (!await isOnline()) {
             await updateBLStatus(blId, BL_STATUS.PENDING);
             await this.loadPendingBLs();
             return;
@@ -216,7 +230,7 @@ export default class extends Controller {
     }
 
     async syncAll() {
-        if (!navigator.onLine) {
+        if (!await isOnline()) {
             return;
         }
 
