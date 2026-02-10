@@ -7,6 +7,7 @@ namespace App\Controller\App;
 use App\DTO\Import\ColumnMappingConfig;
 use App\DTO\Import\ImportPreview;
 use App\DTO\Import\ImportResult;
+use App\Entity\Etablissement;
 use App\Entity\MercurialeImport;
 use App\Entity\Utilisateur;
 use App\Enum\StatutImport;
@@ -60,7 +61,8 @@ class MercurialeImportController extends AbstractController
             }
 
             $fournisseur = $form->get('fournisseur')->getData();
-            $etablissement = $form->get('etablissement')->getData();
+            /** @var Etablissement[] $etablissements */
+            $etablissements = $form->get('etablissements')->getData();
             /** @var \Symfony\Component\HttpFoundation\File\UploadedFile $file */
             $file = $form->get('file')->getData();
 
@@ -73,9 +75,11 @@ class MercurialeImportController extends AbstractController
                 throw $this->createAccessDeniedException('Vous n\'avez pas accès à ce fournisseur.');
             }
 
-            // Verify access to etablissement if provided
-            if ($etablissement !== null && !$this->isGranted('VIEW', $etablissement)) {
-                throw $this->createAccessDeniedException('Vous n\'avez pas accès à cet établissement.');
+            // Verify access to each selected etablissement
+            foreach ($etablissements as $etablissement) {
+                if (!$this->isGranted('VIEW', $etablissement)) {
+                    throw $this->createAccessDeniedException('Vous n\'avez pas accès à cet établissement.');
+                }
             }
 
             try {
@@ -88,7 +92,9 @@ class MercurialeImportController extends AbstractController
                 // Create import entity
                 $import = new MercurialeImport();
                 $import->setFournisseur($fournisseur);
-                $import->setEtablissement($etablissement);
+                foreach ($etablissements as $etablissement) {
+                    $import->addEtablissement($etablissement);
+                }
                 $import->setCreatedBy($user);
                 $import->setOriginalFilename($file->getClientOriginalName());
                 $import->setParsedData($parsedData);

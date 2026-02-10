@@ -30,19 +30,73 @@ export const BL_STATUS = {
     SYNCED: 'SYNCED'          // Terminé, peut être nettoyé
 };
 
+// ── Quota Helpers ──
+
+function isQuotaError(error) {
+    if (!error) return false;
+    if (error.name === 'QuotaExceededError') return true;
+    if (error.inner && error.inner.name === 'QuotaExceededError') return true;
+    const msg = (error.message || '').toLowerCase();
+    return msg.includes('quota') || msg.includes('storage');
+}
+
+export async function evictOldCachedBLs(max = 20) {
+    const count = await db.cachedBLs.count();
+    if (count <= max) return 0;
+
+    const toEvict = count - max;
+    const oldest = await db.cachedBLs.orderBy('cachedAt').limit(toEvict).toArray();
+    const ids = oldest.map(bl => bl.id);
+
+    // Also remove associated images
+    await db.cachedBLImages.where('blId').anyOf(ids).delete();
+    await db.cachedBLs.bulkDelete(ids);
+    return ids.length;
+}
+
+export async function emergencyEviction() {
+    console.warn('[DB] Emergency eviction: reducing stored data');
+    const evictedImages = await evictOldBLImages(10);
+    const evictedBLs = await evictOldCachedBLs(20);
+    console.info(`[DB] Evicted ${evictedImages} images, ${evictedBLs} BLs`);
+}
+
+async function safeWrite(operation) {
+    try {
+        return await operation();
+    } catch (error) {
+        if (isQuotaError(error)) {
+            console.warn('[DB] Quota exceeded, running emergency eviction...');
+            await emergencyEviction();
+
+            try {
+                return await operation();
+            } catch (retryError) {
+                if (isQuotaError(retryError)) {
+                    window.dispatchEvent(new CustomEvent('storage-quota-critical'));
+                }
+                throw retryError;
+            }
+        }
+        throw error;
+    }
+}
+
 // Helper : ajouter un BL en attente
 export async function addPendingBL(data) {
-    const id = await db.pendingBL.add({
-        etablissementId: data.etablissementId,
-        fournisseurId: data.fournisseurId,
-        fournisseurNom: data.fournisseurNom || null,
-        etablissementNom: data.etablissementNom || null,
-        status: BL_STATUS.PENDING,
-        retryCount: 0,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+    return safeWrite(async () => {
+        const id = await db.pendingBL.add({
+            etablissementId: data.etablissementId,
+            fournisseurId: data.fournisseurId,
+            fournisseurNom: data.fournisseurNom || null,
+            etablissementNom: data.etablissementNom || null,
+            status: BL_STATUS.PENDING,
+            retryCount: 0,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        });
+        return id;
     });
-    return id;
 }
 
 // Helper : ajouter une photo pour un BL
@@ -56,12 +110,14 @@ export async function addPendingPhoto(pendingBLId, blob, originalName) {
         throw new Error('Format non supporté (JPEG, PNG, WebP uniquement)');
     }
 
-    return await db.pendingPhotos.add({
-        pendingBLId,
-        blob,
-        originalName,
-        size: blob.size,
-        createdAt: new Date().toISOString()
+    return safeWrite(async () => {
+        return await db.pendingPhotos.add({
+            pendingBLId,
+            blob,
+            originalName,
+            size: blob.size,
+            createdAt: new Date().toISOString()
+        });
     });
 }
 
@@ -172,17 +228,19 @@ export async function getCachedReferentiels(key, maxAgeHours = 24) {
 const BL_SYNC_TIME_KEY = 'lastBLSyncTime';
 
 export async function cacheBLs(bls) {
-    const now = new Date().toISOString();
-    await db.cachedBLs.bulkPut(
-        bls.map(bl => ({
-            id: bl.id,
-            etablissementId: bl.etablissement.id,
-            statut: bl.statut,
-            validatedAt: bl.validatedAt,
-            cachedAt: now,
-            data: bl,
-        }))
-    );
+    return safeWrite(async () => {
+        const now = new Date().toISOString();
+        await db.cachedBLs.bulkPut(
+            bls.map(bl => ({
+                id: bl.id,
+                etablissementId: bl.etablissement.id,
+                statut: bl.statut,
+                validatedAt: bl.validatedAt,
+                cachedAt: now,
+                data: bl,
+            }))
+        );
+    });
 }
 
 export async function getCachedBLs(etablissementId) {
@@ -203,12 +261,14 @@ export async function getCachedBL(blId) {
 }
 
 export async function cacheBLImage(blId, blob) {
-    const now = new Date().toISOString();
-    await db.cachedBLImages.put({
-        blId,
-        blob,
-        cachedAt: now,
-        lastAccessedAt: now,
+    return safeWrite(async () => {
+        const now = new Date().toISOString();
+        await db.cachedBLImages.put({
+            blId,
+            blob,
+            cachedAt: now,
+            lastAccessedAt: now,
+        });
     });
 }
 

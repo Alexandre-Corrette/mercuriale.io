@@ -46,8 +46,8 @@
                         <div class="text-lg font-semibold">{{ import.originalFilename }}</div>
                         <div class="text-cream/80">
                             {{ import.fournisseur.nom }}
-                            {% if import.etablissement %}
-                                - {{ import.etablissement.nom }}
+                            {% if import.etablissements|length > 0 %}
+                                - {{ import.etablissements|map(e => e.nom)|join(', ') }}
                             {% else %}
                                 - Prix groupe
                             {% endif %}

@@ -1,4 +1,5 @@
 import { db, BL_STATUS, updateBLStatus, incrementRetryCount, getBLsReadyToSync, cleanupSyncedBLs } from './db.js';
+import { isOnline } from './networkProbe.js';
 
 // JWT token cache
 let _cachedToken = null;
@@ -28,6 +29,9 @@ export async function getJwtToken() {
     });
 
     if (!response.ok) {
+        if (response.status === 401) {
+            window.dispatchEvent(new CustomEvent('auth-session-lost'));
+        }
         throw new Error(`Token refresh failed: ${response.status}`);
     }
 
@@ -136,7 +140,7 @@ export async function syncAll() {
         return;
     }
 
-    if (!navigator.onLine) {
+    if (!await isOnline()) {
         console.info('[SyncManager] Hors ligne, sync reportée');
         return;
     }
@@ -156,7 +160,7 @@ export async function syncAll() {
 
         for (const bl of bls) {
             // Stop if we went offline during sync
-            if (!navigator.onLine) {
+            if (!await isOnline()) {
                 console.info('[SyncManager] Connexion perdue, arrêt de la sync');
                 break;
             }

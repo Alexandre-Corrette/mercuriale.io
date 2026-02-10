@@ -14,13 +14,16 @@ use App\Entity\Etablissement;
 use App\Entity\Fournisseur;
 use App\Entity\Mercuriale;
 use App\Entity\MercurialeImport;
+use App\Entity\Produit;
 use App\Entity\ProduitFournisseur;
 use App\Entity\Utilisateur;
 use App\Enum\StatutImport;
 use App\Exception\Import\ImportException;
 use App\Repository\MercurialeRepository;
 use App\Repository\ProduitFournisseurRepository;
+use App\Repository\ProduitRepository;
 use App\Repository\UniteRepository;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Psr\Log\LoggerInterface;
@@ -51,6 +54,7 @@ class MercurialeBulkImporter
         private EntityManagerInterface $entityManager,
         private readonly ManagerRegistry $managerRegistry,
         private readonly ProduitFournisseurRepository $produitFournisseurRepository,
+        private readonly ProduitRepository $produitRepository,
         private readonly MercurialeRepository $mercurialeRepository,
         private readonly UniteRepository $uniteRepository,
         private readonly ColumnMapper $columnMapper,
@@ -89,9 +93,13 @@ class MercurialeBulkImporter
         $skipCount = 0;
         $errorCount = 0;
 
+        $etablissements = $import->getEtablissements();
+        // For preview, check against first etablissement or null (prix groupe)
+        $previewEtablissement = $etablissements->isEmpty() ? null : $etablissements->first();
+
         foreach ($rows as $index => $row) {
             $rowNumber = $index + 2; // +2 for header row and 1-based index
-            $line = $this->previewRow($row, $rowNumber, $config, $import->getFournisseur(), $import->getEtablissement());
+            $line = $this->previewRow($row, $rowNumber, $config, $import->getFournisseur(), $previewEtablissement);
 
             $lines[] = $line;
 
@@ -312,6 +320,11 @@ class MercurialeBulkImporter
             // Get default unit (code 'p' for Pièce)
             $defaultUnit = $this->uniteRepository->findOneBy(['code' => 'p']);
 
+            $etablissements = $import->getEtablissements();
+            // If no etablissement selected → prix groupe (null), process once
+            /** @var array<int, ?Etablissement> $etablissementList */
+            $etablissementList = $etablissements->isEmpty() ? [null] : $etablissements->toArray();
+
             $batchCount = 0;
 
             foreach ($rows as $index => $row) {
@@ -325,12 +338,14 @@ class MercurialeBulkImporter
                 $rowNumber = $index + 2;
 
                 try {
+                    // Process the product once (first etablissement determines action)
+                    $firstEtab = $etablissementList[0] ?? null;
                     $result = $this->processRow(
                         $row,
                         $rowNumber,
                         $config,
                         $import->getFournisseur(),
-                        $import->getEtablissement(),
+                        $firstEtab,
                         $user,
                         $defaultUnit,
                     );
@@ -349,6 +364,26 @@ class MercurialeBulkImporter
 
                     if ($result['action'] === 'skipped') {
                         ++$skipped;
+                    }
+
+                    // For additional etablissements, create mercuriale rows
+                    // (product already created/updated above)
+                    if (\count($etablissementList) > 1 && $result['product'] !== null) {
+                        for ($i = 1, $count = \count($etablissementList); $i < $count; ++$i) {
+                            $extraResult = $this->processExtraMercuriale(
+                                $row,
+                                $config,
+                                $result['product'],
+                                $etablissementList[$i],
+                                $user,
+                            );
+
+                            match ($extraResult) {
+                                'created' => ++$mercurialesCreated,
+                                'updated' => ++$mercurialesUpdated,
+                                default => null,
+                            };
+                        }
                     }
                 } catch (\Exception $e) {
                     ++$failed;
@@ -464,7 +499,7 @@ class MercurialeBulkImporter
     }
 
     /**
-     * @return array{action: string, mercuriale_action: ?string}
+     * @return array{action: string, mercuriale_action: ?string, product: ?ProduitFournisseur}
      */
     private function processRow(
         array $row,
@@ -526,6 +561,19 @@ class MercurialeBulkImporter
 
         $this->entityManager->persist($product);
 
+        // Auto-create or link Produit (internal catalog) if missing
+        if ($product->getProduit() === null && !empty($mappedData['designation'])) {
+            $produit = $this->produitRepository->findOneBy(['nom' => $mappedData['designation']]);
+            if ($produit === null) {
+                $produit = new Produit();
+                $produit->setNom($mappedData['designation']);
+                $produit->setUniteBase($product->getUniteAchat());
+                $produit->setCodeInterne($mappedData['code_fournisseur']);
+                $this->entityManager->persist($produit);
+            }
+            $product->setProduit($produit);
+        }
+
         // Handle mercuriale (price) - only if price is valid
         $hasValidPrice = !empty($mappedData['prix'])
             && is_numeric($mappedData['prix'])
@@ -536,6 +584,7 @@ class MercurialeBulkImporter
             return [
                 'action' => $productAction,
                 'mercuriale_action' => null,
+                'product' => $product,
             ];
         }
 
@@ -561,7 +610,7 @@ class MercurialeBulkImporter
                 // Check if price is different
                 if (bccomp($existingMercuriale->getPrixNegocie(), $mappedData['prix'], 4) === 0) {
                     // Same price, skip
-                    return ['action' => 'skipped', 'mercuriale_action' => null];
+                    return ['action' => 'skipped', 'mercuriale_action' => null, 'product' => $product];
                 }
 
                 // End the existing mercuriale
@@ -589,6 +638,68 @@ class MercurialeBulkImporter
         return [
             'action' => $productAction,
             'mercuriale_action' => $mercurialeAction,
+            'product' => $product,
         ];
+    }
+
+    /**
+     * Create a mercuriale row for an additional etablissement (product already exists).
+     */
+    private function processExtraMercuriale(
+        array $row,
+        ColumnMappingConfig $config,
+        ProduitFournisseur $product,
+        ?Etablissement $etablissement,
+        Utilisateur $user,
+    ): ?string {
+        $mappedData = $this->columnMapper->mapRow($row, $config);
+
+        $hasValidPrice = !empty($mappedData['prix'])
+            && is_numeric($mappedData['prix'])
+            && (float) $mappedData['prix'] > 0;
+
+        if (!$hasValidPrice) {
+            return null;
+        }
+
+        $dateDebut = $mappedData['date_debut']
+            ? new \DateTimeImmutable($mappedData['date_debut'])
+            : new \DateTimeImmutable();
+
+        $dateFin = $mappedData['date_fin']
+            ? new \DateTimeImmutable($mappedData['date_fin'])
+            : null;
+
+        $mercurialeAction = null;
+
+        if ($product->getId() !== null) {
+            $existingMercuriale = $this->mercurialeRepository->findPrixValide(
+                $product,
+                $etablissement,
+                $dateDebut,
+            );
+
+            if ($existingMercuriale !== null) {
+                if (bccomp($existingMercuriale->getPrixNegocie(), $mappedData['prix'], 4) === 0) {
+                    return null; // same price, skip
+                }
+
+                $previousDay = $dateDebut->modify('-1 day');
+                $existingMercuriale->setDateFin($previousDay);
+                $mercurialeAction = 'updated';
+            }
+        }
+
+        $mercuriale = new Mercuriale();
+        $mercuriale->setProduitFournisseur($product);
+        $mercuriale->setEtablissement($etablissement);
+        $mercuriale->setPrixNegocie($mappedData['prix']);
+        $mercuriale->setDateDebut($dateDebut);
+        $mercuriale->setDateFin($dateFin);
+        $mercuriale->setCreatedBy($user);
+
+        $this->entityManager->persist($mercuriale);
+
+        return $mercurialeAction ?? 'created';
     }
 }
