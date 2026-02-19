@@ -38,67 +38,80 @@
 
 {# Lines table #}
 <div class="overflow-x-auto">
-    <table class="w-full text-sm">
+    <table class="extraction-table">
         <thead>
             <tr class="bg-navy text-white text-left">
-                <th class="px-3 py-2 rounded-tl-lg">Produit</th>
-                <th class="px-3 py-2 text-center">Qté Cmd</th>
-                <th class="px-3 py-2 text-center">Qté Liv</th>
-                <th class="px-3 py-2 text-right">Prix U.</th>
-                <th class="px-3 py-2 text-right">Total</th>
-                <th class="px-3 py-2 text-center rounded-tr-lg">Statut</th>
+                <th class="rounded-tl-lg">N°</th>
+                <th>Code</th>
+                <th>Désignation</th>
+                <th>Orig.</th>
+                <th class="extraction-cell--right">Qté livrée</th>
+                <th class="extraction-cell--right">Qté fact.</th>
+                <th class="extraction-cell--right">PU</th>
+                <th class="extraction-cell--right">MJ</th>
+                <th class="extraction-cell--right">Total HT</th>
+                <th class="extraction-cell--center">TVA</th>
+                <th class="extraction-cell--center rounded-tr-lg">Statut</th>
             </tr>
         </thead>
         <tbody>
             {% for ligne in bonLivraison.lignes %}
                 {% set hasAlertes = ligne.alertes|length > 0 %}
                 {% set isMatched = ligne.produitFournisseur is not null %}
-                <tr class="border-b border-gray-100 hover:bg-cream/50 {{ hasAlertes ? 'bg-coral/5' : '' }}"
+                <tr class="{{ hasAlertes ? 'extraction-row--alerte' : '' }}"
                     data-ligne-id="{{ ligne.id }}">
-                    <td class="px-3 py-3">
+                    <td class="extraction-cell--muted">{{ ligne.numeroLigneBl }}</td>
+                    <td class="extraction-cell--code">{{ ligne.codeProduitBl|e }}</td>
+                    <td>
                         <div class="flex items-start gap-2">
-                            {# Match indicator #}
                             {% if isMatched %}
-                                <span class="flex-shrink-0 w-5 h-5 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-xs" title="Produit référencé">
+                                <span class="extraction-match-icon extraction-match-icon--ok" title="Produit référencé">
                                     <i class="fas fa-check"></i>
                                 </span>
                             {% else %}
-                                <span class="flex-shrink-0 w-5 h-5 rounded-full bg-gold/30 text-gold-dark flex items-center justify-center text-xs" title="Produit non référencé">
+                                <span class="extraction-match-icon extraction-match-icon--unknown" title="Produit non référencé">
                                     <i class="fas fa-question"></i>
                                 </span>
                             {% endif %}
-                            <div>
-                                <div class="font-medium text-navy">{{ ligne.designationBl|e }}</div>
-                                {% if ligne.codeProduitBl %}
-                                    <div class="text-xs text-gray-400">{{ ligne.codeProduitBl|e }}</div>
-                                {% endif %}
-                            </div>
+                            <span class="font-medium text-navy">{{ ligne.designationBl|e }}</span>
                         </div>
                     </td>
-                    <td class="px-3 py-3 text-center">
-                        {% if ligne.quantiteCommandee %}
-                            {{ ligne.quantiteCommandee|number_format(2, ',', ' ') }}
-                            <span class="text-gray-400">{{ ligne.unite.code }}</span>
+                    <td class="extraction-cell--muted">{{ ligne.origine }}</td>
+                    <td class="extraction-cell--right">
+                        {% if ligne.quantiteLivree %}
+                            {{ ligne.quantiteLivree|number_format(3, ',', ' ') }}
+                            <span class="extraction-cell--muted">{{ ligne.uniteLivraison }}</span>
                         {% else %}
-                            <span class="text-gray-300">—</span>
+                            <span class="extraction-cell--muted">—</span>
                         {% endif %}
                     </td>
-                    <td class="px-3 py-3 text-center">
-                        <span class="editable-field" data-field="quantite_livree">
-                            {{ ligne.quantiteLivree|number_format(2, ',', ' ') }}
-                        </span>
-                        <span class="text-gray-400">{{ ligne.unite.code }}</span>
+                    <td class="extraction-cell--right">
+                        {% if ligne.quantiteFacturee %}
+                            {{ ligne.quantiteFacturee|number_format(3, ',', ' ') }}
+                            <span class="extraction-cell--muted">{{ ligne.uniteFacturation }}</span>
+                        {% else %}
+                            <span class="extraction-cell--muted">—</span>
+                        {% endif %}
                     </td>
-                    <td class="px-3 py-3 text-right">
-                        <span class="editable-field" data-field="prix_unitaire">
-                            {{ ligne.prixUnitaire|number_format(4, ',', ' ') }}
-                        </span>
-                        <span class="text-gray-400">€/{{ ligne.unite.code }}</span>
+                    <td class="extraction-cell--right">
+                        {{ ligne.prixUnitaire|number_format(4, ',', ' ') }}
+                        <span class="extraction-cell--muted">€/{{ ligne.uniteFacturation|default(ligne.unite.code) }}</span>
                     </td>
-                    <td class="px-3 py-3 text-right font-medium">
+                    <td class="extraction-cell--right">
+                        {% if ligne.majorationDecote and ligne.majorationDecote != '0' and ligne.majorationDecote != '0.0000' %}
+                            {% set mjFloat = ligne.majorationDecote|number_format(2, ',', ' ') %}
+                            <span class="extraction-mj-value {{ ligne.majorationDecote > 0 ? 'extraction-mj-value--positive' : 'extraction-mj-value--negative' }}">
+                                {{ mjFloat }} €
+                            </span>
+                        {% else %}
+                            <span class="extraction-cell--muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="extraction-cell--right font-medium">
                         {{ ligne.totalLigne|number_format(2, ',', ' ') }} €
                     </td>
-                    <td class="px-3 py-3 text-center">
+                    <td class="extraction-cell--center extraction-cell--muted">{{ ligne.codeTva }}</td>
+                    <td class="extraction-cell--center">
                         {% if ligne.statutControle.value == 'OK' %}
                             <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-600" title="OK">
                                 <i class="fas fa-check"></i>
@@ -110,7 +123,8 @@
                         {% else %}
                             <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-coral/20 text-coral cursor-pointer"
                                   title="{{ ligne.statutControle.label }}"
-                                  onclick="toggleAlertes({{ ligne.id }})">
+                                  data-action="click->extraction-alertes#toggle"
+                                  data-ligne-id="{{ ligne.id }}">
                                 <i class="fas fa-exclamation"></i>
                             </span>
                         {% endif %}
@@ -118,11 +132,11 @@
                 </tr>
                 {# Alerts row (hidden by default) #}
                 {% if hasAlertes %}
-                <tr class="hidden" id="alertes-{{ ligne.id }}">
-                    <td colspan="6" class="px-3 py-2 bg-coral/5">
+                <tr class="extraction-alertes-row" id="alertes-{{ ligne.id }}">
+                    <td colspan="11" class="extraction-alertes-cell">
                         <div class="text-sm">
                             {% for alerte in ligne.alertes %}
-                                <div class="flex items-start gap-2 py-1 {% if not loop.last %}border-b border-coral/10{% endif %}">
+                                <div class="extraction-alerte-item">
                                     <span class="flex-shrink-0 px-2 py-0.5 rounded text-xs font-medium
                                         {% if alerte.typeAlerte.value == 'ECART_PRIX' %}bg-coral/20 text-coral-dark
                                         {% elseif alerte.typeAlerte.value == 'ECART_QUANTITE' %}bg-gold/30 text-gold-dark
@@ -139,8 +153,8 @@
                 {% endif %}
             {% else %}
                 <tr>
-                    <td colspan="6" class="px-3 py-8 text-center text-gray-400">
-                        <i class="fas fa-inbox text-3xl mb-2"></i>
+                    <td colspan="11" class="extraction-empty">
+                        <i class="fas fa-inbox"></i>
                         <p>Aucune ligne extraite</p>
                     </td>
                 </tr>
@@ -170,12 +184,3 @@
         </div>
     </div>
 </div>
-
-<script>
-function toggleAlertes(ligneId) {
-    const row = document.getElementById('alertes-' + ligneId);
-    if (row) {
-        row.classList.toggle('hidden');
-    }
-}
-</script>

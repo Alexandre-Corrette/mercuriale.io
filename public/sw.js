@@ -17,7 +17,7 @@
  * - Kill switch : si /api/sw/status retourne {active: false}, le SW se désenregistre
  */
 
-var CACHE_VERSION = 'mercuriale-v1.5.0';
+var CACHE_VERSION = 'mercuriale-v1.6.0';
 var APP_SHELL_CACHE = CACHE_VERSION + '-shell';
 
 // Fichiers de l'App Shell à pré-cacher
@@ -34,7 +34,8 @@ var APP_SHELL_FILES = [
     '/css/push-notification.css',
     '/css/bl-consultation.css',
     '/js/offline-retry.js',
-    '/css/install-prompt.css'
+    '/css/install-prompt.css',
+    '/css/extraction.css'
 ];
 
 // ── INSTALL ──
