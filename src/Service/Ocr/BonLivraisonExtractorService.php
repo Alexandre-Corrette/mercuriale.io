@@ -67,6 +67,7 @@ class BonLivraisonExtractorService
         private readonly EntityManagerInterface $entityManager,
         private readonly ProduitFournisseurRepository $produitFournisseurRepository,
         private readonly FournisseurRepository $fournisseurRepository,
+        private readonly ImageCompressor $imageCompressor,
         private readonly UniteRepository $uniteRepository,
         private readonly LoggerInterface $logger,
         private readonly string $projectDir,
@@ -92,9 +93,24 @@ class BonLivraisonExtractorService
                 );
             }
 
-            // 2. Appeler l'API Claude
+            // 2. Préparer l'image (compression si nécessaire)
+            $preparedImage = $this->imageCompressor->prepareForApi($imagePath);
+
+            if ($preparedImage['wasCompressed']) {
+                $this->logger->info('Image BL compressée avant OCR', [
+                    'bl_id' => $bl->getId(),
+                    'original' => $preparedImage['originalSize'],
+                    'final' => $preparedImage['finalSize'],
+                ]);
+            }
+
+            // 3. Appeler l'API Claude avec l'image préparée
             $prompt = $this->buildExtractionPrompt();
-            $response = $this->anthropicClient->analyzeImage($imagePath, $prompt);
+            $response = $this->anthropicClient->analyzeImageFromBase64(
+                $preparedImage['base64'],
+                $preparedImage['mediaType'],
+                $prompt
+            );
 
             // 3. Parser la réponse JSON
             $data = $this->parseResponse($response['content']);
