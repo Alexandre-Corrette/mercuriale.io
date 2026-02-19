@@ -463,3 +463,56 @@
 .ea-no-sidebar .main-content {
     max-width: 100%;
 }
+
+/* =============================================
+   BL Lignes inline table (detail page)
+   ============================================= */
+
+.bl-lignes-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.bl-lignes-table th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    color: var(--mercuriale-navy);
+    background-color: var(--mercuriale-cream);
+    padding: 0.5rem 0.75rem;
+    border-bottom: 2px solid var(--mercuriale-cream-dark);
+    white-space: nowrap;
+}
+
+.bl-lignes-table td {
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--mercuriale-cream-dark);
+    vertical-align: middle;
+}
+
+.bl-lignes-table tbody tr:hover {
+    background-color: rgba(245, 240, 230, 0.5);
+}
+
+.bl-lignes-table .ligne-alerte {
+    background-color: #fff5f5;
+}
+
+.bl-lignes-table .ligne-alerte:hover {
+    background-color: #ffe8e8;
+}
+
+.bl-lignes-table .badge {
+    font-size: 0.7rem;
+    padding: 0.25em 0.5em;
+    margin-right: 0.25rem;
+}
+
+.bl-lignes-table tfoot .bl-lignes-total td {
+    border-top: 2px solid var(--mercuriale-navy);
+    border-bottom: none;
+    padding-top: 0.75rem;
+    font-size: 0.95rem;
+}
