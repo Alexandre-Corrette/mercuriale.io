@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Entity\Fournisseur;
+use App\Entity\Organisation;
 use App\Entity\ProduitFournisseur;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -49,5 +50,21 @@ class ProduitFournisseurRepository extends ServiceEntityRepository
             ->orderBy('pf.designationFournisseur', 'ASC')
             ->getQuery()
             ->getResult();
+    }
+
+    public function countActiveForOrganisation(Organisation $org): int
+    {
+        return (int) $this->createQueryBuilder('pf')
+            ->select('COUNT(pf.id)')
+            ->join('pf.fournisseur', 'f')
+            ->innerJoin('f.organisationFournisseurs', 'orgf')
+            ->where('pf.actif = :pfActif')
+            ->andWhere('orgf.organisation = :org')
+            ->andWhere('orgf.actif = :actif')
+            ->setParameter('pfActif', true)
+            ->setParameter('org', $org)
+            ->setParameter('actif', true)
+            ->getQuery()
+            ->getSingleScalarResult();
     }
 }

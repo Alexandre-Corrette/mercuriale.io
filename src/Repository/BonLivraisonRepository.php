@@ -7,6 +7,7 @@ namespace App\Repository;
 use App\Entity\BonLivraison;
 use App\Entity\Etablissement;
 use App\Entity\Fournisseur;
+use App\Entity\Organisation;
 use App\Entity\Utilisateur;
 use App\Enum\StatutBonLivraison;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
@@ -120,5 +121,41 @@ class BonLivraisonRepository extends ServiceEntityRepository
         }
 
         return $qb->getQuery()->getResult();
+    }
+
+    public function countByMonthForOrganisation(Organisation $org): int
+    {
+        $firstDayOfMonth = new \DateTimeImmutable('first day of this month midnight');
+
+        return (int) $this->createQueryBuilder('bl')
+            ->select('COUNT(bl.id)')
+            ->innerJoin('bl.etablissement', 'e')
+            ->where('e.organisation = :org')
+            ->andWhere('e.actif = :actif')
+            ->andWhere('bl.dateLivraison >= :firstDay')
+            ->setParameter('org', $org)
+            ->setParameter('actif', true)
+            ->setParameter('firstDay', $firstDayOfMonth)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
+     * @return BonLivraison[]
+     */
+    public function findRecentForOrganisation(Organisation $org, int $limit = 5): array
+    {
+        return $this->createQueryBuilder('bl')
+            ->select('bl', 'f', 'e')
+            ->leftJoin('bl.fournisseur', 'f')
+            ->innerJoin('bl.etablissement', 'e')
+            ->where('e.organisation = :org')
+            ->andWhere('e.actif = :actif')
+            ->setParameter('org', $org)
+            ->setParameter('actif', true)
+            ->orderBy('bl.createdAt', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
     }
 }
