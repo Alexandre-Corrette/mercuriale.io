@@ -212,6 +212,14 @@ class BonLivraisonController extends AbstractController
                 'tempsExtraction' => $result->tempsExtraction,
                 'redirectUrl' => $this->generateUrl('app_bl_extraction', ['id' => $bonLivraison->getId()]),
             ]);
+        } catch (\RuntimeException $e) {
+            if (str_contains($e->getMessage(), 'Impossible de compresser')) {
+                return new JsonResponse([
+                    'success' => false,
+                    'errors' => ['L\'image est trop volumineuse. Veuillez prendre une photo en qualité standard (pas HDR/ProRAW).'],
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+            throw $e;
         } catch (\Exception $e) {
             $this->logger->error('Erreur extraction BL', [
                 'bl_id' => $bonLivraison->getId(),
