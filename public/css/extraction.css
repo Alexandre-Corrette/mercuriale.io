@@ -1,0 +1,118 @@
+/* Extraction BL table styles */
+
+.extraction-table {
+    width: 100%;
+    font-size: 0.8125rem;
+    border-collapse: collapse;
+}
+
+.extraction-table thead th {
+    padding: 0.5rem 0.5rem;
+    text-align: left;
+    white-space: nowrap;
+    font-weight: 600;
+    font-size: 0.75rem;
+}
+
+.extraction-table tbody td {
+    padding: 0.5rem 0.5rem;
+    vertical-align: top;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.extraction-table tbody tr:hover {
+    background-color: rgba(250, 245, 235, 0.5);
+}
+
+.extraction-table tbody tr.extraction-row--alerte {
+    background-color: rgba(255, 107, 107, 0.05);
+}
+
+.extraction-table .extraction-cell--right {
+    text-align: right;
+}
+
+.extraction-table .extraction-cell--center {
+    text-align: center;
+}
+
+.extraction-cell--muted {
+    color: #9ca3af;
+    font-size: 0.75rem;
+}
+
+.extraction-cell--code {
+    font-family: ui-monospace, monospace;
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+.extraction-match-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 9999px;
+    font-size: 0.625rem;
+    flex-shrink: 0;
+}
+
+.extraction-match-icon--ok {
+    background-color: #dcfce7;
+    color: #16a34a;
+}
+
+.extraction-match-icon--unknown {
+    background-color: rgba(212, 175, 55, 0.3);
+    color: #92700c;
+}
+
+.extraction-mj-value {
+    font-size: 0.75rem;
+}
+
+.extraction-mj-value--positive {
+    color: #dc2626;
+}
+
+.extraction-mj-value--negative {
+    color: #16a34a;
+}
+
+/* Alertes toggle row */
+.extraction-alertes-row {
+    display: none;
+}
+
+.extraction-alertes-row.is-visible {
+    display: table-row;
+}
+
+.extraction-alertes-cell {
+    padding: 0.5rem;
+    background-color: rgba(255, 107, 107, 0.05);
+}
+
+.extraction-alerte-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.25rem 0;
+}
+
+.extraction-alerte-item:not(:last-child) {
+    border-bottom: 1px solid rgba(255, 107, 107, 0.1);
+}
+
+/* Empty state */
+.extraction-empty {
+    padding: 2rem 0.75rem;
+    text-align: center;
+    color: #9ca3af;
+}
+
+.extraction-empty i {
+    font-size: 1.875rem;
+    margin-bottom: 0.5rem;
+}
