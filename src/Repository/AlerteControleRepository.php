@@ -7,6 +7,7 @@ namespace App\Repository;
 use App\Entity\AlerteControle;
 use App\Entity\BonLivraison;
 use App\Entity\Etablissement;
+use App\Entity\Organisation;
 use App\Enum\StatutAlerte;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -66,5 +67,22 @@ class AlerteControleRepository extends ServiceEntityRepository
     public function countNouvelles(): int
     {
         return $this->count(['statut' => StatutAlerte::NOUVELLE]);
+    }
+
+    public function countNonTraiteesForOrganisation(Organisation $org): int
+    {
+        return (int) $this->createQueryBuilder('a')
+            ->select('COUNT(a.id)')
+            ->join('a.ligneBl', 'l')
+            ->join('l.bonLivraison', 'bl')
+            ->innerJoin('bl.etablissement', 'e')
+            ->where('a.statut = :statut')
+            ->andWhere('e.organisation = :org')
+            ->andWhere('e.actif = :actif')
+            ->setParameter('statut', StatutAlerte::NOUVELLE)
+            ->setParameter('org', $org)
+            ->setParameter('actif', true)
+            ->getQuery()
+            ->getSingleScalarResult();
     }
 }

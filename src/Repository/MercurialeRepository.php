@@ -6,6 +6,7 @@ namespace App\Repository;
 
 use App\Entity\Etablissement;
 use App\Entity\Mercuriale;
+use App\Entity\Organisation;
 use App\Entity\ProduitFournisseur;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -85,5 +86,45 @@ class MercurialeRepository extends ServiceEntityRepository
         }
 
         return $qb->getQuery()->getOneOrNullResult();
+    }
+
+    public function countActiveForOrganisation(Organisation $org): int
+    {
+        $now = new \DateTimeImmutable();
+
+        return (int) $this->createQueryBuilder('m')
+            ->select('COUNT(m.id)')
+            ->join('m.produitFournisseur', 'pf')
+            ->join('pf.fournisseur', 'f')
+            ->innerJoin('f.organisationFournisseurs', 'orgf')
+            ->where('orgf.organisation = :org')
+            ->andWhere('orgf.actif = :actif')
+            ->andWhere('m.dateDebut <= :now')
+            ->andWhere('m.dateFin IS NULL OR m.dateFin >= :now')
+            ->setParameter('org', $org)
+            ->setParameter('actif', true)
+            ->setParameter('now', $now)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
+     * @return Mercuriale[]
+     */
+    public function findRecentForOrganisation(Organisation $org, int $limit = 10): array
+    {
+        return $this->createQueryBuilder('m')
+            ->select('m', 'pf', 'f')
+            ->join('m.produitFournisseur', 'pf')
+            ->join('pf.fournisseur', 'f')
+            ->innerJoin('f.organisationFournisseurs', 'orgf')
+            ->where('orgf.organisation = :org')
+            ->andWhere('orgf.actif = :actif')
+            ->setParameter('org', $org)
+            ->setParameter('actif', true)
+            ->orderBy('m.updatedAt', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
     }
 }
