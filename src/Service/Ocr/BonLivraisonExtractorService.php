@@ -81,7 +81,6 @@ class BonLivraisonExtractorService
         private readonly EntityManagerInterface $entityManager,
         private readonly ProduitFournisseurRepository $produitFournisseurRepository,
         private readonly FournisseurRepository $fournisseurRepository,
-        private readonly ImageCompressor $imageCompressor,
         private readonly UniteRepository $uniteRepository,
         private readonly LoggerInterface $logger,
         private readonly string $projectDir,
@@ -107,24 +106,9 @@ class BonLivraisonExtractorService
                 );
             }
 
-            // 2. Préparer l'image (compression si nécessaire)
-            $preparedImage = $this->imageCompressor->prepareForApi($imagePath);
-
-            if ($preparedImage['wasCompressed']) {
-                $this->logger->info('Image BL compressée avant OCR', [
-                    'bl_id' => $bl->getId(),
-                    'original' => $preparedImage['originalSize'],
-                    'final' => $preparedImage['finalSize'],
-                ]);
-            }
-
-            // 3. Appeler l'API Claude avec l'image préparée
+            // 2. Appeler l'API Claude (la compression est gérée dans AnthropicClient)
             $prompt = $this->buildExtractionPrompt();
-            $response = $this->anthropicClient->analyzeImageFromBase64(
-                $preparedImage['base64'],
-                $preparedImage['mediaType'],
-                $prompt
-            );
+            $response = $this->anthropicClient->analyzeImage($imagePath, $prompt);
 
             // 3. Parser la réponse JSON
             $data = $this->parseResponse($response['content']);
@@ -202,6 +186,7 @@ class BonLivraisonExtractorService
 Tu es un expert en lecture de bons de livraison (BL) pour la restauration professionnelle.
 
 ÉTAPE 1 — ANALYSE DU DOCUMENT
+
 Avant d'extraire les données, identifie :
 - Le fournisseur et son secteur (fruits/légumes, marée, viande, boissons, épicerie...)
 - La structure exacte des colonnes du tableau (elles varient selon les fournisseurs)
