@@ -98,4 +98,45 @@ class FournisseurRepository extends ServiceEntityRepository
 
         return $qb;
     }
+
+    public function countActiveForOrganisation(Organisation $organisation): int
+    {
+        return (int) $this->createQueryBuilder('f')
+            ->select('COUNT(DISTINCT f.id)')
+            ->innerJoin('f.organisationFournisseurs', 'orgf')
+            ->where('orgf.organisation = :organisation')
+            ->andWhere('orgf.actif = :actif')
+            ->andWhere('f.actif = :fournisseurActif')
+            ->setParameter('organisation', $organisation)
+            ->setParameter('actif', true)
+            ->setParameter('fournisseurActif', true)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
+     * @return array<array{fournisseur: Fournisseur, productCount: int}>
+     */
+    public function findWithProductCountForOrganisation(Organisation $organisation): array
+    {
+        $rows = $this->createQueryBuilder('f')
+            ->select('f', 'COUNT(pf.id) AS productCount')
+            ->innerJoin('f.organisationFournisseurs', 'orgf')
+            ->leftJoin('f.produitsFournisseur', 'pf', 'WITH', 'pf.actif = true')
+            ->where('orgf.organisation = :organisation')
+            ->andWhere('orgf.actif = :actif')
+            ->andWhere('f.actif = :fournisseurActif')
+            ->setParameter('organisation', $organisation)
+            ->setParameter('actif', true)
+            ->setParameter('fournisseurActif', true)
+            ->groupBy('f.id')
+            ->orderBy('f.nom', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        return array_map(fn (array $row) => [
+            'fournisseur' => $row[0],
+            'productCount' => (int) $row['productCount'],
+        ], $rows);
+    }
 }
