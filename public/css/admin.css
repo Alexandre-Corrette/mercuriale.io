@@ -516,3 +516,19 @@
     padding-top: 0.75rem;
     font-size: 0.95rem;
 }
+
+/* =============================================
+   Sidebar hidden for non-SUPER_ADMIN
+   ============================================= */
+
+.ea-no-sidebar .sidebar {
+    display: none;
+}
+
+.ea-no-sidebar .content-wrapper {
+    margin-left: 0;
+}
+
+.ea-no-sidebar .main-content {
+    max-width: 100%;
+}
