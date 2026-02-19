@@ -48,6 +48,25 @@ class FournisseurRepository extends ServiceEntityRepository
     }
 
     /**
+     * Vérifie si un fournisseur est accessible via un établissement actif de l'organisation.
+     */
+    public function hasAccessViaEtablissement(Organisation $organisation, Fournisseur $fournisseur): bool
+    {
+        $count = $this->createQueryBuilder('f')
+            ->select('COUNT(f.id)')
+            ->innerJoin('f.etablissements', 'etab')
+            ->where('f = :fournisseur')
+            ->andWhere('etab.organisation = :organisation')
+            ->andWhere('etab.actif = true')
+            ->setParameter('fournisseur', $fournisseur)
+            ->setParameter('organisation', $organisation)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return $count > 0;
+    }
+
+    /**
      * Retourne un QueryBuilder filtré par les accès de l'utilisateur.
      * Un utilisateur voit les fournisseurs associés à son organisation via OrganisationFournisseur
      * OU liés directement à un établissement accessible via fournisseur_etablissement.
