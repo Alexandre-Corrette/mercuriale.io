@@ -1,0 +1,6 @@
+{% extends '@EasyAdmin/layout.html.twig' %}
+
+{% block body_class %}
+    {{ parent() }}
+    {% if not is_granted('ROLE_SUPER_ADMIN') %} ea-no-sidebar{% endif %}
+{% endblock %}
