@@ -73,6 +73,27 @@ class LigneBonLivraison
     #[ORM\Column(options: ['default' => 0])]
     private int $ordre = 0;
 
+    #[ORM\Column(length: 20, nullable: true)]
+    private ?string $uniteLivraison = null;
+
+    #[ORM\Column(type: Types::DECIMAL, precision: 12, scale: 4, nullable: true)]
+    private ?string $quantiteFacturee = null;
+
+    #[ORM\Column(length: 20, nullable: true)]
+    private ?string $uniteFacturation = null;
+
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 4, nullable: true)]
+    private ?string $majorationDecote = null;
+
+    #[ORM\Column(length: 10, nullable: true)]
+    private ?string $codeTva = null;
+
+    #[ORM\Column(length: 10, nullable: true)]
+    private ?string $origine = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?int $numeroLigneBl = null;
+
     /** @var Collection<int, AlerteControle> */
     #[ORM\OneToMany(targetEntity: AlerteControle::class, mappedBy: 'ligneBl', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $alertes;
@@ -152,7 +173,7 @@ class LigneBonLivraison
         return $this->quantiteLivree;
     }
 
-    public function setQuantiteLivree(string $quantiteLivree): static
+    public function setQuantiteLivree(?string $quantiteLivree): static
     {
         $this->quantiteLivree = $quantiteLivree;
 
@@ -266,6 +287,90 @@ class LigneBonLivraison
                 $alerte->setLigneBl(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getUniteLivraison(): ?string
+    {
+        return $this->uniteLivraison;
+    }
+
+    public function setUniteLivraison(?string $uniteLivraison): static
+    {
+        $this->uniteLivraison = $uniteLivraison;
+
+        return $this;
+    }
+
+    public function getQuantiteFacturee(): ?string
+    {
+        return $this->quantiteFacturee;
+    }
+
+    public function setQuantiteFacturee(?string $quantiteFacturee): static
+    {
+        $this->quantiteFacturee = $quantiteFacturee;
+
+        return $this;
+    }
+
+    public function getUniteFacturation(): ?string
+    {
+        return $this->uniteFacturation;
+    }
+
+    public function setUniteFacturation(?string $uniteFacturation): static
+    {
+        $this->uniteFacturation = $uniteFacturation;
+
+        return $this;
+    }
+
+    public function getMajorationDecote(): ?string
+    {
+        return $this->majorationDecote;
+    }
+
+    public function setMajorationDecote(?string $majorationDecote): static
+    {
+        $this->majorationDecote = $majorationDecote;
+
+        return $this;
+    }
+
+    public function getCodeTva(): ?string
+    {
+        return $this->codeTva;
+    }
+
+    public function setCodeTva(?string $codeTva): static
+    {
+        $this->codeTva = $codeTva;
+
+        return $this;
+    }
+
+    public function getOrigine(): ?string
+    {
+        return $this->origine;
+    }
+
+    public function setOrigine(?string $origine): static
+    {
+        $this->origine = $origine;
+
+        return $this;
+    }
+
+    public function getNumeroLigneBl(): ?int
+    {
+        return $this->numeroLigneBl;
+    }
+
+    public function setNumeroLigneBl(?int $numeroLigneBl): static
+    {
+        $this->numeroLigneBl = $numeroLigneBl;
 
         return $this;
     }
