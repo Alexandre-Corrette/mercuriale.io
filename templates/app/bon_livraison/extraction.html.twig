@@ -2,6 +2,11 @@
 
 {% block title %}Extraction BL #{{ bonLivraison.id }} - Mercuriale.io{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="/css/extraction.css">
+{% endblock %}
+
 {% block body %}
 <div class="min-h-screen bg-gradient-to-br from-cream to-cream-dark py-6 px-4">
     <div class="max-w-7xl mx-auto">
@@ -122,7 +127,9 @@
                         </div>
                     {% else %}
                         {# Show extracted data #}
-                        {% include 'app/bon_livraison/_extraction_data.html.twig' %}
+                        <div data-controller="extraction-alertes">
+                            {% include 'app/bon_livraison/_extraction_data.html.twig' %}
+                        </div>
                     {% endif %}
                 </div>
             </div>
