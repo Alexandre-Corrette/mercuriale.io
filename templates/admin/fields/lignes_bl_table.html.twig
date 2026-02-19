@@ -1,0 +1,64 @@
+{% set lignes = field.value %}
+
+{% if lignes is empty %}
+    <p class="text-muted">Aucune ligne pour ce bon de livraison.</p>
+{% else %}
+    <div class="table-responsive">
+        <table class="bl-lignes-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Produit</th>
+                    <th class="text-end">Qte cmd</th>
+                    <th class="text-end">Qte livree</th>
+                    <th>Unite</th>
+                    <th class="text-end">PU</th>
+                    <th class="text-end">Total</th>
+                    <th>Statut</th>
+                    <th>Alertes</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set totalGeneral = '0' %}
+                {% for ligne in lignes %}
+                    {% set hasAlerte = ligne.alertes|length > 0 %}
+                    <tr class="{{ hasAlerte ? 'ligne-alerte' : '' }}">
+                        <td>{{ ligne.ordre }}</td>
+                        <td>
+                            {% if ligne.codeProduitBl %}<span class="text-muted small">{{ ligne.codeProduitBl }}</span> {% endif %}
+                            {{ ligne.designationBl }}
+                        </td>
+                        <td class="text-end">{{ ligne.quantiteCommandee is not null ? ligne.quantiteCommandee|number_format(3, ',', ' ') : '-' }}</td>
+                        <td class="text-end">{{ ligne.quantiteLivree|number_format(3, ',', ' ') }}</td>
+                        <td>{{ ligne.unite }}</td>
+                        <td class="text-end">{{ ligne.prixUnitaire|number_format(4, ',', ' ') }} &euro;</td>
+                        <td class="text-end">{{ ligne.totalLigne|number_format(2, ',', ' ') }} &euro;</td>
+                        <td>
+                            {% set statutColor = ligne.statutControle.color() %}
+                            <span class="badge bg-{{ statutColor }}">{{ ligne.statutControle.label() }}</span>
+                        </td>
+                        <td>
+                            {% if hasAlerte %}
+                                {% for alerte in ligne.alertes %}
+                                    <span class="badge bg-{{ alerte.statut.color() }}" title="{{ alerte.message }}">
+                                        {{ alerte.statut.label() }}
+                                    </span>
+                                {% endfor %}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% set totalGeneral = totalGeneral + ligne.totalLigne %}
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="bl-lignes-total">
+                    <td colspan="6" class="text-end"><strong>Total</strong></td>
+                    <td class="text-end"><strong>{{ totalGeneral|number_format(2, ',', ' ') }} &euro;</strong></td>
+                    <td colspan="2"></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+{% endif %}
