@@ -6,6 +6,7 @@ namespace App\Security\Voter;
 
 use App\Entity\Fournisseur;
 use App\Entity\Utilisateur;
+use App\Repository\FournisseurRepository;
 use App\Repository\OrganisationFournisseurRepository;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
@@ -21,6 +22,7 @@ class FournisseurVoter extends Voter
 
     public function __construct(
         private readonly OrganisationFournisseurRepository $organisationFournisseurRepository,
+        private readonly FournisseurRepository $fournisseurRepository,
     ) {
     }
 
@@ -48,7 +50,11 @@ class FournisseurVoter extends Voter
         }
 
         // Verify organisation has access to this fournisseur via OrganisationFournisseur
-        if (!$this->organisationFournisseurRepository->hasAccess($organisation, $fournisseur)) {
+        // OR via a direct Etablissement link (fournisseur_etablissement)
+        $hasOrgAccess = $this->organisationFournisseurRepository->hasAccess($organisation, $fournisseur);
+        $hasEtabAccess = !$hasOrgAccess && $this->fournisseurRepository->hasAccessViaEtablissement($organisation, $fournisseur);
+
+        if (!$hasOrgAccess && !$hasEtabAccess) {
             return false;
         }
 
