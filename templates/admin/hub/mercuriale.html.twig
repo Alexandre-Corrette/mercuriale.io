@@ -1,0 +1,73 @@
+{% extends 'admin/hub/layout.html.twig' %}
+
+{% block hub_content %}
+<div class="hub-content">
+    <h1 class="hub-title"><i class="fas fa-tags"></i> Mercuriale</h1>
+
+    {# Stats #}
+    <div class="hub-stats">
+        <div class="hub-stat-card hub-stat-card--gold">
+            <div class="hub-stat-card__value">{{ mercuriale_count }}</div>
+            <div class="hub-stat-card__label">prix actifs</div>
+        </div>
+        <div class="hub-stat-card">
+            <div class="hub-stat-card__value">{{ fournisseur_count }}</div>
+            <div class="hub-stat-card__label">fournisseurs</div>
+        </div>
+    </div>
+
+    {# CTAs #}
+    <div class="hub-ctas">
+        <a href="{{ path('app_mercuriale_import') }}" class="hub-cta hub-cta--primary">
+            <i class="fas fa-file-excel"></i> Importer des prix
+        </a>
+    </div>
+
+    {# Recent prices table #}
+    <div class="hub-section">
+        <div class="hub-section__header">
+            <h2 class="hub-section__title">Prix récents</h2>
+            <a href="{{ crud_mercuriale_url }}" class="hub-section__link">Voir tous les prix <i class="fas fa-arrow-right"></i></a>
+        </div>
+
+        {% if recent_mercuriales is empty %}
+            <div class="hub-table__empty">
+                Aucun prix enregistré.
+            </div>
+        {% else %}
+            <table class="hub-table">
+                <thead>
+                    <tr>
+                        <th>Produit</th>
+                        <th>Fournisseur</th>
+                        <th>Prix</th>
+                        <th>Unité</th>
+                        <th>Début</th>
+                        <th>Fin</th>
+                        <th>Scope</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in recent_mercuriales %}
+                        <tr>
+                            <td>{{ m.produitFournisseur.designationFournisseur }}</td>
+                            <td>{{ m.produitFournisseur.fournisseur.nom }}</td>
+                            <td class="hub-prix">{{ m.prixNegocieAsFloat|number_format(4, ',', ' ') }} &euro;</td>
+                            <td>{{ m.produitFournisseur.uniteAchat }}</td>
+                            <td>{{ m.dateDebut|date('d/m/Y') }}</td>
+                            <td>{{ m.dateFin ? m.dateFin|date('d/m/Y') : '—' }}</td>
+                            <td>
+                                {% if m.etablissement %}
+                                    <span class="hub-badge hub-badge--warning">{{ m.etablissement }}</span>
+                                {% else %}
+                                    <span class="hub-badge hub-badge--secondary">Groupe</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

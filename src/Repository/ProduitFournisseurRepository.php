@@ -52,6 +52,61 @@ class ProduitFournisseurRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    /**
+     * @return array{items: ProduitFournisseur[], total: int}
+     */
+    public function searchForOrganisation(
+        Organisation $org,
+        ?string $query = null,
+        ?int $fournisseurId = null,
+        ?int $categorieId = null,
+        int $limit = 20,
+        int $offset = 0,
+    ): array {
+        $qb = $this->createQueryBuilder('pf')
+            ->join('pf.fournisseur', 'f')
+            ->join('pf.uniteAchat', 'u')
+            ->innerJoin('f.organisationFournisseurs', 'orgf')
+            ->leftJoin('pf.produit', 'p')
+            ->leftJoin('p.categorie', 'cat')
+            ->where('pf.actif = :pfActif')
+            ->andWhere('orgf.organisation = :org')
+            ->andWhere('orgf.actif = :actif')
+            ->setParameter('pfActif', true)
+            ->setParameter('org', $org)
+            ->setParameter('actif', true);
+
+        if ($query !== null && $query !== '') {
+            $qb->andWhere('pf.designationFournisseur LIKE :q OR f.nom LIKE :q')
+                ->setParameter('q', '%' . $query . '%');
+        }
+
+        if ($fournisseurId !== null) {
+            $qb->andWhere('f.id = :fournisseurId')
+                ->setParameter('fournisseurId', $fournisseurId);
+        }
+
+        if ($categorieId !== null) {
+            $qb->andWhere('p.categorie = :categorieId')
+                ->setParameter('categorieId', $categorieId);
+        }
+
+        $countQb = clone $qb;
+        $total = (int) $countQb->select('COUNT(pf.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        $items = $qb
+            ->select('pf', 'f', 'u', 'p', 'cat')
+            ->orderBy('pf.designationFournisseur', 'ASC')
+            ->setMaxResults($limit)
+            ->setFirstResult($offset)
+            ->getQuery()
+            ->getResult();
+
+        return ['items' => $items, 'total' => $total];
+    }
+
     public function countActiveForOrganisation(Organisation $org): int
     {
         return (int) $this->createQueryBuilder('pf')

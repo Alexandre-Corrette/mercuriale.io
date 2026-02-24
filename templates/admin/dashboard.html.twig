@@ -33,8 +33,11 @@
                     </div>
                 </div>
                 <div class="card-footer">
-                    <a href="{{ ea_url().setController('App\\Controller\\Admin\\BonLivraisonCrudController').setAction('index') }}" class="portail-card__cta">
-                        Gérer les BL <i class="fas fa-arrow-right"></i>
+                    <a href="{{ path('app_bl_upload') }}" class="portail-card__cta">
+                        <i class="fas fa-camera"></i> Uploader un BL
+                    </a>
+                    <a href="{{ path('admin_hub_bl') }}" class="portail-card__cta portail-card__cta--secondary">
+                        Consulter les BL <i class="fas fa-arrow-right"></i>
                     </a>
                 </div>
             </div>
@@ -60,8 +63,11 @@
                     </div>
                 </div>
                 <div class="card-footer">
-                    <a href="{{ ea_url().setController('App\\Controller\\Admin\\MercurialeCrudController').setAction('index') }}" class="portail-card__cta">
-                        Voir la mercuriale <i class="fas fa-arrow-right"></i>
+                    <a href="{{ path('app_mercuriale_import') }}" class="portail-card__cta">
+                        <i class="fas fa-file-excel"></i> Importer une mercuriale
+                    </a>
+                    <a href="{{ path('admin_hub_mercuriale') }}" class="portail-card__cta portail-card__cta--secondary">
+                        Voir les prix <i class="fas fa-arrow-right"></i>
                     </a>
                 </div>
             </div>
@@ -87,10 +93,11 @@
                     </div>
                 </div>
                 <div class="card-footer">
-                    <a href="{{ ea_url().setController('App\\Controller\\Admin\\ProduitFournisseurCrudController').setAction('index') }}" class="portail-card__cta">
+                    <a href="{{ path('admin_hub_produits') }}" class="portail-card__cta">
                         Voir les produits <i class="fas fa-arrow-right"></i>
                     </a>
                 </div>
+
             </div>
         </div>
     </div>
