@@ -59,47 +59,66 @@ class DashboardController extends AbstractDashboardController
                 ->setCssClass('menu-item-highlight');
 
             yield MenuItem::linkToCrud('Bons de livraison', 'fas fa-file-invoice', BonLivraison::class)
+                ->setPermission('ROLE_SUPER_ADMIN')
                 ->setDefaultSort(['dateLivraison' => 'DESC']);
 
-            yield MenuItem::linkToCrud('Lignes BL', 'fas fa-list', LigneBonLivraison::class);
+            yield MenuItem::linkToCrud('Lignes BL', 'fas fa-list', LigneBonLivraison::class)
+                ->setPermission('ROLE_SUPER_ADMIN');
 
             yield MenuItem::linkToUrl('Import mercuriale', 'fas fa-file-excel', '/app/mercuriale/import')
                 ->setCssClass('menu-item-highlight');
 
             yield MenuItem::linkToCrud('Alertes', 'fas fa-exclamation-triangle', AlerteControle::class)
+                ->setPermission('ROLE_SUPER_ADMIN')
                 ->setDefaultSort(['createdAt' => 'DESC']);
 
             yield MenuItem::section('RÉFÉRENTIELS');
 
             yield MenuItem::subMenu('Fournisseurs & Produits', 'fas fa-boxes')
+                ->setPermission('ROLE_SUPER_ADMIN')
                 ->setSubItems([
-                    MenuItem::linkToCrud('Fournisseurs', 'fas fa-truck', Fournisseur::class),
-                    MenuItem::linkToCrud('Associations Fournisseurs', 'fas fa-link', OrganisationFournisseur::class),
-                    MenuItem::linkToCrud('Produits', 'fas fa-box', ProduitFournisseur::class),
+                    MenuItem::linkToCrud('Fournisseurs', 'fas fa-truck', Fournisseur::class)
+                        ->setPermission('ROLE_SUPER_ADMIN'),
+                    MenuItem::linkToCrud('Associations Fournisseurs', 'fas fa-link', OrganisationFournisseur::class)
+                        ->setPermission('ROLE_SUPER_ADMIN'),
+                    MenuItem::linkToCrud('Produits', 'fas fa-box', ProduitFournisseur::class)
+                        ->setPermission('ROLE_SUPER_ADMIN'),
                     MenuItem::linkToCrud('Mercuriale (prix)', 'fas fa-tags', Mercuriale::class)
+                        ->setPermission('ROLE_SUPER_ADMIN')
                         ->setDefaultSort(['dateDebut' => 'DESC']),
                 ]);
 
             yield MenuItem::subMenu('Catalogue', 'fas fa-book')
+                ->setPermission('ROLE_SUPER_ADMIN')
                 ->setSubItems([
-                    MenuItem::linkToCrud('Catalogue interne', 'fas fa-apple-whole', Produit::class),
-                    MenuItem::linkToCrud('Catégories', 'fas fa-folder', CategorieProduit::class),
+                    MenuItem::linkToCrud('Catalogue interne', 'fas fa-apple-whole', Produit::class)
+                        ->setPermission('ROLE_SUPER_ADMIN'),
+                    MenuItem::linkToCrud('Catégories', 'fas fa-folder', CategorieProduit::class)
+                        ->setPermission('ROLE_SUPER_ADMIN'),
                 ]);
 
             yield MenuItem::subMenu('Unités', 'fas fa-ruler-combined')
+                ->setPermission('ROLE_SUPER_ADMIN')
                 ->setSubItems([
-                    MenuItem::linkToCrud('Unités', 'fas fa-ruler', Unite::class),
-                    MenuItem::linkToCrud('Conversions', 'fas fa-exchange-alt', ConversionUnite::class),
+                    MenuItem::linkToCrud('Unités', 'fas fa-ruler', Unite::class)
+                        ->setPermission('ROLE_SUPER_ADMIN'),
+                    MenuItem::linkToCrud('Conversions', 'fas fa-exchange-alt', ConversionUnite::class)
+                        ->setPermission('ROLE_SUPER_ADMIN'),
                 ]);
 
             yield MenuItem::section('ADMINISTRATION');
 
             yield MenuItem::subMenu('Configuration', 'fas fa-cog')
+                ->setPermission('ROLE_SUPER_ADMIN')
                 ->setSubItems([
-                    MenuItem::linkToCrud('Établissements', 'fas fa-store', Etablissement::class),
-                    MenuItem::linkToCrud('Utilisateurs', 'fas fa-users', Utilisateur::class),
-                    MenuItem::linkToCrud('Droits établissements', 'fas fa-user-shield', UtilisateurEtablissement::class),
-                    MenuItem::linkToCrud('Organisations', 'fas fa-sitemap', Organisation::class),
+                    MenuItem::linkToCrud('Établissements', 'fas fa-store', Etablissement::class)
+                        ->setPermission('ROLE_SUPER_ADMIN'),
+                    MenuItem::linkToCrud('Utilisateurs', 'fas fa-users', Utilisateur::class)
+                        ->setPermission('ROLE_SUPER_ADMIN'),
+                    MenuItem::linkToCrud('Droits établissements', 'fas fa-user-shield', UtilisateurEtablissement::class)
+                        ->setPermission('ROLE_SUPER_ADMIN'),
+                    MenuItem::linkToCrud('Organisations', 'fas fa-sitemap', Organisation::class)
+                        ->setPermission('ROLE_SUPER_ADMIN'),
                 ]);
         }
         // ADMIN/MANAGER : pas d'items supplementaires (navigation par cards du dashboard)
