@@ -4,3 +4,14 @@
     {{ parent() }}
     {% if not is_granted('ROLE_SUPER_ADMIN') %} ea-no-sidebar{% endif %}
 {% endblock %}
+
+{% block content_top_header %}
+    {% if not is_granted('ROLE_SUPER_ADMIN') %}
+    <div class="ea-no-sidebar-logo">
+        <a href="{{ path(ea.dashboardRouteName) }}">
+            <img src="/images/logo-mercuriale-rectangulaire.png" alt="Mercuriale.io" class="ea-no-sidebar-logo__img">
+        </a>
+    </div>
+    {% endif %}
+    {{ parent() }}
+{% endblock %}
