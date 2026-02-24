@@ -47,28 +47,28 @@ class BonLivraisonUploadType extends AbstractType
                 'required' => true,
                 'multiple' => true,
                 'constraints' => [
-                    new Count([
-                        'min' => 1,
-                        'max' => 10,
-                        'minMessage' => 'Veuillez sélectionner au moins un fichier',
-                        'maxMessage' => 'Vous ne pouvez pas uploader plus de {{ limit }} fichiers',
-                    ]),
-                    new All([
-                        'constraints' => [
-                            new File([
-                                'maxSize' => '20M',
-                                'mimeTypes' => [
+                    new Count(
+                        min: 1,
+                        max: 10,
+                        minMessage: 'Veuillez sélectionner au moins un fichier',
+                        maxMessage: 'Vous ne pouvez pas uploader plus de {{ limit }} fichiers',
+                    ),
+                    new All(
+                        constraints: [
+                            new File(
+                                maxSize: '20M',
+                                mimeTypes: [
                                     'image/jpeg',
                                     'image/png',
                                     'image/heic',
                                     'image/heif',
                                     'application/pdf',
                                 ],
-                                'mimeTypesMessage' => 'Formats acceptés : JPEG, PNG, HEIC, PDF',
-                                'maxSizeMessage' => 'Le fichier est trop volumineux ({{ size }} {{ suffix }}). Taille maximale : {{ limit }} {{ suffix }}.',
-                            ]),
+                                mimeTypesMessage: 'Formats acceptés : JPEG, PNG, HEIC, PDF',
+                                maxSizeMessage: 'Le fichier est trop volumineux ({{ size }} {{ suffix }}). Taille maximale : {{ limit }} {{ suffix }}.',
+                            ),
                         ],
-                    ]),
+                    ),
                 ],
                 'attr' => [
                     'accept' => 'image/jpeg,image/png,image/heic,image/heif,application/pdf',
