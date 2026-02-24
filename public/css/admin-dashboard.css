@@ -1,0 +1,128 @@
+/* =============================================
+   Dashboard Portail — MERC-42
+   ============================================= */
+
+/* Portal cards layout */
+.dashboard-portail .portail-card {
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.dashboard-portail .portail-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 20px -4px rgba(0, 0, 0, 0.15);
+}
+
+/* Card header: icon + title */
+.portail-card__header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.portail-card__header h5 {
+    margin: 0;
+    font-weight: 700;
+}
+
+/* Stats grid inside each card */
+.portail-card__stats {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.portail-card__stat {
+    display: flex;
+    flex-direction: column;
+}
+
+.portail-card__stat-value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.portail-card__stat-label {
+    font-size: 0.8rem;
+    opacity: 0.85;
+}
+
+/* CTA link in card footer */
+.portail-card__cta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    text-decoration: none;
+    color: inherit;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.portail-card__cta:hover {
+    text-decoration: none;
+    color: inherit;
+}
+
+.card-navy .portail-card__cta,
+.card-coral .portail-card__cta {
+    color: white;
+}
+
+.card-gold .portail-card__cta {
+    color: var(--mercuriale-navy);
+}
+
+/* Activity section */
+.dashboard-activity .table {
+    margin-bottom: 0;
+}
+
+.dashboard-activity .table th {
+    border-top: none;
+}
+
+.dashboard-activity .table td {
+    vertical-align: middle;
+}
+
+/* Params section */
+.dashboard-params__link {
+    display: block;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    color: var(--mercuriale-navy);
+    text-decoration: none;
+    font-weight: 600;
+    transition: background-color 0.2s ease, padding-left 0.2s ease;
+}
+
+.dashboard-params__link:hover {
+    background-color: var(--mercuriale-cream);
+    padding-left: 1.25rem;
+    color: var(--mercuriale-coral);
+}
+
+.dashboard-params__link i {
+    color: var(--mercuriale-gold);
+}
+
+/* =============================================
+   Responsive — single column on mobile
+   ============================================= */
+
+@media (max-width: 768px) {
+    .portail-card__stats {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .portail-card__stat-value {
+        font-size: 1.5rem;
+    }
+
+    .dashboard-params .row > div {
+        margin-bottom: 0.5rem;
+    }
+}
