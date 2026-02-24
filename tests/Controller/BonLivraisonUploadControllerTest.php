@@ -62,28 +62,16 @@ class BonLivraisonUploadControllerTest extends WebTestCase
 
         $this->client->loginUser($user);
 
-        // Créer un fichier de test
-        $testFile = $this->createTestJpegFile();
-        $uploadedFile = new UploadedFile(
-            $testFile,
-            'test.jpg',
-            'image/jpeg',
-            null,
-            true
-        );
-
-        // Tenter de soumettre le formulaire avec un établissement non autorisé
+        // Accéder au formulaire d'upload
         $crawler = $this->client->request('GET', '/app/bl/upload');
-        $form = $crawler->selectButton('Extraire les données')->form();
-
-        // Note: Ce test vérifie que le formulaire ne permet pas de sélectionner
-        // un établissement non autorisé (le dropdown est filtré)
-        // Si quelqu'un tente de forcer la soumission, le Voter rejettera
-
         $this->assertResponseIsSuccessful();
 
-        // Nettoyer
-        unlink($testFile);
+        // Le formulaire filtre les établissements par accès utilisateur,
+        // donc l'établissement interdit ne devrait pas apparaître dans le select
+        $options = $crawler->filter('#bon_livraison_upload_etablissement option')->each(
+            fn ($node) => $node->attr('value')
+        );
+        $this->assertNotContains((string) $etablissement->getId(), $options);
     }
 
     public function testUploadValidFile(): void
@@ -106,25 +94,21 @@ class BonLivraisonUploadControllerTest extends WebTestCase
 
         // Extraire le token CSRF
         $form = $crawler->filter('form#upload-form')->form();
+        $csrfToken = $form->get('bon_livraison_upload[_token]')->getValue();
 
-        $this->client->request('POST', '/app/bl/upload', [
-            'bon_livraison_upload' => [
+        $uploadedFile = new UploadedFile($testFile, 'test.jpg', 'image/jpeg', null, true);
+
+        $this->client->request(
+            'POST',
+            '/app/bl/upload',
+            ['bon_livraison_upload' => [
                 'etablissement' => $etablissement->getId(),
-                '_token' => $form->get('bon_livraison_upload[_token]')->getValue(),
-            ],
-        ], [
-            'bon_livraison_upload' => [
-                'file' => new UploadedFile(
-                    $testFile,
-                    'test.jpg',
-                    'image/jpeg',
-                    null,
-                    true
-                ),
-            ],
-        ]);
+                '_token' => $csrfToken,
+            ]],
+            ['bon_livraison_upload' => ['files' => [$uploadedFile]]],
+        );
 
-        // Devrait rediriger vers la page de validation
+        // Devrait rediriger vers la page d'extraction
         $this->assertResponseRedirects();
 
         // Nettoyer
@@ -147,25 +131,20 @@ class BonLivraisonUploadControllerTest extends WebTestCase
 
         $testFile = $this->createTestJpegFile();
 
-        $this->client->request('POST', '/app/bl/upload', [
-            'bon_livraison_upload' => [
+        $uploadedFile = new UploadedFile($testFile, 'test.jpg', 'image/jpeg', null, true);
+
+        $this->client->request(
+            'POST',
+            '/app/bl/upload',
+            ['bon_livraison_upload' => [
                 'etablissement' => $etablissement->getId(),
                 '_token' => 'invalid_csrf_token',
-            ],
-        ], [
-            'bon_livraison_upload' => [
-                'file' => new UploadedFile(
-                    $testFile,
-                    'test.jpg',
-                    'image/jpeg',
-                    null,
-                    true
-                ),
-            ],
-        ]);
+            ]],
+            ['bon_livraison_upload' => ['files' => [$uploadedFile]]],
+        );
 
-        // Le formulaire devrait être invalide (CSRF)
-        $this->assertResponseIsSuccessful(); // Re-affiche le formulaire avec erreur
+        // Le formulaire devrait être invalide (CSRF) — re-affiche avec erreur (422)
+        $this->assertResponseStatusCodeSame(422);
 
         // Nettoyer
         if (file_exists($testFile)) {
@@ -180,6 +159,8 @@ class BonLivraisonUploadControllerTest extends WebTestCase
 
         $user = new Utilisateur();
         $user->setEmail('test_' . uniqid() . '@example.com');
+        $user->setNom('Test');
+        $user->setPrenom('User');
         $user->setOrganisation($organisation);
         $user->setRoles(['ROLE_USER']);
 
@@ -199,6 +180,8 @@ class BonLivraisonUploadControllerTest extends WebTestCase
 
         $user = new Utilisateur();
         $user->setEmail('test_access_' . uniqid() . '@example.com');
+        $user->setNom('Test');
+        $user->setPrenom('Admin');
         $user->setOrganisation($organisation);
         $user->setRoles(['ROLE_ADMIN']); // ADMIN a accès à tous les établissements de son org
 
