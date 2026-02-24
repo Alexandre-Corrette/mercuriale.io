@@ -12,7 +12,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\NumberField;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-#[IsGranted('ROLE_MANAGER')]
+#[IsGranted('ROLE_ADMIN')]
 class ConversionUniteCrudController extends AbstractCrudController
 {
     public static function getEntityFqcn(): string

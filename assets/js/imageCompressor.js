@@ -1,13 +1,36 @@
 /**
+ * Détecte si le navigateur supporte l'encodage WebP via canvas.
+ * Résultat mis en cache après le premier appel.
+ */
+let _webpSupported = null;
+function supportsWebP() {
+    if (_webpSupported !== null) return _webpSupported;
+
+    try {
+        const c = document.createElement('canvas');
+        c.width = 1;
+        c.height = 1;
+        _webpSupported = c.toDataURL('image/webp').startsWith('data:image/webp');
+    } catch {
+        _webpSupported = false;
+    }
+
+    return _webpSupported;
+}
+
+/**
  * Compresse une image avant stockage IndexedDB
- * Objectif : passer de ~5Mo à ~300-500Ko
+ * Utilise WebP si supporté (30-40% plus léger), JPEG en fallback
+ * Objectif : passer de ~5Mo à ~200-400Ko
  */
 export async function compressImage(file, options = {}) {
+    const outputType = supportsWebP() ? 'image/webp' : 'image/jpeg';
     const {
-        maxWidth = 1600,
-        maxHeight = 1600,
-        quality = 0.85,
-        type = 'image/jpeg'
+        maxWidth = 1400,
+        maxHeight = 1400,
+        quality = 0.82,
+        maxSizeBytes = 3 * 1024 * 1024,
+        type = outputType
     } = options;
 
     // Validation du fichier
@@ -22,17 +45,11 @@ export async function compressImage(file, options = {}) {
     let width = bitmap.width;
     let height = bitmap.height;
 
-    if (width > maxWidth) {
-        height = (height * maxWidth) / width;
-        width = maxWidth;
+    if (width > maxWidth || height > maxHeight) {
+        const ratio = Math.min(maxWidth / width, maxHeight / height);
+        width = Math.round(width * ratio);
+        height = Math.round(height * ratio);
     }
-    if (height > maxHeight) {
-        width = (width * maxHeight) / height;
-        height = maxHeight;
-    }
-
-    width = Math.round(width);
-    height = Math.round(height);
 
     // Utiliser OffscreenCanvas si disponible (plus performant)
     let canvas;
@@ -52,19 +69,22 @@ export async function compressImage(file, options = {}) {
     // Dessiner l'image redimensionnée
     ctx.drawImage(bitmap, 0, 0, width, height);
 
-    // Convertir en blob
+    // Boucle de compression dégressive si trop gros
+    let currentQuality = quality;
     let blob;
-    if (canvas.convertToBlob) {
-        blob = await canvas.convertToBlob({ type, quality });
-    } else {
-        // Fallback pour canvas classique
-        blob = await new Promise(resolve => {
-            canvas.toBlob(resolve, type, quality);
-        });
-    }
+
+    do {
+        blob = canvas.convertToBlob
+            ? await canvas.convertToBlob({ type, quality: currentQuality })
+            : await new Promise(resolve => canvas.toBlob(resolve, type, currentQuality));
+
+        if (blob.size <= maxSizeBytes) break;
+        currentQuality -= 0.1;
+    } while (currentQuality > 0.3);
 
     // Log pour debug
-    console.log(`[ImageCompressor] ${file.name}: ${(file.size / 1024).toFixed(0)}Ko → ${(blob.size / 1024).toFixed(0)}Ko (${width}x${height})`);
+    const format = type === 'image/webp' ? 'WebP' : 'JPEG';
+    console.log(`[ImageCompressor] ${file.name}: ${(file.size / 1024).toFixed(0)}Ko → ${(blob.size / 1024).toFixed(0)}Ko (${width}x${height}, ${format}, q=${currentQuality.toFixed(1)})`);
 
     return {
         blob,

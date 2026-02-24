@@ -1,0 +1,92 @@
+{% set lignes = field.value %}
+
+{% if lignes is empty %}
+    <p class="text-muted">Aucune ligne pour ce bon de livraison.</p>
+{% else %}
+    <div class="table-responsive">
+        <table class="bl-lignes-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>N° ligne</th>
+                    <th>Produit</th>
+                    <th>Orig.</th>
+                    <th class="text-end">Qte livrée</th>
+                    <th class="text-end">Qte facturée</th>
+                    <th>Unité</th>
+                    <th class="text-end">PU</th>
+                    <th class="text-end">MJ/Décote</th>
+                    <th class="text-end">Total</th>
+                    <th>TVA</th>
+                    <th>Statut</th>
+                    <th>Alertes</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set totalGeneral = '0' %}
+                {% for ligne in lignes %}
+                    {% set hasAlerte = ligne.alertes|length > 0 %}
+                    <tr class="{{ hasAlerte ? 'ligne-alerte' : '' }}">
+                        <td>{{ ligne.ordre }}</td>
+                        <td>{{ ligne.numeroLigneBl }}</td>
+                        <td>
+                            {% if ligne.codeProduitBl %}<span class="text-muted small">{{ ligne.codeProduitBl }}</span> {% endif %}
+                            {{ ligne.designationBl }}
+                        </td>
+                        <td>{{ ligne.origine }}</td>
+                        <td class="text-end">
+                            {% if ligne.quantiteLivree is not null %}
+                                {{ ligne.quantiteLivree|number_format(3, ',', ' ') }}
+                                {% if ligne.uniteLivraison %}<span class="text-muted small">{{ ligne.uniteLivraison }}</span>{% endif %}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if ligne.quantiteFacturee is not null %}
+                                {{ ligne.quantiteFacturee|number_format(3, ',', ' ') }}
+                                {% if ligne.uniteFacturation %}<span class="text-muted small">{{ ligne.uniteFacturation }}</span>{% endif %}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>{{ ligne.unite }}</td>
+                        <td class="text-end">{{ ligne.prixUnitaire|number_format(4, ',', ' ') }} &euro;</td>
+                        <td class="text-end">
+                            {% if ligne.majorationDecote and ligne.majorationDecote != '0' and ligne.majorationDecote != '0.0000' %}
+                                {{ ligne.majorationDecote|number_format(2, ',', ' ') }} &euro;
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td class="text-end">{{ ligne.totalLigne|number_format(2, ',', ' ') }} &euro;</td>
+                        <td>{{ ligne.codeTva }}</td>
+                        <td>
+                            {% set statutColor = ligne.statutControle.color() %}
+                            <span class="badge bg-{{ statutColor }}">{{ ligne.statutControle.label() }}</span>
+                        </td>
+                        <td>
+                            {% if hasAlerte %}
+                                {% for alerte in ligne.alertes %}
+                                    <span class="badge bg-{{ alerte.statut.color() }}" title="{{ alerte.message }}">
+                                        {{ alerte.statut.label() }}
+                                    </span>
+                                {% endfor %}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% set totalGeneral = totalGeneral + ligne.totalLigne %}
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="bl-lignes-total">
+                    <td colspan="9" class="text-end"><strong>Total</strong></td>
+                    <td class="text-end"><strong>{{ totalGeneral|number_format(2, ',', ' ') }} &euro;</strong></td>
+                    <td colspan="3"></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+{% endif %}

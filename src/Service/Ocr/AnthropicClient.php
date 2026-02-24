@@ -14,17 +14,10 @@ class AnthropicClient
     private const API_VERSION = '2023-06-01';
     private const MAX_RETRIES = 3;
     private const TIMEOUT_SECONDS = 60;
-    private const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20 Mo
-
-    private const ALLOWED_MIME_TYPES = [
-        'image/jpeg' => 'image/jpeg',
-        'image/png' => 'image/png',
-        'image/gif' => 'image/gif',
-        'image/webp' => 'image/webp',
-    ];
 
     public function __construct(
         private readonly HttpClientInterface $httpClient,
+        private readonly ImageCompressor $imageCompressor,
         private readonly LoggerInterface $logger,
         private readonly string $apiKey,
         private readonly string $model,
@@ -46,19 +39,24 @@ class AnthropicClient
     {
         $startTime = microtime(true);
 
-        // 1. Valider que le fichier existe et est une image valide
-        $this->validateImageFile($imagePath);
+        // 1. Préparer l'image (validation + compression si nécessaire)
+        $prepared = $this->imageCompressor->prepareForApi($imagePath);
 
-        // 2. Lire l'image et encoder en base64
-        $imageData = $this->encodeImage($imagePath);
+        if ($prepared['wasCompressed']) {
+            $this->logger->info('[OCR] Image compressée côté serveur', [
+                'original_size' => $prepared['originalSize'],
+                'final_size' => $prepared['finalSize'],
+                'ratio' => round((1 - $prepared['finalSize'] / $prepared['originalSize']) * 100) . '%',
+            ]);
+        }
 
-        // 3. Construire le payload
-        $payload = $this->buildPayload($imageData['base64'], $imageData['media_type'], $prompt);
+        // 2. Construire le payload
+        $payload = $this->buildPayload($prepared['base64'], $prepared['mediaType'], $prompt);
 
-        // 4. Appeler l'API avec retry
+        // 3. Appeler l'API avec retry
         $response = $this->callApiWithRetry($payload);
 
-        // 5. Logger le succès (sans les données sensibles)
+        // 4. Logger le succès (sans les données sensibles)
         $duration = round(microtime(true) - $startTime, 2);
         $this->logger->info('Anthropic API call successful', [
             'duration_seconds' => $duration,
@@ -67,65 +65,10 @@ class AnthropicClient
             'model' => $this->model,
         ]);
 
-        // 6. Extraire et retourner le contenu
+        // 5. Extraire et retourner le contenu
         return [
             'content' => $this->extractContent($response),
             'usage' => $response['usage'] ?? ['input_tokens' => 0, 'output_tokens' => 0],
-        ];
-    }
-
-    /**
-     * Valide que le fichier est une image valide et respecte les contraintes.
-     *
-     * @throws AnthropicApiException
-     */
-    private function validateImageFile(string $imagePath): void
-    {
-        if (!file_exists($imagePath)) {
-            throw new AnthropicApiException("Le fichier n'existe pas: {$imagePath}");
-        }
-
-        if (!is_readable($imagePath)) {
-            throw new AnthropicApiException("Le fichier n'est pas lisible: {$imagePath}");
-        }
-
-        $fileSize = filesize($imagePath);
-        if ($fileSize === false || $fileSize > self::MAX_FILE_SIZE) {
-            throw new AnthropicApiException(
-                sprintf('Le fichier dépasse la taille maximale autorisée (%d Mo)', self::MAX_FILE_SIZE / 1024 / 1024)
-            );
-        }
-
-        $mimeType = mime_content_type($imagePath);
-        if ($mimeType === false || !isset(self::ALLOWED_MIME_TYPES[$mimeType])) {
-            throw new AnthropicApiException(
-                sprintf('Type de fichier non supporté: %s. Types autorisés: %s', $mimeType, implode(', ', array_keys(self::ALLOWED_MIME_TYPES)))
-            );
-        }
-    }
-
-    /**
-     * Encode l'image en base64 et détecte le media type.
-     *
-     * @return array{base64: string, media_type: string}
-     *
-     * @throws AnthropicApiException
-     */
-    private function encodeImage(string $imagePath): array
-    {
-        $imageContent = file_get_contents($imagePath);
-        if ($imageContent === false) {
-            throw new AnthropicApiException("Impossible de lire le fichier: {$imagePath}");
-        }
-
-        $mimeType = mime_content_type($imagePath);
-        if ($mimeType === false) {
-            throw new AnthropicApiException("Impossible de déterminer le type MIME du fichier");
-        }
-
-        return [
-            'base64' => base64_encode($imageContent),
-            'media_type' => self::ALLOWED_MIME_TYPES[$mimeType],
         ];
     }
 
