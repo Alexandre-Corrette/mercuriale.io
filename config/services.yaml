@@ -44,6 +44,10 @@ services:
         arguments:
             $projectDir: '%kernel.project_dir%'
 
+    App\Command\BatchImportBlCommand:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
     App\Security\AuthenticationProviderInterface:
         alias: App\Security\JwtAuthenticationProvider
 

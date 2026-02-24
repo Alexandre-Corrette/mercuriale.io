@@ -54,3 +54,15 @@
 *.heic
 *.HEIC
 !/var/tailwind/
+
+# OCR batch test images (too large for git)
+tests/fixtures/images/bl/*.jpeg
+tests/fixtures/images/bl/*.jpg
+tests/fixtures/images/bl/*.png
+!tests/fixtures/images/bl/.gitkeep
+
+# OCR test local config
+.env.test.local
+
+# OCR batch reports
+ocr_batch_report_*.json
