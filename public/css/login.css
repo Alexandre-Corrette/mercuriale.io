@@ -1,0 +1,60 @@
+/* Mercuriale.io — Login page styles */
+.login-container {
+    max-width: 400px;
+    margin: 100px auto;
+    padding: 20px;
+    font-family: sans-serif;
+}
+.login-container .login-title {
+    text-align: center;
+    color: #333;
+}
+.login-container .login-subtitle {
+    text-align: center;
+    color: #666;
+    font-weight: normal;
+}
+.login-container .login-error {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+.login-container .form-group {
+    margin-bottom: 15px;
+}
+.login-container .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: #333;
+}
+.login-container .form-group input[type="email"],
+.login-container .form-group input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+.login-container .remember-me {
+    margin-bottom: 15px;
+}
+.login-container .remember-me label {
+    display: flex;
+    align-items: center;
+    color: #666;
+}
+.login-container .remember-me input[type="checkbox"] {
+    margin-right: 8px;
+}
+.login-container .btn-login {
+    width: 100%;
+    padding: 12px;
+    background: #0056d2;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}

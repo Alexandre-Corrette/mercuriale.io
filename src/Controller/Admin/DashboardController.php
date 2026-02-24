@@ -13,6 +13,7 @@ use App\Entity\Fournisseur;
 use App\Entity\LigneBonLivraison;
 use App\Entity\Mercuriale;
 use App\Entity\Organisation;
+use App\Entity\OrganisationFournisseur;
 use App\Entity\Produit;
 use App\Entity\ProduitFournisseur;
 use App\Entity\Unite;
@@ -32,6 +33,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\MenuItem;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractDashboardController;
 use Symfony\Component\HttpFoundation\Response;
+
 #[AdminDashboard(routePath: '/admin', routeName: 'admin')]
 class DashboardController extends AbstractDashboardController
 {
@@ -63,42 +65,86 @@ class DashboardController extends AbstractDashboardController
     public function configureDashboard(): Dashboard
     {
         return Dashboard::new()
-            ->setTitle('Mercuriale.io')
+            ->setTitle('<img src="/images/logo-rectangulaire-mercuriale.jpg" alt="Mercuriale.io" style="width: 200px; height: 45px; object-fit: cover; object-position: center;">')
             ->setFaviconPath('favicon.ico')
             ->setLocales(['fr' => 'Français']);
     }
 
     public function configureMenuItems(): iterable
     {
-        yield MenuItem::linkToDashboard('Tableau de bord', 'fa fa-home');
+        // ========================================
+        // SECTION 1 : Navigation principale (tous les utilisateurs)
+        // ========================================
+        yield MenuItem::linkToDashboard('Tableau de bord', 'fas fa-tachometer-alt');
 
-        yield MenuItem::section('Gestion des BL');
-        yield MenuItem::linkToCrud('Bons de livraison', 'fa fa-file-invoice', BonLivraison::class);
-        yield MenuItem::linkToCrud('Lignes BL', 'fa fa-list', LigneBonLivraison::class);
-        yield MenuItem::linkToCrud('Alertes', 'fa fa-exclamation-triangle', AlerteControle::class);
+        yield MenuItem::section('OPÉRATIONS');
 
-        yield MenuItem::section('Mercuriale');
-        yield MenuItem::linkToCrud('Prix négociés', 'fa fa-euro-sign', Mercuriale::class);
-        yield MenuItem::linkToCrud('Produits fournisseur', 'fa fa-box', ProduitFournisseur::class);
+        yield MenuItem::linkToUrl('Uploader un BL', 'fas fa-camera', '/app/bl/upload')
+            ->setCssClass('menu-item-highlight');
 
-        yield MenuItem::section('Référentiel');
-        yield MenuItem::linkToCrud('Produits', 'fa fa-apple-whole', Produit::class);
-        yield MenuItem::linkToCrud('Catégories', 'fa fa-folder', CategorieProduit::class);
-        yield MenuItem::linkToCrud('Fournisseurs', 'fa fa-truck', Fournisseur::class);
+        yield MenuItem::linkToCrud('Bons de livraison', 'fas fa-file-invoice', BonLivraison::class)
+            ->setDefaultSort(['dateLivraison' => 'DESC']);
 
-        yield MenuItem::section('Configuration');
-        yield MenuItem::linkToCrud('Établissements', 'fa fa-building', Etablissement::class);
-        yield MenuItem::linkToCrud('Utilisateurs', 'fa fa-users', Utilisateur::class);
-        yield MenuItem::linkToCrud('Droits établissements', 'fa fa-user-shield', UtilisateurEtablissement::class);
-        yield MenuItem::linkToCrud('Organisations', 'fa fa-sitemap', Organisation::class);
+        yield MenuItem::linkToCrud('Lignes BL', 'fas fa-list', LigneBonLivraison::class);
 
-        yield MenuItem::section('Unités');
-        yield MenuItem::linkToCrud('Unités', 'fa fa-ruler', Unite::class);
-        yield MenuItem::linkToCrud('Conversions', 'fa fa-exchange-alt', ConversionUnite::class);
+        yield MenuItem::linkToUrl('Import mercuriale', 'fas fa-file-excel', '/app/mercuriale/import')
+            ->setCssClass('menu-item-highlight');
 
+        yield MenuItem::linkToCrud('Alertes', 'fas fa-exclamation-triangle', AlerteControle::class)
+            ->setDefaultSort(['createdAt' => 'DESC']);
+
+        // ========================================
+        // SECTION 2 : Référentiels (ROLE_MANAGER et +)
+        // ========================================
+        yield MenuItem::section('RÉFÉRENTIELS')
+            ->setPermission('ROLE_MANAGER');
+
+        yield MenuItem::subMenu('Fournisseurs & Produits', 'fas fa-boxes')
+            ->setPermission('ROLE_MANAGER')
+            ->setSubItems([
+                MenuItem::linkToCrud('Fournisseurs', 'fas fa-truck', Fournisseur::class),
+                MenuItem::linkToCrud('Associations Fournisseurs', 'fas fa-link', OrganisationFournisseur::class)
+                    ->setPermission('ROLE_SUPER_ADMIN'),
+                MenuItem::linkToCrud('Produits', 'fas fa-box', ProduitFournisseur::class),
+                MenuItem::linkToCrud('Mercuriale (prix)', 'fas fa-tags', Mercuriale::class)
+                    ->setDefaultSort(['dateDebut' => 'DESC']),
+            ]);
+
+        yield MenuItem::subMenu('Catalogue', 'fas fa-book')
+            ->setPermission('ROLE_MANAGER')
+            ->setSubItems([
+                MenuItem::linkToCrud('Catalogue interne', 'fas fa-apple-whole', Produit::class)
+                    ->setPermission('ROLE_SUPER_ADMIN'),
+                MenuItem::linkToCrud('Catégories', 'fas fa-folder', CategorieProduit::class),
+            ]);
+
+        yield MenuItem::subMenu('Unités', 'fas fa-ruler-combined')
+            ->setPermission('ROLE_MANAGER')
+            ->setSubItems([
+                MenuItem::linkToCrud('Unités', 'fas fa-ruler', Unite::class),
+                MenuItem::linkToCrud('Conversions', 'fas fa-exchange-alt', ConversionUnite::class),
+            ]);
+
+        // ========================================
+        // SECTION 3 : Administration (ROLE_ADMIN uniquement)
+        // ========================================
+        yield MenuItem::section('ADMINISTRATION')
+            ->setPermission('ROLE_ADMIN');
+
+        yield MenuItem::subMenu('Configuration', 'fas fa-cog')
+            ->setPermission('ROLE_ADMIN')
+            ->setSubItems([
+                MenuItem::linkToCrud('Établissements', 'fas fa-store', Etablissement::class),
+                MenuItem::linkToCrud('Utilisateurs', 'fas fa-users', Utilisateur::class),
+                MenuItem::linkToCrud('Droits établissements', 'fas fa-user-shield', UtilisateurEtablissement::class),
+                MenuItem::linkToCrud('Organisations', 'fas fa-sitemap', Organisation::class),
+            ]);
+
+        // ========================================
+        // SECTION 4 : Déconnexion
+        // ========================================
         yield MenuItem::section('');
-        yield MenuItem::linkToRoute('Retour à l\'app', 'fa fa-arrow-left', 'app_dashboard');
-        yield MenuItem::linkToLogout('Déconnexion', 'fa fa-sign-out-alt');
+        yield MenuItem::linkToLogout('Déconnexion', 'fas fa-sign-out-alt');
     }
 
     public function configureActions(): Actions

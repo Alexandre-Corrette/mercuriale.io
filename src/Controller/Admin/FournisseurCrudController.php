@@ -14,7 +14,9 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\EmailField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TelephoneField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
+#[IsGranted('ROLE_MANAGER')]
 class FournisseurCrudController extends AbstractCrudController
 {
     public static function getEntityFqcn(): string
@@ -28,14 +30,13 @@ class FournisseurCrudController extends AbstractCrudController
             ->setEntityLabelInSingular('Fournisseur')
             ->setEntityLabelInPlural('Fournisseurs')
             ->setSearchFields(['nom', 'code', 'ville', 'siret'])
-            ->setDefaultSort(['nom' => 'ASC']);
+            ->setDefaultSort(['nom' => 'ASC'])
+            ->setHelp('index', 'Les fournisseurs sont des entités partagées. Utilisez le champ "Restaurants" pour associer un fournisseur à vos établissements.');
     }
 
     public function configureFields(string $pageName): iterable
     {
         yield IdField::new('id')->hideOnForm();
-        yield AssociationField::new('organisation', 'Organisation')
-            ->setRequired(true);
         yield TextField::new('code', 'Code');
         yield TextField::new('nom', 'Nom')
             ->setRequired(true);
@@ -47,6 +48,8 @@ class FournisseurCrudController extends AbstractCrudController
         yield TextField::new('siret', 'SIRET')
             ->setHelp('14 chiffres');
         yield BooleanField::new('actif', 'Actif');
+        yield AssociationField::new('etablissements', 'Restaurants')
+            ->setFormTypeOption('by_reference', false);
         yield DateTimeField::new('createdAt', 'Créé le')
             ->hideOnForm();
         yield DateTimeField::new('updatedAt', 'Modifié le')

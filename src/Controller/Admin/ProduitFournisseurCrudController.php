@@ -13,7 +13,9 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\NumberField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
+#[IsGranted('ROLE_MANAGER')]
 class ProduitFournisseurCrudController extends AbstractCrudController
 {
     public static function getEntityFqcn(): string
@@ -24,9 +26,9 @@ class ProduitFournisseurCrudController extends AbstractCrudController
     public function configureCrud(Crud $crud): Crud
     {
         return $crud
-            ->setEntityLabelInSingular('Produit fournisseur')
-            ->setEntityLabelInPlural('Produits fournisseur')
-            ->setSearchFields(['codeFournisseur', 'designationFournisseur'])
+            ->setEntityLabelInSingular('Produit')
+            ->setEntityLabelInPlural('Produits')
+            ->setSearchFields(['codeFournisseur', 'designationFournisseur', 'fournisseur.nom'])
             ->setDefaultSort(['designationFournisseur' => 'ASC']);
     }
 

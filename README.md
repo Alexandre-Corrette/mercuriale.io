@@ -1,3 +1,5 @@
+
+
 # Mercuriale.io
 
 Application de contrôle des bons de livraison et gestion de mercuriale pour la restauration.
@@ -102,7 +104,14 @@ src/
 └── Twig/
     └── Components/     # Composants Twig réutilisables
 ```
+# Déploiement normal preprod
+./deploy-preprod.sh
 
+# Sans rebuild assets
+./deploy-preprod.sh --skip-build
+
+# Test sans rien exécuter
+./deploy-preprod.sh --dry-run
 ## Licence
 
 Propriétaire - Groupe Horao - Tous droits réservés.

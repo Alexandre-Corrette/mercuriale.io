@@ -19,3 +19,6 @@ when@prod:
         # Force HTTPS in production
         trusted_proxies: '%env(TRUSTED_PROXIES)%'
         trusted_headers: ['x-forwarded-for', 'x-forwarded-proto']
+        session:
+            cookie_secure: true
+            cookie_samesite: lax

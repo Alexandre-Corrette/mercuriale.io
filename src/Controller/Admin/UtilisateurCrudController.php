@@ -17,7 +17,9 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
+#[IsGranted('ROLE_ADMIN')]
 class UtilisateurCrudController extends AbstractCrudController
 {
     public function __construct(
@@ -60,6 +62,7 @@ class UtilisateurCrudController extends AbstractCrudController
                 'Utilisateur' => 'ROLE_USER',
                 'Manager' => 'ROLE_MANAGER',
                 'Administrateur' => 'ROLE_ADMIN',
+                'Super Admin' => 'ROLE_SUPER_ADMIN',
             ])
             ->allowMultipleChoices()
             ->setRequired(true);

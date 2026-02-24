@@ -1,0 +1,38 @@
+/* Mercuriale Import - Checkbox list for etablissements */
+.mercuriale-import-checkboxes {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 2px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 0.75rem;
+    background: #fff;
+}
+
+.mercuriale-import-checkboxes > div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.mercuriale-import-checkboxes label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: background-color 0.15s;
+    font-size: 0.9375rem;
+    color: #374151;
+}
+
+.mercuriale-import-checkboxes label:hover {
+    background-color: #f9fafb;
+}
+
+.mercuriale-import-checkboxes input[type="checkbox"] {
+    width: 1.125rem;
+    height: 1.125rem;
+    accent-color: #e8734a;
+    flex-shrink: 0;
+}

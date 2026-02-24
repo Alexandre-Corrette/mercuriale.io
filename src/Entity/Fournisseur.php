@@ -13,7 +13,6 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: FournisseurRepository::class)]
 #[ORM\Table(name: 'fournisseur')]
-#[ORM\Index(columns: ['organisation_id'], name: 'idx_fournisseur_organisation')]
 #[ORM\HasLifecycleCallbacks]
 class Fournisseur
 {
@@ -23,11 +22,6 @@ class Fournisseur
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
-
-    #[ORM\ManyToOne(targetEntity: Organisation::class, inversedBy: 'fournisseurs')]
-    #[ORM\JoinColumn(nullable: false)]
-    #[Assert\NotNull(message: 'L\'organisation est obligatoire')]
-    private ?Organisation $organisation = null;
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: 'Le nom du fournisseur est obligatoire')]
@@ -67,6 +61,10 @@ class Fournisseur
     #[ORM\Column(options: ['default' => true])]
     private bool $actif = true;
 
+    /** @var Collection<int, OrganisationFournisseur> */
+    #[ORM\OneToMany(targetEntity: OrganisationFournisseur::class, mappedBy: 'fournisseur', orphanRemoval: true)]
+    private Collection $organisationFournisseurs;
+
     /** @var Collection<int, ProduitFournisseur> */
     #[ORM\OneToMany(targetEntity: ProduitFournisseur::class, mappedBy: 'fournisseur')]
     private Collection $produitsFournisseur;
@@ -75,27 +73,22 @@ class Fournisseur
     #[ORM\OneToMany(targetEntity: BonLivraison::class, mappedBy: 'fournisseur')]
     private Collection $bonsLivraison;
 
+    /** @var Collection<int, Etablissement> */
+    #[ORM\ManyToMany(targetEntity: Etablissement::class, inversedBy: 'fournisseurs')]
+    #[ORM\JoinTable(name: 'fournisseur_etablissement')]
+    private Collection $etablissements;
+
     public function __construct()
     {
+        $this->organisationFournisseurs = new ArrayCollection();
         $this->produitsFournisseur = new ArrayCollection();
         $this->bonsLivraison = new ArrayCollection();
+        $this->etablissements = new ArrayCollection();
     }
 
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function getOrganisation(): ?Organisation
-    {
-        return $this->organisation;
-    }
-
-    public function setOrganisation(?Organisation $organisation): static
-    {
-        $this->organisation = $organisation;
-
-        return $this;
     }
 
     public function getNom(): ?string
@@ -207,6 +200,35 @@ class Fournisseur
     }
 
     /**
+     * @return Collection<int, OrganisationFournisseur>
+     */
+    public function getOrganisationFournisseurs(): Collection
+    {
+        return $this->organisationFournisseurs;
+    }
+
+    public function addOrganisationFournisseur(OrganisationFournisseur $organisationFournisseur): static
+    {
+        if (!$this->organisationFournisseurs->contains($organisationFournisseur)) {
+            $this->organisationFournisseurs->add($organisationFournisseur);
+            $organisationFournisseur->setFournisseur($this);
+        }
+
+        return $this;
+    }
+
+    public function removeOrganisationFournisseur(OrganisationFournisseur $organisationFournisseur): static
+    {
+        if ($this->organisationFournisseurs->removeElement($organisationFournisseur)) {
+            if ($organisationFournisseur->getFournisseur() === $this) {
+                $organisationFournisseur->setFournisseur(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
      * @return Collection<int, ProduitFournisseur>
      */
     public function getProduitsFournisseur(): Collection
@@ -220,6 +242,30 @@ class Fournisseur
     public function getBonsLivraison(): Collection
     {
         return $this->bonsLivraison;
+    }
+
+    /**
+     * @return Collection<int, Etablissement>
+     */
+    public function getEtablissements(): Collection
+    {
+        return $this->etablissements;
+    }
+
+    public function addEtablissement(Etablissement $etablissement): static
+    {
+        if (!$this->etablissements->contains($etablissement)) {
+            $this->etablissements->add($etablissement);
+        }
+
+        return $this;
+    }
+
+    public function removeEtablissement(Etablissement $etablissement): static
+    {
+        $this->etablissements->removeElement($etablissement);
+
+        return $this;
     }
 
     public function getAdresseComplete(): string
