@@ -158,4 +158,32 @@ class BonLivraisonRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * @return array<array{bl: BonLivraison, alertCount: int, ligneCount: int}>
+     */
+    public function findRecentWithAlertCountForOrganisation(Organisation $org, int $limit = 10): array
+    {
+        $rows = $this->createQueryBuilder('bl')
+            ->select('bl', 'f', 'e', 'COUNT(DISTINCT a.id) AS alertCount', 'COUNT(DISTINCT l.id) AS ligneCount')
+            ->leftJoin('bl.fournisseur', 'f')
+            ->innerJoin('bl.etablissement', 'e')
+            ->leftJoin('bl.lignes', 'l')
+            ->leftJoin('l.alertes', 'a')
+            ->where('e.organisation = :org')
+            ->andWhere('e.actif = :actif')
+            ->setParameter('org', $org)
+            ->setParameter('actif', true)
+            ->groupBy('bl.id')
+            ->orderBy('bl.createdAt', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+
+        return array_map(fn (array $row) => [
+            'bl' => $row[0],
+            'alertCount' => (int) $row['alertCount'],
+            'ligneCount' => (int) $row['ligneCount'],
+        ], $rows);
+    }
 }

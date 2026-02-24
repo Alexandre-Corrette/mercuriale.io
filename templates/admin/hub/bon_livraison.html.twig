@@ -1,0 +1,95 @@
+{% extends 'admin/hub/layout.html.twig' %}
+
+{% block hub_content %}
+<div class="hub-content">
+    <h1 class="hub-title"><i class="fas fa-file-invoice"></i> Bons de livraison</h1>
+
+    {# Stats #}
+    <div class="hub-stats">
+        <div class="hub-stat-card">
+            <div class="hub-stat-card__value">{{ bl_count }}</div>
+            <div class="hub-stat-card__label">BL ce mois</div>
+        </div>
+        <div class="hub-stat-card hub-stat-card--coral">
+            <div class="hub-stat-card__value">{{ alerte_count }}</div>
+            <div class="hub-stat-card__label">alertes en attente</div>
+        </div>
+    </div>
+
+    {# CTAs #}
+    <div class="hub-ctas">
+        <a href="{{ path('app_bl_upload') }}" class="hub-cta hub-cta--primary">
+            <i class="fas fa-camera"></i> Scanner un BL
+        </a>
+        <a href="{{ path('app_bl_list') }}" class="hub-cta hub-cta--secondary">
+            <i class="fas fa-list"></i> Consulter les BL
+        </a>
+    </div>
+
+    {# Alert banner #}
+    {% if alerte_count > 0 %}
+    <div class="hub-alert-banner">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span>{{ alerte_count }} alerte{{ alerte_count > 1 ? 's' : '' }} non traitée{{ alerte_count > 1 ? 's' : '' }}</span>
+    </div>
+    {% endif %}
+
+    {# Recent BLs table #}
+    <div class="hub-section">
+        <div class="hub-section__header">
+            <h2 class="hub-section__title">Derniers bons de livraison</h2>
+            <a href="{{ crud_bl_url }}" class="hub-section__link">Voir tous les BL <i class="fas fa-arrow-right"></i></a>
+        </div>
+
+        {% if recent_bls is empty %}
+            <div class="hub-table__empty">
+                Aucun bon de livraison récent.
+            </div>
+        {% else %}
+            <table class="hub-table">
+                <thead>
+                    <tr>
+                        <th>N°</th>
+                        <th>Fournisseur</th>
+                        <th>Date</th>
+                        <th>Lignes</th>
+                        <th>Alertes</th>
+                        <th>Statut</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in recent_bls %}
+                        {% set bl = row.bl %}
+                        <tr class="hub-table__row--clickable" data-href="{{ path('app_bl_detail', {id: bl.id}) }}">
+                            <td>{{ bl.numeroBl ?? '—' }}</td>
+                            <td>{{ bl.fournisseur ? bl.fournisseur.nom : '—' }}</td>
+                            <td>{{ bl.dateLivraison|date('d/m/Y') }}</td>
+                            <td>{{ row.ligneCount }}</td>
+                            <td>
+                                {% if row.alertCount > 0 %}
+                                    <span class="hub-badge hub-badge--danger">{{ row.alertCount }}</span>
+                                {% else %}
+                                    <span class="hub-badge hub-badge--success">0</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="hub-badge hub-badge--{{ bl.statut.color }}">
+                                    {{ bl.statut.label }}
+                                </span>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <script type="module">
+                document.querySelectorAll('[data-href]').forEach(row => {
+                    row.addEventListener('click', () => {
+                        window.location.href = row.dataset.href;
+                    });
+                });
+            </script>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

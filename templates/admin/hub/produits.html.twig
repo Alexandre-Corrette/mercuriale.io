@@ -1,0 +1,97 @@
+{% extends 'admin/hub/layout.html.twig' %}
+
+{% block hub_content %}
+<div class="hub-content" data-controller="produits-hub" data-produits-hub-search-url-value="{{ path('admin_hub_produits_search') }}">
+    <h1 class="hub-title"><i class="fas fa-box"></i> Produits</h1>
+
+    {# Stats #}
+    <div class="hub-stats">
+        <div class="hub-stat-card hub-stat-card--coral">
+            <div class="hub-stat-card__value">{{ produit_count }}</div>
+            <div class="hub-stat-card__label">produits actifs</div>
+        </div>
+        <div class="hub-stat-card">
+            <div class="hub-stat-card__value">{{ fournisseur_count }}</div>
+            <div class="hub-stat-card__label">fournisseurs</div>
+        </div>
+    </div>
+
+    {# Category cards #}
+    {% if categories is not empty %}
+    <div class="hub-section">
+        <h2 class="hub-section__title">Catégories</h2>
+        <div class="hub-categorie-cards">
+            {% for row in categories %}
+                <div class="hub-categorie-card"
+                     data-action="click->produits-hub#selectCategorie"
+                     data-categorie-id="{{ row.categorie.id }}">
+                    <div class="hub-categorie-card__name">{{ row.categorie.nom }}</div>
+                    <div class="hub-categorie-card__count">{{ row.productCount }} produit{{ row.productCount > 1 ? 's' : '' }}</div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {# Fournisseur cards #}
+    {% if fournisseurs is not empty %}
+    <div class="hub-section">
+        <h2 class="hub-section__title">Fournisseurs</h2>
+        <div class="hub-fournisseur-cards">
+            {% for row in fournisseurs %}
+                <div class="hub-fournisseur-card"
+                     data-action="click->produits-hub#selectFournisseur"
+                     data-fournisseur-id="{{ row.fournisseur.id }}">
+                    <div class="hub-fournisseur-card__name">{{ row.fournisseur.nom }}</div>
+                    <div class="hub-fournisseur-card__count">{{ row.productCount }} produit{{ row.productCount > 1 ? 's' : '' }}</div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {# Search bar + dropdown filters #}
+    <div class="hub-search-bar">
+        <input type="text"
+               class="hub-search-bar__input"
+               placeholder="Rechercher un produit..."
+               data-produits-hub-target="searchInput"
+               data-action="input->produits-hub#onSearchInput">
+
+        <select class="hub-search-bar__select"
+                data-produits-hub-target="fournisseurFilter"
+                data-action="change->produits-hub#onFournisseurDropdown">
+            <option value="">Tous les fournisseurs</option>
+            {% for row in fournisseurs %}
+                <option value="{{ row.fournisseur.id }}">{{ row.fournisseur.nom }}</option>
+            {% endfor %}
+        </select>
+
+        <select class="hub-search-bar__select"
+                data-produits-hub-target="categorieFilter"
+                data-action="change->produits-hub#onCategorieDropdown">
+            <option value="">Toutes les catégories</option>
+            {% for row in categories %}
+                <option value="{{ row.categorie.id }}">{{ row.categorie.nom }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    {# Loading #}
+    <div data-produits-hub-target="loading" class="hub-loading">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>Chargement...</p>
+    </div>
+
+    {# Results (Stimulus-rendered) #}
+    <div data-produits-hub-target="results"></div>
+
+    {# Pagination (Stimulus-rendered) #}
+    <div data-produits-hub-target="pagination" class="hub-pagination"></div>
+
+    {# Link to CRUD #}
+    <div class="hub-section">
+        <a href="{{ crud_produit_url }}" class="hub-section__link">Voir tous les produits dans l'admin <i class="fas fa-arrow-right"></i></a>
+    </div>
+</div>
+{% endblock %}
