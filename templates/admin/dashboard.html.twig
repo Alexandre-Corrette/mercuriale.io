@@ -3,120 +3,170 @@
 {% block page_title %}Tableau de bord{% endblock %}
 
 {% block main %}
-<div class="container-fluid">
-<div class="row">
-    <div class="col-12">
-        <h1 class="mb-4">Bienvenue sur Mercuriale.io</h1>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-md-3 col-sm-6 mb-4">
-        <div class="card bg-primary text-white h-100">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-uppercase mb-1">Bons de livraison</h6>
-                        <h2 class="mb-0">-</h2>
-                    </div>
-                    <i class="fa fa-file-invoice fa-2x opacity-50"></i>
-                </div>
-            </div>
-            <div class="card-footer d-flex align-items-center justify-content-between">
-                <a href="{{ ea_url().setController('App\\Controller\\Admin\\BonLivraisonCrudController').setAction('index') }}" class="text-white text-decoration-none small">Voir tout</a>
-                <i class="fa fa-arrow-right text-white"></i>
-            </div>
+<div class="container-fluid dashboard-portail">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">Bienvenue sur Mercuriale.io</h1>
         </div>
     </div>
 
-    <div class="col-md-3 col-sm-6 mb-4">
-        <div class="card bg-warning text-dark h-100">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-uppercase mb-1">Alertes en attente</h6>
-                        <h2 class="mb-0">-</h2>
+    {# ====== 3 Portal Cards ====== #}
+    <div class="row">
+        {# Card BL — Navy #}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 card-navy portail-card">
+                <div class="card-body">
+                    <div class="portail-card__header">
+                        <i class="fas fa-file-invoice fa-2x"></i>
+                        <h5>Bons de livraison</h5>
                     </div>
-                    <i class="fa fa-exclamation-triangle fa-2x opacity-50"></i>
+                    <div class="portail-card__stats">
+                        <div class="portail-card__stat">
+                            <span class="portail-card__stat-value">{{ bl_count }}</span>
+                            <span class="portail-card__stat-label">BL ce mois</span>
+                        </div>
+                        <div class="portail-card__stat">
+                            <span class="portail-card__stat-value">{{ alerte_count }}</span>
+                            <span class="portail-card__stat-label">alertes en attente</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="{{ ea_url().setController('App\\Controller\\Admin\\BonLivraisonCrudController').setAction('index') }}" class="portail-card__cta">
+                        Gérer les BL <i class="fas fa-arrow-right"></i>
+                    </a>
                 </div>
             </div>
-            <div class="card-footer d-flex align-items-center justify-content-between">
-                <a href="{{ ea_url().setController('App\\Controller\\Admin\\AlerteControleCrudController').setAction('index') }}" class="text-dark text-decoration-none small">Voir tout</a>
-                <i class="fa fa-arrow-right text-dark"></i>
-            </div>
         </div>
-    </div>
 
-    <div class="col-md-3 col-sm-6 mb-4">
-        <div class="card bg-success text-white h-100">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-uppercase mb-1">Produits</h6>
-                        <h2 class="mb-0">-</h2>
+        {# Card Mercuriale — Gold #}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 card-gold portail-card">
+                <div class="card-body">
+                    <div class="portail-card__header">
+                        <i class="fas fa-tags fa-2x"></i>
+                        <h5>Mercuriale</h5>
                     </div>
-                    <i class="fa fa-box fa-2x opacity-50"></i>
+                    <div class="portail-card__stats">
+                        <div class="portail-card__stat">
+                            <span class="portail-card__stat-value">{{ mercuriale_count }}</span>
+                            <span class="portail-card__stat-label">prix actifs</span>
+                        </div>
+                        <div class="portail-card__stat">
+                            <span class="portail-card__stat-value">{{ fournisseur_count }}</span>
+                            <span class="portail-card__stat-label">fournisseurs</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="{{ ea_url().setController('App\\Controller\\Admin\\MercurialeCrudController').setAction('index') }}" class="portail-card__cta">
+                        Voir la mercuriale <i class="fas fa-arrow-right"></i>
+                    </a>
                 </div>
             </div>
-            <div class="card-footer d-flex align-items-center justify-content-between">
-                <a href="{{ ea_url().setController('App\\Controller\\Admin\\ProduitFournisseurCrudController').setAction('index') }}" class="text-white text-decoration-none small">Voir tout</a>
-                <i class="fa fa-arrow-right text-white"></i>
-            </div>
         </div>
-    </div>
 
-    <div class="col-md-3 col-sm-6 mb-4">
-        <div class="card bg-info text-white h-100">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-uppercase mb-1">Établissements</h6>
-                        <h2 class="mb-0">-</h2>
+        {# Card Produits — Coral #}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 card-coral portail-card">
+                <div class="card-body">
+                    <div class="portail-card__header">
+                        <i class="fas fa-box fa-2x"></i>
+                        <h5>Produits</h5>
                     </div>
-                    <i class="fa fa-building fa-2x opacity-50"></i>
+                    <div class="portail-card__stats">
+                        <div class="portail-card__stat">
+                            <span class="portail-card__stat-value">{{ produit_count }}</span>
+                            <span class="portail-card__stat-label">produits actifs</span>
+                        </div>
+                        <div class="portail-card__stat">
+                            <span class="portail-card__stat-value">{{ fournisseur_count }}</span>
+                            <span class="portail-card__stat-label">fournisseurs</span>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="card-footer d-flex align-items-center justify-content-between">
-                <a href="{{ ea_url().setController('App\\Controller\\Admin\\EtablissementCrudController').setAction('index') }}" class="text-white text-decoration-none small">Voir tout</a>
-                <i class="fa fa-arrow-right text-white"></i>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row mt-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Accès rapide</h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-4">
-                        <h6>Gestion des BL</h6>
-                        <ul class="list-unstyled">
-                            <li><a href="{{ ea_url().setController('App\\Controller\\Admin\\BonLivraisonCrudController').setAction('new') }}"><i class="fa fa-plus me-2"></i>Nouveau bon de livraison</a></li>
-                            <li><a href="{{ ea_url().setController('App\\Controller\\Admin\\AlerteControleCrudController').setAction('index') }}"><i class="fa fa-exclamation-triangle me-2"></i>Gérer les alertes</a></li>
-                        </ul>
-                    </div>
-                    <div class="col-md-4">
-                        <h6>Mercuriale</h6>
-                        <ul class="list-unstyled">
-                            <li><a href="{{ ea_url().setController('App\\Controller\\Admin\\MercurialeCrudController').setAction('new') }}"><i class="fa fa-plus me-2"></i>Nouveau prix négocié</a></li>
-                            <li><a href="{{ ea_url().setController('App\\Controller\\Admin\\ProduitFournisseurCrudController').setAction('new') }}"><i class="fa fa-plus me-2"></i>Nouveau produit fournisseur</a></li>
-                        </ul>
-                    </div>
-                    <div class="col-md-4">
-                        <h6>Configuration</h6>
-                        <ul class="list-unstyled">
-                            <li><a href="{{ ea_url().setController('App\\Controller\\Admin\\UtilisateurCrudController').setAction('new') }}"><i class="fa fa-plus me-2"></i>Nouvel utilisateur</a></li>
-                            <li><a href="{{ ea_url().setController('App\\Controller\\Admin\\FournisseurCrudController').setAction('new') }}"><i class="fa fa-plus me-2"></i>Nouveau fournisseur</a></li>
-                        </ul>
-                    </div>
+                <div class="card-footer">
+                    <a href="{{ ea_url().setController('App\\Controller\\Admin\\ProduitFournisseurCrudController').setAction('index') }}" class="portail-card__cta">
+                        Voir les produits <i class="fas fa-arrow-right"></i>
+                    </a>
                 </div>
             </div>
         </div>
     </div>
-</div>
+
+    {# ====== Activity Feed ====== #}
+    <div class="row mt-2">
+        <div class="col-12">
+            <div class="card dashboard-activity">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Activité récente</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_bls is empty %}
+                        <p class="text-muted p-3 mb-0">Aucun bon de livraison récent.</p>
+                    {% else %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Fournisseur</th>
+                                        <th>Lignes</th>
+                                        <th>Statut</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for bl in recent_bls %}
+                                        <tr>
+                                            <td>{{ bl.dateLivraison|date('d/m/Y') }}</td>
+                                            <td>{{ bl.fournisseur ? bl.fournisseur.nom : '—' }}</td>
+                                            <td>{{ bl.lignes|length }}</td>
+                                            <td>
+                                                <span class="badge bg-{{ bl.statut.color }}">
+                                                    {{ bl.statut.label }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ====== Paramètres (ADMIN+ only) ====== #}
+    {% if is_granted('ROLE_ADMIN') %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card dashboard-params">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-cog me-2"></i>Paramètres</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <a href="{{ ea_url().setController('App\\Controller\\Admin\\EtablissementCrudController').setAction('index') }}" class="dashboard-params__link">
+                                <i class="fas fa-store me-2"></i>Établissements
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="{{ ea_url().setController('App\\Controller\\Admin\\UtilisateurCrudController').setAction('index') }}" class="dashboard-params__link">
+                                <i class="fas fa-users me-2"></i>Utilisateurs
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="{{ ea_url().setController('App\\Controller\\Admin\\UniteCrudController').setAction('index') }}" class="dashboard-params__link">
+                                <i class="fas fa-ruler me-2"></i>Unités
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
