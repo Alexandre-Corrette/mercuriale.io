@@ -48,6 +48,13 @@
     opacity: 0.85;
 }
 
+/* Card footer with multiple CTAs */
+.portail-card .card-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
 /* CTA link in card footer */
 .portail-card__cta {
     display: flex;
@@ -63,6 +70,17 @@
 .portail-card__cta:hover {
     text-decoration: none;
     color: inherit;
+    opacity: 0.85;
+}
+
+.portail-card__cta--secondary {
+    font-weight: 500;
+    font-size: 0.8rem;
+    opacity: 0.75;
+}
+
+.portail-card__cta--secondary:hover {
+    opacity: 1;
 }
 
 .card-navy .portail-card__cta,
@@ -71,7 +89,7 @@
 }
 
 .card-gold .portail-card__cta {
-    color: var(--mercuriale-navy);
+    color: white;
 }
 
 /* Activity section */

@@ -111,6 +111,7 @@
     color: white !important;
 }
 
+.card.card-navy h5,
 .card.card-navy h6,
 .card.card-navy h2,
 .card.card-navy i {
@@ -122,6 +123,7 @@
     color: white !important;
 }
 
+.card.card-coral h5,
 .card.card-coral h6,
 .card.card-coral h2,
 .card.card-coral i {
@@ -130,14 +132,15 @@
 
 .card.card-gold {
     background: linear-gradient(135deg, var(--mercuriale-gold) 0%, var(--mercuriale-gold-light) 100%) !important;
-    color: var(--mercuriale-navy) !important;
+    color: white !important;
 }
 
+.card.card-gold h5,
 .card.card-gold h6,
 .card.card-gold h2,
 .card.card-gold i,
 .card.card-gold a {
-    color: var(--mercuriale-navy) !important;
+    color: white !important;
 }
 
 .card.card-navy-light {
@@ -145,6 +148,7 @@
     color: white !important;
 }
 
+.card.card-navy-light h5,
 .card.card-navy-light h6,
 .card.card-navy-light h2,
 .card.card-navy-light i {
@@ -315,15 +319,19 @@
     border-radius: 1rem 1rem 0 0 !important;
 }
 
-.card-header h5 {
+.card-header h5,
+.card-header i {
     margin: 0;
     font-weight: 600;
+    color: white !important;
 }
 
 /* Logo in sidebar */
-.sidebar-logo img {
-    max-height: 45px;
-    border-radius: 8px;
+.sidebar-logo__img {
+    width: 200px;
+    height: 45px;
+    object-fit: cover;
+    object-position: center;
 }
 
 /* =============================================
@@ -452,14 +460,29 @@
    Sidebar hidden for non-SUPER_ADMIN
    ============================================= */
 
-.ea-no-sidebar .sidebar {
-    display: none;
+.ea-no-sidebar .sidebar-wrapper,
+.ea-no-sidebar .sidebar,
+.ea-no-sidebar #sidebar-resizer-handler {
+    display: none !important;
+}
+
+.ea-no-sidebar .wrapper {
+    display: block !important;
+    grid-template-columns: none !important;
 }
 
 .ea-no-sidebar .content-wrapper {
-    margin-left: 0;
+    margin-left: 0 !important;
+    max-width: 100% !important;
 }
 
-.ea-no-sidebar .main-content {
-    max-width: 100%;
+/* Logo bar when sidebar is hidden */
+.ea-no-sidebar-logo {
+    padding: 0 1.5rem;
+}
+
+.ea-no-sidebar-logo__img {
+    height: 55px;
+    width: auto;
+    margin: -10px 0;
 }
