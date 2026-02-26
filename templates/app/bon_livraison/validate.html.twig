@@ -2,8 +2,20 @@
 
 {% block title %}Validation BL #{{ bonLivraison.id }} - Mercuriale.io{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/admin-hub.css') }}">
+{% endblock %}
+
 {% block body %}
 <div class="container py-5">
+    {% include 'admin/components/_breadcrumb.html.twig' with {
+        breadcrumbs: [
+            { label: 'Bons de livraison', url: path('admin_hub_bl') },
+            { label: 'Validation' }
+        ]
+    } %}
+
     <div class="row">
         <div class="col-lg-6">
             <div class="card shadow-sm">
@@ -62,10 +74,6 @@
                 </div>
                 <div class="card-footer bg-white">
                     <div class="d-flex gap-2">
-                        <a href="{{ path('app_bl_upload') }}" class="btn btn--ghost">
-                            <i class="fas fa-arrow-left me-2"></i>
-                            Retour
-                        </a>
                         <button type="button" class="btn btn--primary" disabled>
                             <i class="fas fa-check me-2"></i>
                             Valider (bientôt disponible)

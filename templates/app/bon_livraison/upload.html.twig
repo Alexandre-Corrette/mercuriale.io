@@ -2,9 +2,21 @@
 
 {% block title %}Upload Bon de Livraison - Mercuriale.io{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/admin-hub.css') }}">
+{% endblock %}
+
 {% block body %}
 <div class="min-h-screen bg-gradient-to-br from-cream to-cream-dark py-8 px-4">
     <div class="max-w-3xl mx-auto">
+        {% include 'admin/components/_breadcrumb.html.twig' with {
+            breadcrumbs: [
+                { label: 'Bons de livraison', url: path('admin_hub_bl') },
+                { label: 'Upload BL' }
+            ]
+        } %}
+
         {# Header #}
         <div class="text-center mb-8">
             <h1 class="text-2xl font-bold text-navy mb-2">
@@ -114,13 +126,6 @@
             </div>
         </div>
 
-        {# Back link #}
-        <div class="text-center mt-6">
-            <a href="{{ path('admin') }}" class="inline-flex items-center gap-2 text-gray-500 text-sm hover:text-coral transition-colors">
-                <i class="fas fa-arrow-left"></i>
-                Retour au tableau de bord
-            </a>
-        </div>
     </div>
 </div>
 
