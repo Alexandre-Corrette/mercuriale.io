@@ -18,11 +18,9 @@
             </a>
         </header>
 
-        <nav class="hub-breadcrumb">
-            <a href="{{ path('admin') }}">Tableau de bord</a>
-            <span class="hub-breadcrumb__sep">/</span>
-            <span>{{ hub_title }}</span>
-        </nav>
+        {% include 'admin/components/_breadcrumb.html.twig' with {
+            breadcrumbs: [{ label: hub_title }]
+        } %}
 
         {% for label, messages in app.flashes %}
             {% for message in messages %}

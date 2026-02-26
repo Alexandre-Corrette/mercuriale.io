@@ -30,6 +30,22 @@
     color: var(--mercuriale-navy);
 }
 
+.hub-breadcrumb ol {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    gap: 0;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.hub-breadcrumb li + li::before {
+    content: "\203A";
+    margin: 0 0.5rem;
+    opacity: 0.5;
+}
+
 .hub-breadcrumb a {
     color: var(--mercuriale-navy);
     text-decoration: none;
@@ -41,9 +57,9 @@
     text-decoration: underline;
 }
 
-.hub-breadcrumb__sep {
-    margin: 0 0.5rem;
-    opacity: 0.5;
+.hub-breadcrumb span {
+    color: var(--mercuriale-navy);
+    font-weight: 600;
 }
 
 /* Flash messages */

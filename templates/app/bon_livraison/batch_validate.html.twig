@@ -2,9 +2,21 @@
 
 {% block title %}Validation des BL - Mercuriale.io{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/admin-hub.css') }}">
+{% endblock %}
+
 {% block body %}
 <div class="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 py-8 px-4">
     <div class="max-w-6xl mx-auto">
+        {% include 'admin/components/_breadcrumb.html.twig' with {
+            breadcrumbs: [
+                { label: 'Bons de livraison', url: path('admin_hub_bl') },
+                { label: 'Validation lot' }
+            ]
+        } %}
+
         {# Header #}
         <div class="flex items-center justify-between mb-8">
             <div>
@@ -118,13 +130,6 @@
             {% endfor %}
         </div>
 
-        {# Back link #}
-        <div class="text-center mt-8">
-            <a href="{{ path('admin') }}" class="inline-flex items-center gap-2 text-gray-500 text-sm hover:text-coral transition-colors">
-                <i class="fas fa-arrow-left"></i>
-                Retour au tableau de bord
-            </a>
-        </div>
     </div>
 </div>
 {% endblock %}

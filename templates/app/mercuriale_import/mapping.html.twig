@@ -2,9 +2,21 @@
 
 {% block title %}Mapping des colonnes - Import Mercuriale{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/admin-hub.css') }}">
+{% endblock %}
+
 {% block body %}
 <div class="min-h-screen bg-gradient-to-br from-cream to-cream-dark py-8 px-4">
     <div class="max-w-5xl mx-auto">
+        {% include 'admin/components/_breadcrumb.html.twig' with {
+            breadcrumbs: [
+                { label: 'Mercuriale', url: path('admin_hub_mercuriale') },
+                { label: 'Mapping' }
+            ]
+        } %}
+
         {# Header #}
         <div class="text-center mb-8">
             <h1 class="text-2xl font-bold text-navy mb-2">
