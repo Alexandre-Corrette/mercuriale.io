@@ -110,7 +110,7 @@
                                 <h3 class="text-xl font-semibold text-navy mb-2">Extraction automatique</h3>
                                 <p class="text-gray-500 mb-6">Cliquez pour extraire les données du bon de livraison via IA</p>
                                 <button type="button" data-action="extraction#start"
-                                        class="inline-flex items-center gap-2 px-6 py-3 bg-coral text-white font-semibold rounded-xl transition-all hover:bg-coral-dark">
+                                        class="btn btn--secondary">
                                     <i class="fas fa-play"></i>
                                     Lancer l'extraction
                                 </button>
@@ -166,15 +166,15 @@
                     <form action="{{ path('app_bl_rejeter', {id: bonLivraison.id}) }}" method="post" class="inline"
                           onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce bon de livraison ?');">
                         <input type="hidden" name="_token" value="{{ csrf_token('rejeter_bl_' ~ bonLivraison.id) }}">
-                        <button type="submit" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-coral/20 hover:text-coral-dark transition-all">
-                            <i class="fas fa-trash-alt mr-2"></i>Rejeter
+                        <button type="submit" class="btn btn--ghost btn--sm">
+                            <i class="fas fa-trash-alt"></i>Rejeter
                         </button>
                     </form>
 
                     <form action="{{ path('app_bl_valider', {id: bonLivraison.id}) }}" method="post" class="inline">
                         <input type="hidden" name="_token" value="{{ csrf_token('valider_bl_' ~ bonLivraison.id) }}">
-                        <button type="submit" class="px-6 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-all">
-                            <i class="fas fa-check mr-2"></i>Valider et contrôler
+                        <button type="submit" class="btn btn--success">
+                            <i class="fas fa-check"></i>Valider et contrôler
                         </button>
                     </form>
                 </div>

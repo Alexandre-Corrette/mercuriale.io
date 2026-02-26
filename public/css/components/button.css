@@ -1,0 +1,212 @@
+/* =============================================
+   Button Component — Mercuriale.io
+   Unified button system using BEM-style modifiers.
+   Uses double-dash (--) to avoid collision with
+   existing single-dash (.btn-primary) in admin.css.
+   ============================================= */
+
+/* ── Base ── */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: var(--touch-target-min);
+    padding: 0.625rem 1.25rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.4;
+    text-decoration: none;
+    border: 2px solid transparent;
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: background-color var(--transition-normal),
+                color var(--transition-normal),
+                border-color var(--transition-normal),
+                box-shadow var(--transition-normal),
+                transform var(--transition-fast);
+    white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    text-decoration: none;
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+.btn:focus-visible {
+    outline: 3px solid var(--mercuriale-coral);
+    outline-offset: 2px;
+}
+
+.btn:disabled,
+.btn.is-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* ── Primary (Navy) ── */
+.btn--primary {
+    background-color: var(--mercuriale-navy);
+    border-color: var(--mercuriale-navy);
+    color: #fff;
+}
+
+.btn--primary:hover {
+    background-color: var(--mercuriale-navy-light);
+    border-color: var(--mercuriale-navy-light);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(30, 58, 95, 0.3);
+}
+
+.btn--primary:active {
+    background-color: var(--mercuriale-navy-dark);
+    border-color: var(--mercuriale-navy-dark);
+}
+
+/* ── Secondary (Coral) ── */
+.btn--secondary {
+    background-color: var(--mercuriale-coral);
+    border-color: var(--mercuriale-coral);
+    color: #fff;
+}
+
+.btn--secondary:hover {
+    background-color: var(--mercuriale-coral-light);
+    border-color: var(--mercuriale-coral-light);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(240, 117, 96, 0.3);
+}
+
+.btn--secondary:active {
+    background-color: var(--mercuriale-coral-dark);
+    border-color: var(--mercuriale-coral-dark);
+}
+
+/* ── Danger (Red) ── */
+.btn--danger {
+    background-color: var(--color-danger);
+    border-color: var(--color-danger);
+    color: #fff;
+}
+
+.btn--danger:hover {
+    background-color: var(--color-danger-light);
+    border-color: var(--color-danger-light);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+.btn--danger:active {
+    background-color: #b91c1c;
+    border-color: #b91c1c;
+}
+
+/* ── Success (Green) ── */
+.btn--success {
+    background-color: var(--color-success);
+    border-color: var(--color-success);
+    color: #fff;
+}
+
+.btn--success:hover {
+    background-color: var(--color-success-light);
+    border-color: var(--color-success-light);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(45, 106, 79, 0.3);
+}
+
+.btn--success:active {
+    background-color: #1b4332;
+    border-color: #1b4332;
+}
+
+/* ── Ghost (Transparent) ── */
+.btn--ghost {
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--mercuriale-navy);
+}
+
+.btn--ghost:hover {
+    background-color: var(--mercuriale-cream);
+    color: var(--mercuriale-navy);
+}
+
+.btn--ghost:active {
+    background-color: var(--mercuriale-cream-dark);
+}
+
+/* ── Outline (Navy border) ── */
+.btn--outline {
+    background-color: transparent;
+    border-color: var(--mercuriale-navy);
+    color: var(--mercuriale-navy);
+}
+
+.btn--outline:hover {
+    background-color: var(--mercuriale-navy);
+    border-color: var(--mercuriale-navy);
+    color: #fff;
+}
+
+.btn--outline:active {
+    background-color: var(--mercuriale-navy-dark);
+    border-color: var(--mercuriale-navy-dark);
+    color: #fff;
+}
+
+/* ── Icon-only (square 44x44) ── */
+.btn--icon {
+    width: var(--touch-target-min);
+    min-height: var(--touch-target-min);
+    padding: 0;
+}
+
+/* ── Size: Small ── */
+.btn--sm {
+    min-height: 36px;
+    padding: 0.375rem 0.875rem;
+    font-size: 0.8125rem;
+    border-radius: var(--radius-md);
+}
+
+/* ── Size: Large ── */
+.btn--lg {
+    min-height: 52px;
+    padding: 0.875rem 1.75rem;
+    font-size: 1.0625rem;
+}
+
+/* ── Full Width ── */
+.btn--full {
+    width: 100%;
+}
+
+/* ── Loading State ── */
+.btn--loading {
+    position: relative;
+    color: transparent !important;
+    pointer-events: none;
+}
+
+.btn--loading::after {
+    content: '';
+    position: absolute;
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: btn-spin 0.6s linear infinite;
+}
+
+@keyframes btn-spin {
+    to { transform: rotate(360deg); }
+}

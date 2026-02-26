@@ -17,7 +17,7 @@
 .extraction-table tbody td {
     padding: 0.5rem 0.5rem;
     vertical-align: top;
-    border-bottom: 1px solid #f3f4f6;
+    border-bottom: 1px solid var(--mercuriale-cream-dark);
 }
 
 .extraction-table tbody tr:hover {
@@ -59,13 +59,13 @@
 }
 
 .extraction-match-icon--ok {
-    background-color: #dcfce7;
-    color: #16a34a;
+    background-color: var(--color-success-bg);
+    color: var(--color-success);
 }
 
 .extraction-match-icon--unknown {
-    background-color: rgba(212, 175, 55, 0.3);
-    color: #92700c;
+    background-color: rgba(212, 168, 75, 0.3);
+    color: var(--color-warning);
 }
 
 .extraction-mj-value {
@@ -73,11 +73,11 @@
 }
 
 .extraction-mj-value--positive {
-    color: #dc2626;
+    color: var(--color-danger);
 }
 
 .extraction-mj-value--negative {
-    color: #16a34a;
+    color: var(--color-success);
 }
 
 /* Alertes toggle row */

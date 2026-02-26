@@ -178,6 +178,9 @@ class DashboardController extends AbstractDashboardController
     public function configureAssets(): Assets
     {
         return Assets::new()
+            ->addCssFile('css/tokens.css')
+            ->addCssFile('css/components/button.css')
+            ->addCssFile('css/components/card.css')
             ->addCssFile('css/admin.css')
             ->addCssFile('css/admin-dashboard.css');
     }

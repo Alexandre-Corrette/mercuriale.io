@@ -1,23 +1,5 @@
 /* Custom styles for Mercuriale.io Admin */
-/* Color palette from logo:
-   - Navy blue: #1e3a5f
-   - Coral: #f07560
-   - Gold/Mustard: #d4a84b
-   - Cream: #f5f0e6
-*/
-
-:root {
-    --mercuriale-navy: #1e3a5f;
-    --mercuriale-navy-light: #2c4a6e;
-    --mercuriale-navy-dark: #152a47;
-    --mercuriale-coral: #f07560;
-    --mercuriale-coral-light: #f59485;
-    --mercuriale-coral-dark: #e55a43;
-    --mercuriale-gold: #d4a84b;
-    --mercuriale-gold-light: #e0be6e;
-    --mercuriale-cream: #f5f0e6;
-    --mercuriale-cream-dark: #e8e0d0;
-}
+/* Brand colors defined in tokens.css */
 
 /* EasyAdmin overrides */
 :root {
@@ -144,7 +126,7 @@
 }
 
 .card.card-navy-light {
-    background: linear-gradient(135deg, var(--mercuriale-navy-light) 0%, #3d5a7e 100%) !important;
+    background: linear-gradient(135deg, var(--mercuriale-navy-light) 0%, var(--mercuriale-navy) 100%) !important;
     color: white !important;
 }
 
@@ -164,7 +146,7 @@
 }
 
 .card.bg-success {
-    background: linear-gradient(135deg, #2d6a4f 0%, #40916c 100%) !important;
+    background: linear-gradient(135deg, var(--color-success) 0%, var(--color-success-light) 100%) !important;
 }
 
 .card.bg-info {
@@ -295,9 +277,9 @@
 }
 
 .alert-warning {
-    background-color: rgba(212, 168, 75, 0.15);
+    background-color: var(--color-warning-bg);
     border-color: var(--mercuriale-gold);
-    color: #8a6d1f;
+    color: var(--color-warning);
 }
 
 .alert-danger {
@@ -436,11 +418,11 @@
 }
 
 .bl-lignes-table .ligne-alerte {
-    background-color: #fff5f5;
+    background-color: var(--color-danger-bg);
 }
 
 .bl-lignes-table .ligne-alerte:hover {
-    background-color: #ffe8e8;
+    background-color: #fecaca;
 }
 
 .bl-lignes-table .badge {
@@ -485,4 +467,26 @@
     height: 55px;
     width: auto;
     margin: -10px 0;
+}
+
+/* =============================================
+   App Header (base.html.twig — non-admin pages)
+   ============================================= */
+
+.app-header {
+    background: #fff;
+    border-bottom: 2px solid var(--mercuriale-coral);
+    padding: var(--space-sm) var(--space-lg);
+}
+
+.app-header__logo {
+    height: 45px;
+    width: auto;
+    display: block;
+}
+
+@media (max-width: 480px) {
+    .app-header__logo {
+        height: 35px;
+    }
 }

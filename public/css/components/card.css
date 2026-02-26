@@ -1,0 +1,150 @@
+/* =============================================
+   Card Component — Mercuriale.io
+   Prefixed .m-card to avoid collision with
+   existing .card class used by EasyAdmin/admin.css.
+   ============================================= */
+
+/* ── Base ── */
+.m-card {
+    background: #fff;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    transition: box-shadow var(--transition-slow),
+                transform var(--transition-slow);
+}
+
+/* ── Interactive (clickable) ── */
+.m-card--interactive {
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.m-card--interactive:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    text-decoration: none;
+    color: inherit;
+}
+
+.m-card--interactive:active {
+    transform: translateY(0);
+}
+
+/* ── Header ── */
+.m-card__header {
+    padding: var(--space-md) var(--space-lg);
+    border-bottom: 1px solid var(--mercuriale-cream-dark);
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-weight: 700;
+    color: var(--mercuriale-navy);
+}
+
+.m-card__header--navy {
+    background-color: var(--mercuriale-navy);
+    color: #fff;
+    border-bottom: none;
+}
+
+.m-card__header--coral {
+    background-color: var(--mercuriale-coral);
+    color: #fff;
+    border-bottom: none;
+}
+
+/* ── Body ── */
+.m-card__body {
+    padding: var(--space-lg);
+}
+
+.m-card__body--flush {
+    padding: 0;
+}
+
+/* ── Footer ── */
+.m-card__footer {
+    padding: var(--space-md) var(--space-lg);
+    background-color: rgba(0, 0, 0, 0.03);
+    border-top: 1px solid var(--mercuriale-cream-dark);
+}
+
+/* ── Color Variants (full gradient backgrounds) ── */
+.m-card--navy {
+    background: linear-gradient(135deg, var(--mercuriale-navy) 0%, var(--mercuriale-navy-light) 100%);
+    color: #fff;
+}
+
+.m-card--navy h5,
+.m-card--navy h6,
+.m-card--navy h2,
+.m-card--navy i,
+.m-card--navy a {
+    color: #fff;
+}
+
+.m-card--coral {
+    background: linear-gradient(135deg, var(--mercuriale-coral) 0%, var(--mercuriale-coral-light) 100%);
+    color: #fff;
+}
+
+.m-card--coral h5,
+.m-card--coral h6,
+.m-card--coral h2,
+.m-card--coral i,
+.m-card--coral a {
+    color: #fff;
+}
+
+.m-card--gold {
+    background: linear-gradient(135deg, var(--mercuriale-gold) 0%, var(--mercuriale-gold-light) 100%);
+    color: #fff;
+}
+
+.m-card--gold h5,
+.m-card--gold h6,
+.m-card--gold h2,
+.m-card--gold i,
+.m-card--gold a {
+    color: #fff;
+}
+
+/* ── Status Variants (left border accent) ── */
+.m-card--alert {
+    border-left: 4px solid var(--mercuriale-coral);
+}
+
+.m-card--success {
+    border-left: 4px solid var(--color-success);
+}
+
+.m-card--default {
+    border-left: 4px solid var(--mercuriale-navy);
+}
+
+/* ── Compact (reduced padding) ── */
+.m-card--compact .m-card__header {
+    padding: var(--space-sm) var(--space-md);
+}
+
+.m-card--compact .m-card__body {
+    padding: var(--space-md);
+}
+
+.m-card--compact .m-card__footer {
+    padding: var(--space-sm) var(--space-md);
+}
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+    .m-card__body {
+        padding: var(--space-md);
+    }
+
+    .m-card__header {
+        padding: var(--space-sm) var(--space-md);
+    }
+}
