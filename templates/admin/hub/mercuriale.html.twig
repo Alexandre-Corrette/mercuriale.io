@@ -1,7 +1,7 @@
 {% extends 'admin/hub/layout.html.twig' %}
 
 {% block hub_content %}
-<div class="hub-content">
+<div class="hub-content" data-controller="mercuriale-hub" data-mercuriale-hub-search-url-value="{{ path('admin_hub_mercuriale_search') }}">
     <h1 class="hub-title"><i class="fas fa-tags"></i> Mercuriale</h1>
 
     {# Stats #}
@@ -23,51 +23,68 @@
         </a>
     </div>
 
-    {# Recent prices table #}
+    {# Fournisseur cards #}
+    {% if fournisseurs is not empty %}
     <div class="hub-section">
-        <div class="hub-section__header">
-            <h2 class="hub-section__title">Prix récents</h2>
-            <a href="{{ crud_mercuriale_url }}" class="hub-section__link">Voir tous les prix <i class="fas fa-arrow-right"></i></a>
+        <h2 class="hub-section__title">Fournisseurs</h2>
+        <div class="hub-fournisseur-cards">
+            {% for row in fournisseurs %}
+                <div class="hub-fournisseur-card"
+                     data-action="click->mercuriale-hub#selectFournisseur"
+                     data-fournisseur-id="{{ row.fournisseur.id }}">
+                    <div class="hub-fournisseur-card__name">{{ row.fournisseur.nom }}</div>
+                    <div class="hub-fournisseur-card__count">{{ row.productCount }} produit{{ row.productCount > 1 ? 's' : '' }}</div>
+                </div>
+            {% endfor %}
         </div>
+    </div>
+    {% endif %}
 
-        {% if recent_mercuriales is empty %}
-            <div class="hub-table__empty">
-                Aucun prix enregistré.
-            </div>
-        {% else %}
-            <table class="hub-table">
-                <thead>
-                    <tr>
-                        <th>Produit</th>
-                        <th>Fournisseur</th>
-                        <th>Prix</th>
-                        <th>Unité</th>
-                        <th>Début</th>
-                        <th>Fin</th>
-                        <th>Scope</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for m in recent_mercuriales %}
-                        <tr>
-                            <td>{{ m.produitFournisseur.designationFournisseur }}</td>
-                            <td>{{ m.produitFournisseur.fournisseur.nom }}</td>
-                            <td class="hub-prix">{{ m.prixNegocieAsFloat|number_format(4, ',', ' ') }} &euro;</td>
-                            <td>{{ m.produitFournisseur.uniteAchat }}</td>
-                            <td>{{ m.dateDebut|date('d/m/Y') }}</td>
-                            <td>{{ m.dateFin ? m.dateFin|date('d/m/Y') : '—' }}</td>
-                            <td>
-                                {% if m.etablissement %}
-                                    <span class="hub-badge hub-badge--warning">{{ m.etablissement }}</span>
-                                {% else %}
-                                    <span class="hub-badge hub-badge--secondary">Groupe</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        {% endif %}
+    {# Search bar + filters #}
+    <div class="hub-search-bar">
+        <input type="text"
+               class="hub-search-bar__input"
+               placeholder="Rechercher un produit ou fournisseur..."
+               data-mercuriale-hub-target="searchInput"
+               data-action="input->mercuriale-hub#onSearchInput">
+
+        <select class="hub-search-bar__select"
+                data-mercuriale-hub-target="fournisseurFilter"
+                data-action="change->mercuriale-hub#onFournisseurDropdown">
+            <option value="">Tous les fournisseurs</option>
+            {% for row in fournisseurs %}
+                <option value="{{ row.fournisseur.id }}">{{ row.fournisseur.nom }}</option>
+            {% endfor %}
+        </select>
+
+        <input type="date"
+               class="hub-search-bar__date"
+               data-mercuriale-hub-target="dateFrom"
+               data-action="change->mercuriale-hub#onDateChange"
+               title="Date début">
+
+        <input type="date"
+               class="hub-search-bar__date"
+               data-mercuriale-hub-target="dateTo"
+               data-action="change->mercuriale-hub#onDateChange"
+               title="Date fin">
+    </div>
+
+    {# Loading #}
+    <div data-mercuriale-hub-target="loading" class="hub-loading">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>Chargement...</p>
+    </div>
+
+    {# Results (Stimulus-rendered) #}
+    <div data-mercuriale-hub-target="results"></div>
+
+    {# Pagination (Stimulus-rendered) #}
+    <div data-mercuriale-hub-target="pagination" class="hub-pagination"></div>
+
+    {# Link to CRUD #}
+    <div class="hub-section">
+        <a href="{{ crud_mercuriale_url }}" class="hub-section__link">Voir tous les prix dans l'admin <i class="fas fa-arrow-right"></i></a>
     </div>
 </div>
 {% endblock %}

@@ -500,6 +500,22 @@
     border-color: var(--mercuriale-coral);
 }
 
+.hub-search-bar__date {
+    padding: 0.5rem 0.75rem;
+    border: 2px solid var(--mercuriale-cream-dark);
+    border-radius: 0.5rem;
+    font-size: 0.9rem;
+    background-color: #fff;
+    min-width: 140px;
+    cursor: pointer;
+    color: var(--mercuriale-navy);
+}
+
+.hub-search-bar__date:focus {
+    outline: none;
+    border-color: var(--mercuriale-coral);
+}
+
 /* =============================================
    Pagination
    ============================================= */
@@ -613,7 +629,8 @@
     }
 
     .hub-search-bar__input,
-    .hub-search-bar__select {
+    .hub-search-bar__select,
+    .hub-search-bar__date {
         width: 100%;
     }
 
