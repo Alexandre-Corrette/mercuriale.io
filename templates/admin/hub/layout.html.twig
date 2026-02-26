@@ -12,12 +12,6 @@
 
 {% block body %}
     <div class="hub-page">
-        <header class="hub-header">
-            <a href="{{ path('admin') }}">
-                <img src="/images/logo-mercuriale-rectangulaire.png" alt="Mercuriale.io" class="hub-header__logo">
-            </a>
-        </header>
-
         {% include 'admin/components/_breadcrumb.html.twig' with {
             breadcrumbs: [{ label: hub_title }]
         } %}

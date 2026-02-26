@@ -55,3 +55,25 @@
     --transition-normal: 0.2s ease;
     --transition-slow: 0.3s ease;
 }
+
+/* =============================================
+   App Header (base.html.twig — all pages)
+   ============================================= */
+
+.app-header {
+    background: #fff;
+    border-bottom: 2px solid var(--mercuriale-coral);
+    padding: var(--space-sm) var(--space-lg);
+}
+
+.app-header__logo {
+    height: 45px;
+    width: auto;
+    display: block;
+}
+
+@media (max-width: 480px) {
+    .app-header__logo {
+        height: 35px;
+    }
+}
