@@ -85,45 +85,33 @@
 /* Card footer with multiple CTAs */
 .portail-card .card-footer {
     display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+    flex-direction: row;
+    justify-content: space-around;
+    gap: 1rem;
+    padding: 0.75rem 1.25rem;
 }
 
 /* CTA link in card footer */
-.portail-card__cta {
+.portail-card__cta,
+.portail-card__cta i {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    width: 100%;
+    gap: 0.5rem;
     text-decoration: none;
-    color: inherit;
-    font-weight: 600;
+    color: var(--mercuriale-navy) !important;
+    font-weight: 700;
     font-size: 0.9rem;
 }
 
-.portail-card__cta:hover {
+.portail-card__cta:hover,
+.portail-card__cta:hover i {
     text-decoration: none;
-    color: inherit;
-    opacity: 0.85;
+    color: var(--mercuriale-coral) !important;
 }
 
 .portail-card__cta--secondary {
-    font-weight: 500;
-    font-size: 0.8rem;
-    opacity: 0.75;
-}
-
-.portail-card__cta--secondary:hover {
-    opacity: 1;
-}
-
-.card-navy .portail-card__cta,
-.card-coral .portail-card__cta {
-    color: white;
-}
-
-.card-gold .portail-card__cta {
-    color: white;
+    font-weight: 700;
+    font-size: 0.85rem;
 }
 
 /* Activity section */
