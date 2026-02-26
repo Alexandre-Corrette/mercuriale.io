@@ -12,9 +12,11 @@
 
 {% block body %}
     <div class="hub-page">
-        {% include 'admin/components/_breadcrumb.html.twig' with {
-            breadcrumbs: [{ label: hub_title }]
-        } %}
+        {% block hub_breadcrumb %}
+            {% include 'admin/components/_breadcrumb.html.twig' with {
+                breadcrumbs: hub_breadcrumbs | default([{ label: hub_title }])
+            } %}
+        {% endblock %}
 
         {% for label, messages in app.flashes %}
             {% for message in messages %}
