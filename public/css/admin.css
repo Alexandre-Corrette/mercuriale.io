@@ -84,7 +84,7 @@
 }
 
 .card-footer {
-    background-color: rgba(0, 0, 0, 0.08);
+    background-color: white;
     border-top: none;
 }
 
@@ -94,10 +94,10 @@
     color: white !important;
 }
 
-.card.card-navy h5,
-.card.card-navy h6,
-.card.card-navy h2,
-.card.card-navy i {
+.card.card-navy .card-body h5,
+.card.card-navy .card-body h6,
+.card.card-navy .card-body h2,
+.card.card-navy .card-body i {
     color: white !important;
 }
 
@@ -106,10 +106,10 @@
     color: white !important;
 }
 
-.card.card-coral h5,
-.card.card-coral h6,
-.card.card-coral h2,
-.card.card-coral i {
+.card.card-coral .card-body h5,
+.card.card-coral .card-body h6,
+.card.card-coral .card-body h2,
+.card.card-coral .card-body i {
     color: white !important;
 }
 
@@ -118,11 +118,10 @@
     color: white !important;
 }
 
-.card.card-gold h5,
-.card.card-gold h6,
-.card.card-gold h2,
-.card.card-gold i,
-.card.card-gold a {
+.card.card-gold .card-body h5,
+.card.card-gold .card-body h6,
+.card.card-gold .card-body h2,
+.card.card-gold .card-body i {
     color: white !important;
 }
 
@@ -156,13 +155,15 @@
 
 /* Buttons */
 .btn-primary {
-    background-color: var(--mercuriale-navy);
-    border-color: var(--mercuriale-navy);
+    background-color: var(--mercuriale-coral);
+    border-color: var(--mercuriale-coral);
+    color: white;
 }
 
 .btn-primary:hover {
-    background-color: var(--mercuriale-navy-light);
-    border-color: var(--mercuriale-navy-light);
+    background-color: var(--mercuriale-coral-dark);
+    border-color: var(--mercuriale-coral-dark);
+    color: white;
 }
 
 .btn-secondary {
