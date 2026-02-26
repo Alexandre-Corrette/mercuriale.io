@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace App\Controller\Admin;
 
 use App\Entity\AlerteControle;
+use App\Entity\AuditLog;
 use App\Entity\BonLivraison;
 use App\Entity\CategorieProduit;
 use App\Entity\ConversionUnite;
 use App\Entity\Etablissement;
 use App\Entity\Fournisseur;
 use App\Entity\LigneBonLivraison;
+use App\Entity\LoginLog;
 use App\Entity\Mercuriale;
 use App\Entity\Organisation;
 use App\Entity\OrganisationFournisseur;
@@ -144,6 +146,17 @@ class DashboardController extends AbstractDashboardController
                         ->setPermission('ROLE_SUPER_ADMIN'),
                     MenuItem::linkToCrud('Organisations', 'fas fa-sitemap', Organisation::class)
                         ->setPermission('ROLE_SUPER_ADMIN'),
+                ]);
+
+            yield MenuItem::subMenu('Supervision', 'fas fa-chart-line')
+                ->setPermission('ROLE_SUPER_ADMIN')
+                ->setSubItems([
+                    MenuItem::linkToCrud('Stats Connexion', 'fas fa-sign-in-alt', LoginLog::class)
+                        ->setPermission('ROLE_SUPER_ADMIN')
+                        ->setDefaultSort(['createdAt' => 'DESC']),
+                    MenuItem::linkToCrud('Audit Trail', 'fas fa-history', AuditLog::class)
+                        ->setPermission('ROLE_SUPER_ADMIN')
+                        ->setDefaultSort(['createdAt' => 'DESC']),
                 ]);
         }
         // ADMIN/MANAGER : pas d'items supplementaires (navigation par cards du dashboard)

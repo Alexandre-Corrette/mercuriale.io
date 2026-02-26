@@ -1,0 +1,6 @@
+{% set color_map = { 'create': 'success', 'update': 'warning', 'delete': 'danger' } %}
+{% set icon_map = { 'create': 'fa-plus', 'update': 'fa-pen', 'delete': 'fa-trash' } %}
+<span class="badge badge-{{ color_map[field.value] ?? 'secondary' }}">
+    <i class="fa-solid {{ icon_map[field.value] ?? 'fa-circle' }}"></i>
+    {{ field.value|capitalize }}
+</span>
