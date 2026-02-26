@@ -9,6 +9,7 @@ use App\Entity\Utilisateur;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Security\Http\Event\LoginFailureEvent;
 use Symfony\Component\Security\Http\Event\LoginSuccessEvent;
 use Symfony\Component\Security\Http\Event\LogoutEvent;
@@ -18,6 +19,7 @@ class LoginLogSubscriber implements EventSubscriberInterface
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly LoggerInterface $logger,
+        private readonly RequestStack $requestStack,
     ) {
     }
 
@@ -47,6 +49,9 @@ class LoginLogSubscriber implements EventSubscriberInterface
         $log->setUserAgent(mb_substr((string) $request->headers->get('User-Agent', ''), 0, 500));
 
         $this->persistLog($log);
+
+        $session = $this->requestStack->getSession();
+        $session->getFlashBag()->add('welcome', $user->getPrenom() ?? $user->getEmail());
     }
 
     public function onLoginFailure(LoginFailureEvent $event): void
