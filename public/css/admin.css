@@ -68,6 +68,7 @@
     border-bottom: 2px solid var(--mercuriale-coral);
 }
 
+
 /* Dashboard cards */
 .card {
     border-radius: 1rem;
@@ -444,7 +445,9 @@
 
 .ea-no-sidebar .sidebar-wrapper,
 .ea-no-sidebar .sidebar,
-.ea-no-sidebar #sidebar-resizer-handler {
+.ea-no-sidebar #sidebar-resizer-handler,
+.ea-no-sidebar #navigation-toggler,
+.ea-no-sidebar .responsive-header {
     display: none !important;
 }
 
@@ -456,17 +459,26 @@
 .ea-no-sidebar .content-wrapper {
     margin-left: 0 !important;
     max-width: 100% !important;
+    padding-top: 1.5rem;
 }
 
-/* Logo bar when sidebar is hidden */
-.ea-no-sidebar-logo {
-    padding: 0 1.5rem;
+/* Logo inside content-top bar (non-SUPER_ADMIN) */
+.ea-no-sidebar .content-top {
+    min-height: 70px;
+    padding: 0.75rem var(--space-lg);
+    align-items: center;
 }
 
-.ea-no-sidebar-logo__img {
+.ea-topbar-logo {
+    display: flex;
+    align-items: center;
+    margin-right: auto;
+    flex-shrink: 0;
+}
+
+.ea-topbar-logo__img {
     height: 55px;
     width: auto;
-    margin: -10px 0;
 }
 
 /* =============================================
