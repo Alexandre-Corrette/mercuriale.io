@@ -30,6 +30,23 @@
     color: var(--mercuriale-navy);
 }
 
+.hub-breadcrumb ol {
+    display: flex;
+    flex-direction: row;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    gap: 0;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.hub-breadcrumb li + li::before {
+    content: ">";
+    margin: 0 0.5rem;
+    opacity: 0.5;
+}
+
 .hub-breadcrumb a {
     color: var(--mercuriale-navy);
     text-decoration: none;
@@ -41,9 +58,9 @@
     text-decoration: underline;
 }
 
-.hub-breadcrumb__sep {
-    margin: 0 0.5rem;
-    opacity: 0.5;
+.hub-breadcrumb span {
+    color: var(--mercuriale-navy);
+    font-weight: 600;
 }
 
 /* Flash messages */
@@ -80,6 +97,14 @@
     padding: 1.5rem;
 }
 
+.hub-content--narrow {
+    max-width: 800px;
+}
+
+.hub-content--medium {
+    max-width: 1024px;
+}
+
 /* Hub title */
 .hub-title {
     color: var(--mercuriale-navy);
@@ -103,6 +128,7 @@
     display: flex;
     gap: 1rem;
     margin-bottom: 1.5rem;
+    flex-wrap: wrap;
 }
 
 .hub-stat-card {
@@ -204,6 +230,16 @@
     color: #fff;
 }
 
+.hub-cta--disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.hub-ctas--center {
+    justify-content: center;
+}
+
 /* =============================================
    Alert banner
    ============================================= */
@@ -224,6 +260,12 @@
 
 .hub-alert-banner i {
     font-size: 1.1rem;
+}
+
+.hub-alert-banner--success {
+    background-color: rgba(45, 106, 79, 0.1);
+    border-color: #2d6a4f;
+    color: #2d6a4f;
 }
 
 .hub-alert-banner a {
@@ -483,6 +525,22 @@
     border-color: var(--mercuriale-coral);
 }
 
+.hub-search-bar__date {
+    padding: 0.5rem 0.75rem;
+    border: 2px solid var(--mercuriale-cream-dark);
+    border-radius: 0.5rem;
+    font-size: 0.9rem;
+    background-color: #fff;
+    min-width: 140px;
+    cursor: pointer;
+    color: var(--mercuriale-navy);
+}
+
+.hub-search-bar__date:focus {
+    outline: none;
+    border-color: var(--mercuriale-coral);
+}
+
 /* =============================================
    Pagination
    ============================================= */
@@ -546,6 +604,50 @@
 }
 
 /* =============================================
+   Import info bar
+   ============================================= */
+
+.hub-import-info {
+    background: #fff;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+}
+
+.hub-import-info__filename {
+    font-weight: 600;
+    color: var(--mercuriale-navy);
+}
+
+.hub-import-info__meta {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.hub-import-info--stacked {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+}
+
+/* =============================================
+   Actions bar (spaced between)
+   ============================================= */
+
+.hub-actions-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+}
+
+/* =============================================
    Prix display helpers
    ============================================= */
 
@@ -596,7 +698,8 @@
     }
 
     .hub-search-bar__input,
-    .hub-search-bar__select {
+    .hub-search-bar__select,
+    .hub-search-bar__date {
         width: 100%;
     }
 

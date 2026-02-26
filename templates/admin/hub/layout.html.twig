@@ -8,19 +8,15 @@
     <link rel="stylesheet" href="{{ asset('css/admin-hub.css') }}">
 {% endblock %}
 
+{% block app_header %}{% endblock %}
+
 {% block body %}
     <div class="hub-page">
-        <header class="hub-header">
-            <a href="{{ path('admin') }}">
-                <img src="/images/logo-mercuriale-rectangulaire.png" alt="Mercuriale.io" class="hub-header__logo">
-            </a>
-        </header>
-
-        <nav class="hub-breadcrumb">
-            <a href="{{ path('admin') }}">Tableau de bord</a>
-            <span class="hub-breadcrumb__sep">/</span>
-            <span>{{ hub_title }}</span>
-        </nav>
+        {% block hub_breadcrumb %}
+            {% include 'admin/components/_breadcrumb.html.twig' with {
+                breadcrumbs: hub_breadcrumbs | default([{ label: hub_title }])
+            } %}
+        {% endblock %}
 
         {% for label, messages in app.flashes %}
             {% for message in messages %}

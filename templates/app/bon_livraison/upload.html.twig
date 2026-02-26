@@ -1,43 +1,21 @@
-{% extends 'base.html.twig' %}
+{% extends 'admin/hub/layout.html.twig' %}
+
+{% set hub_title = 'Bons de livraison' %}
+{% set hub_breadcrumbs = [
+    { label: 'Bons de livraison', url: path('admin_hub_bl') },
+    { label: 'Upload BL' }
+] %}
 
 {% block title %}Upload Bon de Livraison - Mercuriale.io{% endblock %}
 
-{% block body %}
-<div class="min-h-screen bg-gradient-to-br from-cream to-cream-dark py-8 px-4">
-    <div class="max-w-3xl mx-auto">
-        {# Header #}
-        <div class="text-center mb-8">
-            <h1 class="text-2xl font-bold text-navy mb-2">
-                <i class="fas fa-receipt mr-2"></i>Nouveaux bons de livraison
-            </h1>
-            <p class="text-gray-500">Photographiez vos BL et laissez l'IA extraire les donnees</p>
-        </div>
+{% block hub_content %}
+<div class="hub-content hub-content--narrow">
+    <h1 class="hub-title"><i class="fas fa-receipt"></i> Nouveaux bons de livraison</h1>
 
-        {# Card #}
+    {# Card #}
+    <div class="hub-section">
         <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
             <div class="p-6 md:p-8">
-                {# Flash messages #}
-                {% for flash_message in app.flashes('error') %}
-                    <div class="flex items-center gap-3 p-4 mb-4 bg-red-50 text-red-800 border border-red-200 rounded-xl">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <span>{{ flash_message }}</span>
-                    </div>
-                {% endfor %}
-
-                {% for flash_message in app.flashes('success') %}
-                    <div class="flex items-center gap-3 p-4 mb-4 bg-green-50 text-green-800 border border-green-200 rounded-xl">
-                        <i class="fas fa-check-circle"></i>
-                        <span>{{ flash_message }}</span>
-                    </div>
-                {% endfor %}
-
-                {% for flash_message in app.flashes('warning') %}
-                    <div class="flex items-center gap-3 p-4 mb-4 bg-amber-50 text-amber-800 border border-amber-200 rounded-xl">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <span>{{ flash_message }}</span>
-                    </div>
-                {% endfor %}
-
                 {{ form_start(form, {'attr': {
                     'id': 'upload-form',
                     'novalidate': 'novalidate',
@@ -105,21 +83,13 @@
                     </div>
 
                     {# Submit button #}
-                    <button type="submit" data-file-upload-target="submit" disabled class="w-full mt-6 px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-navy to-navy-light rounded-xl flex items-center justify-center gap-3 transition-all duration-300 hover:translate-y-[-2px] hover:shadow-xl hover:shadow-navy/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none">
-                        <i class="fas fa-magic text-xl"></i>
+                    <button type="submit" data-file-upload-target="submit" disabled class="btn btn--primary btn--lg btn--full mt-6">
+                        <i class="fas fa-magic"></i>
                         Analyser et extraire les donnees
                     </button>
 
                 {{ form_end(form) }}
             </div>
-        </div>
-
-        {# Back link #}
-        <div class="text-center mt-6">
-            <a href="{{ path('admin') }}" class="inline-flex items-center gap-2 text-gray-500 text-sm hover:text-coral transition-colors">
-                <i class="fas fa-arrow-left"></i>
-                Retour au tableau de bord
-            </a>
         </div>
     </div>
 </div>

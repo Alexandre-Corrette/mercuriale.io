@@ -1,0 +1,14 @@
+<nav class="hub-breadcrumb" aria-label="Fil d'Ariane">
+    <ol>
+        <li><a href="{{ path('admin') }}" data-turbo="false">Tableau de bord</a></li>
+        {% for crumb in breadcrumbs %}
+            <li>
+                {% if crumb.url is defined and crumb.url %}
+                    <a href="{{ crumb.url }}">{{ crumb.label }}</a>
+                {% else %}
+                    <span>{{ crumb.label }}</span>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ol>
+</nav>

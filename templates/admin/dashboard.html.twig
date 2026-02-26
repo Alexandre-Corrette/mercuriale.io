@@ -5,11 +5,17 @@
 
 {% block main %}
 <div class="container-fluid dashboard-portail">
-    <div class="row">
-        <div class="col-12">
-            <h1 class="mb-4">Bienvenue sur Mercuriale.io</h1>
+    {# Welcome toast — only on login, auto-dismiss after 5s #}
+    {% for name in app.flashes('welcome') %}
+        <div class="dashboard-toast" id="welcome-toast">
+            <i class="fas fa-hand-wave"></i>
+            Bonjour {{ name }}, bon service !
+            <button type="button" class="dashboard-toast__close" onclick="this.parentElement.remove()">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
-    </div>
+        <script>setTimeout(function(){var t=document.getElementById('welcome-toast');if(t)t.remove();},5000);</script>
+    {% endfor %}
 
     {# ====== 3 Portal Cards ====== #}
     <div class="row">
@@ -33,10 +39,10 @@
                     </div>
                 </div>
                 <div class="card-footer">
-                    <a href="{{ path('app_bl_upload') }}" class="portail-card__cta">
+                    <a href="{{ path('app_bl_upload') }}" class="portail-card__cta" data-turbo="false">
                         <i class="fas fa-camera"></i> Uploader un BL
                     </a>
-                    <a href="{{ path('admin_hub_bl') }}" class="portail-card__cta portail-card__cta--secondary">
+                    <a href="{{ path('admin_hub_bl') }}" class="portail-card__cta portail-card__cta--secondary" data-turbo="false">
                         Consulter les BL <i class="fas fa-arrow-right"></i>
                     </a>
                 </div>
@@ -63,10 +69,10 @@
                     </div>
                 </div>
                 <div class="card-footer">
-                    <a href="{{ path('app_mercuriale_import') }}" class="portail-card__cta">
+                    <a href="{{ path('app_mercuriale_import') }}" class="portail-card__cta" data-turbo="false">
                         <i class="fas fa-file-excel"></i> Importer une mercuriale
                     </a>
-                    <a href="{{ path('admin_hub_mercuriale') }}" class="portail-card__cta portail-card__cta--secondary">
+                    <a href="{{ path('admin_hub_mercuriale') }}" class="portail-card__cta portail-card__cta--secondary" data-turbo="false">
                         Voir les prix <i class="fas fa-arrow-right"></i>
                     </a>
                 </div>
@@ -93,7 +99,7 @@
                     </div>
                 </div>
                 <div class="card-footer">
-                    <a href="{{ path('admin_hub_produits') }}" class="portail-card__cta">
+                    <a href="{{ path('admin_hub_produits') }}" class="portail-card__cta" data-turbo="false">
                         Voir les produits <i class="fas fa-arrow-right"></i>
                     </a>
                 </div>

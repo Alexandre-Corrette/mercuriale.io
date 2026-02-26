@@ -2,6 +2,40 @@
    Dashboard Portail — MERC-42
    ============================================= */
 
+/* Welcome toast */
+.dashboard-toast {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    margin-bottom: 1.5rem;
+    background: var(--mercuriale-cream);
+    border-left: 4px solid var(--mercuriale-gold);
+    border-radius: var(--radius-md);
+    color: var(--mercuriale-navy);
+    font-weight: 500;
+    animation: toast-in 0.3s ease;
+}
+
+.dashboard-toast__close {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: var(--mercuriale-navy);
+    opacity: 0.5;
+    cursor: pointer;
+    padding: 0.25rem;
+}
+
+.dashboard-toast__close:hover {
+    opacity: 1;
+}
+
+@keyframes toast-in {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 /* Portal cards layout */
 .dashboard-portail .portail-card {
     cursor: pointer;
@@ -51,45 +85,33 @@
 /* Card footer with multiple CTAs */
 .portail-card .card-footer {
     display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+    flex-direction: row;
+    justify-content: space-around;
+    gap: 1rem;
+    padding: 0.75rem 1.25rem;
 }
 
 /* CTA link in card footer */
-.portail-card__cta {
+.portail-card__cta,
+.portail-card__cta i {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    width: 100%;
+    gap: 0.5rem;
     text-decoration: none;
-    color: inherit;
-    font-weight: 600;
+    color: var(--mercuriale-navy) !important;
+    font-weight: 700;
     font-size: 0.9rem;
 }
 
-.portail-card__cta:hover {
+.portail-card__cta:hover,
+.portail-card__cta:hover i {
     text-decoration: none;
-    color: inherit;
-    opacity: 0.85;
+    color: var(--mercuriale-coral) !important;
 }
 
 .portail-card__cta--secondary {
-    font-weight: 500;
-    font-size: 0.8rem;
-    opacity: 0.75;
-}
-
-.portail-card__cta--secondary:hover {
-    opacity: 1;
-}
-
-.card-navy .portail-card__cta,
-.card-coral .portail-card__cta {
-    color: white;
-}
-
-.card-gold .portail-card__cta {
-    color: white;
+    font-weight: 700;
+    font-size: 0.85rem;
 }
 
 /* Activity section */
@@ -141,6 +163,21 @@
     }
 
     .dashboard-params .row > div {
-        margin-bottom: 0.5rem;
+        margin-bottom: var(--space-sm);
+    }
+}
+
+@media (max-width: 480px) {
+    .portail-card__header h5 {
+        font-size: 1rem;
+    }
+
+    .portail-card__stat-value {
+        font-size: 1.25rem;
+    }
+
+    .portail-card__cta {
+        font-size: 0.8rem;
+        min-height: var(--touch-target-min);
     }
 }

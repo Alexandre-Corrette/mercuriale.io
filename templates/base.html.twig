@@ -7,7 +7,7 @@
 
         {# ── PWA Meta Tags ── #}
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-        <meta name="theme-color" content="#2E7D32">
+        <meta name="theme-color" content="#1e3a5f">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
         <meta name="apple-mobile-web-app-title" content="Mercuriale">
@@ -16,6 +16,9 @@
         <link rel="apple-touch-icon" href="{{ asset('icons/icon-192x192.png') }}">
 
         {% block stylesheets %}
+            <link rel="stylesheet" href="{{ asset('css/tokens.css') }}">
+            <link rel="stylesheet" href="{{ asset('css/components/button.css') }}">
+            <link rel="stylesheet" href="{{ asset('css/components/card.css') }}">
             <link rel="stylesheet" href="{{ asset('styles/app.css') }}">
             <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
             <link rel="stylesheet" href="{{ asset('css/push-notification.css') }}">
@@ -42,6 +45,16 @@
                     </span>
                 </a>
             </div>
+
+            {% block app_header %}
+                {% if app.user %}
+                <header class="app-header">
+                    <a href="{{ path('admin') }}">
+                        <img src="{{ asset('images/logo-mercuriale-rectangulaire.png') }}" alt="Mercuriale.io" class="app-header__logo">
+                    </a>
+                </header>
+                {% endif %}
+            {% endblock %}
 
             {% block body %}{% endblock %}
         </div>
