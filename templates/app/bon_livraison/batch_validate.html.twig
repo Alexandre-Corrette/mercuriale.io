@@ -13,7 +13,7 @@
                 </h1>
                 <p class="text-gray-500">{{ bonsLivraison|length }} BL a valider</p>
             </div>
-            <a href="{{ path('app_bl_upload') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all">
+            <a href="{{ path('app_bl_upload') }}" class="btn btn--outline btn--sm">
                 <i class="fas fa-plus"></i>
                 Ajouter d'autres BL
             </a>
@@ -98,7 +98,7 @@
                         </div>
 
                         {# Action button #}
-                        <a href="{{ path('app_bl_validate', {'id': bl.id}) }}" class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-700 to-blue-500 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-blue-700/30 transition-all">
+                        <a href="{{ path('app_bl_validate', {'id': bl.id}) }}" class="btn btn--primary btn--full">
                             <i class="fas fa-magic"></i>
                             Valider ce BL
                         </a>
@@ -110,7 +110,7 @@
                         <i class="fas fa-inbox text-5xl"></i>
                     </div>
                     <p class="text-gray-500">Aucun bon de livraison a valider</p>
-                    <a href="{{ path('app_bl_upload') }}" class="mt-4 inline-flex items-center gap-2 text-blue-700 hover:underline">
+                    <a href="{{ path('app_bl_upload') }}" class="btn btn--secondary mt-4">
                         <i class="fas fa-plus"></i>
                         Uploader des BL
                     </a>
@@ -120,7 +120,7 @@
 
         {# Back link #}
         <div class="text-center mt-8">
-            <a href="{{ path('admin') }}" class="inline-flex items-center gap-2 text-gray-500 text-sm hover:text-blue-700 transition-colors">
+            <a href="{{ path('admin') }}" class="inline-flex items-center gap-2 text-gray-500 text-sm hover:text-coral transition-colors">
                 <i class="fas fa-arrow-left"></i>
                 Retour au tableau de bord
             </a>

@@ -141,6 +141,21 @@
     }
 
     .dashboard-params .row > div {
-        margin-bottom: 0.5rem;
+        margin-bottom: var(--space-sm);
+    }
+}
+
+@media (max-width: 480px) {
+    .portail-card__header h5 {
+        font-size: 1rem;
+    }
+
+    .portail-card__stat-value {
+        font-size: 1.25rem;
+    }
+
+    .portail-card__cta {
+        font-size: 0.8rem;
+        min-height: var(--touch-target-min);
     }
 }
