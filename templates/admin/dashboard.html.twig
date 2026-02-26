@@ -5,11 +5,15 @@
 
 {% block main %}
 <div class="container-fluid dashboard-portail">
-    <div class="row">
-        <div class="col-12">
-            <h1 class="mb-4">Bienvenue sur Mercuriale.io</h1>
-        </div>
+    {# Welcome toast — auto-dismiss after 5s #}
+    <div class="dashboard-toast" id="welcome-toast">
+        <i class="fas fa-hand-wave"></i>
+        Bonjour {{ app.user.prenom|default(app.user.email) }}, bon service !
+        <button type="button" class="dashboard-toast__close" onclick="this.parentElement.remove()">
+            <i class="fas fa-times"></i>
+        </button>
     </div>
+    <script>setTimeout(function(){var t=document.getElementById('welcome-toast');if(t)t.remove();},5000);</script>
 
     {# ====== 3 Portal Cards ====== #}
     <div class="row">

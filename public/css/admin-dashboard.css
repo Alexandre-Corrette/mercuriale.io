@@ -2,6 +2,40 @@
    Dashboard Portail — MERC-42
    ============================================= */
 
+/* Welcome toast */
+.dashboard-toast {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    margin-bottom: 1.5rem;
+    background: var(--mercuriale-cream);
+    border-left: 4px solid var(--mercuriale-gold);
+    border-radius: var(--radius-md);
+    color: var(--mercuriale-navy);
+    font-weight: 500;
+    animation: toast-in 0.3s ease;
+}
+
+.dashboard-toast__close {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: var(--mercuriale-navy);
+    opacity: 0.5;
+    cursor: pointer;
+    padding: 0.25rem;
+}
+
+.dashboard-toast__close:hover {
+    opacity: 1;
+}
+
+@keyframes toast-in {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 /* Portal cards layout */
 .dashboard-portail .portail-card {
     cursor: pointer;
