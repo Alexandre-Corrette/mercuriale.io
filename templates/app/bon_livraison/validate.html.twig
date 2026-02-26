@@ -1,87 +1,75 @@
-{% extends 'base.html.twig' %}
+{% extends 'admin/hub/layout.html.twig' %}
+
+{% set hub_title = 'Bons de livraison' %}
+{% set hub_breadcrumbs = [
+    { label: 'Bons de livraison', url: path('admin_hub_bl') },
+    { label: 'Validation' }
+] %}
 
 {% block title %}Validation BL #{{ bonLivraison.id }} - Mercuriale.io{% endblock %}
 
-{% block stylesheets %}
-    {{ parent() }}
-    <link rel="stylesheet" href="{{ asset('css/admin-hub.css') }}">
-{% endblock %}
+{% block hub_content %}
+<div class="hub-content">
+    <h1 class="hub-title"><i class="fas fa-magic"></i> Validation BL #{{ bonLivraison.id }}</h1>
 
-{% block app_header %}{% endblock %}
-
-{% block body %}
-<div class="container py-5">
-    {% include 'admin/components/_breadcrumb.html.twig' with {
-        breadcrumbs: [
-            { label: 'Bons de livraison', url: path('admin_hub_bl') },
-            { label: 'Validation' }
-        ]
-    } %}
-
-    <div class="row">
-        <div class="col-lg-6">
-            <div class="card shadow-sm">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">
-                        <i class="fas fa-image me-2 text-primary"></i>
-                        Image du bon de livraison
-                    </h5>
-                </div>
-                <div class="card-body p-0">
-                    {% if bonLivraison.imagePath %}
-                        <img src="{{ path('app_bl_image', {'id': bonLivraison.id}) }}"
-                             alt="Bon de livraison"
-                             class="img-fluid w-100">
-                    {% else %}
-                        <div class="p-5 text-center text-muted">
-                            <i class="fas fa-image fa-3x mb-3"></i>
-                            <p>Aucune image</p>
-                        </div>
-                    {% endif %}
-                </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div class="p-4 bg-navy text-white font-semibold">
+                <i class="fas fa-image mr-2"></i>Image du bon de livraison
+            </div>
+            <div class="p-4">
+                {% if bonLivraison.imagePath %}
+                    <img src="{{ path('app_bl_image', {'id': bonLivraison.id}) }}"
+                         alt="Bon de livraison"
+                         class="w-full rounded-lg">
+                {% else %}
+                    <div class="hub-table__empty">
+                        <i class="fas fa-image text-4xl mb-3"></i>
+                        <p>Aucune image</p>
+                    </div>
+                {% endif %}
             </div>
         </div>
-        <div class="col-lg-6">
-            <div class="card shadow-sm">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">
-                        <i class="fas fa-magic me-2 text-primary"></i>
-                        Données extraites
-                    </h5>
+
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div class="p-4 bg-navy text-white font-semibold">
+                <i class="fas fa-magic mr-2"></i>Données extraites
+            </div>
+            <div class="p-6">
+                <div class="hub-alert-banner hub-alert-banner--success">
+                    <i class="fas fa-info-circle"></i>
+                    <span>L'extraction OCR sera implémentée dans une prochaine étape.</span>
                 </div>
-                <div class="card-body">
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i>
-                        L'extraction OCR sera implémentée dans une prochaine étape.
-                    </div>
 
-                    <dl class="row mb-0">
-                        <dt class="col-sm-4">Établissement</dt>
-                        <dd class="col-sm-8">{{ bonLivraison.etablissement.nom }}</dd>
-
-                        <dt class="col-sm-4">Date livraison</dt>
-                        <dd class="col-sm-8">{{ bonLivraison.dateLivraison|date('d/m/Y') }}</dd>
-
-                        <dt class="col-sm-4">Statut</dt>
-                        <dd class="col-sm-8">
-                            <span class="badge bg-secondary">{{ bonLivraison.statut.value }}</span>
-                        </dd>
-
-                        <dt class="col-sm-4">Créé par</dt>
-                        <dd class="col-sm-8">{{ bonLivraison.createdBy.email ?? '-' }}</dd>
-
-                        <dt class="col-sm-4">Créé le</dt>
-                        <dd class="col-sm-8">{{ bonLivraison.createdAt|date('d/m/Y H:i') }}</dd>
-                    </dl>
-                </div>
-                <div class="card-footer bg-white">
-                    <div class="d-flex gap-2">
-                        <button type="button" class="btn btn--primary" disabled>
-                            <i class="fas fa-check me-2"></i>
-                            Valider (bientôt disponible)
-                        </button>
-                    </div>
-                </div>
+                <table class="hub-table">
+                    <tbody>
+                        <tr>
+                            <td><strong>Établissement</strong></td>
+                            <td>{{ bonLivraison.etablissement.nom }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Date livraison</strong></td>
+                            <td>{{ bonLivraison.dateLivraison|date('d/m/Y') }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Statut</strong></td>
+                            <td><span class="hub-badge hub-badge--secondary">{{ bonLivraison.statut.value }}</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Créé par</strong></td>
+                            <td>{{ bonLivraison.createdBy.email ?? '-' }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Créé le</strong></td>
+                            <td>{{ bonLivraison.createdAt|date('d/m/Y H:i') }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="p-4 bg-gray-50 border-t border-gray-100">
+                <button type="button" class="hub-cta hub-cta--primary hub-cta--disabled">
+                    <i class="fas fa-check"></i> Valider (bientôt disponible)
+                </button>
             </div>
         </div>
     </div>
