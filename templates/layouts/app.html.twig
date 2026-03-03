@@ -1,0 +1,41 @@
+{#
+  App Layout — Mercuriale.io
+  Intermediate layout for all authenticated pages.
+  Provides: header + breadcrumb slot + flash messages + content slot + footer.
+  Extends base.html.twig (which handles PWA meta, offline banner, prompts).
+#}
+{% extends 'base.html.twig' %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/layout.css') }}">
+{% endblock %}
+
+{% block app_header %}
+    {% if app.user %}
+        {% include 'components/_header.html.twig' with {
+            restaurant_name: current_restaurant(),
+            current_date: current_date()
+        } %}
+    {% endif %}
+{% endblock %}
+
+{% block body %}
+<div class="app-layout">
+    <main class="app-layout__main">
+        {% block breadcrumb %}{% endblock %}
+
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="m-flash m-flash--{{ label }}">{{ message }}</div>
+            {% endfor %}
+        {% endfor %}
+
+        <div class="app-layout__content">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    {% include 'components/_footer.html.twig' %}
+</div>
+{% endblock %}

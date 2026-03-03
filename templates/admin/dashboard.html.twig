@@ -1,10 +1,21 @@
-{% extends 'admin/layout.html.twig' %}
+{% extends 'layouts/app.html.twig' %}
 
-{% block page_title %}{% endblock %}
-{% block content_header_wrapper %}{% endblock %}
+{% block title %}Tableau de bord — Mercuriale.io{% endblock %}
 
-{% block main %}
-<div class="container-fluid dashboard-portail">
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/admin-dashboard.css') }}">
+{% endblock %}
+
+{% block breadcrumb %}
+    {% include 'components/_breadcrumb.html.twig' with {
+        breadcrumbs: [{ label: 'Tableau de bord' }]
+    } %}
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-portail">
     {# Welcome toast — only on login, auto-dismiss after 5s #}
     {% for name in app.flashes('welcome') %}
         <div class="dashboard-toast" id="welcome-toast">
@@ -103,7 +114,6 @@
                         Voir les produits <i class="fas fa-arrow-right"></i>
                     </a>
                 </div>
-
             </div>
         </div>
     </div>
