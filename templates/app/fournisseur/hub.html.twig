@@ -1,0 +1,55 @@
+{% extends 'admin/hub/layout.html.twig' %}
+
+{% set hub_title = 'Fournisseurs' %}
+{% set hub_breadcrumbs = [
+    { label: 'Fournisseurs' }
+] %}
+
+{% block title %}Fournisseurs — Mercuriale.io{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/admin-dashboard.css') }}">
+{% endblock %}
+
+{% block hub_content %}
+<div class="dashboard-hub">
+    <h1 class="dashboard-hub__title">Fournisseurs</h1>
+    <p class="dashboard-hub__date">{{ current_date() }}</p>
+
+    <div class="m-tile-grid">
+        {# Row 1 #}
+        {% include 'components/_dashboard_tile.html.twig' with {
+            label: 'Statistiques', icon: 'fa-chart-pie',
+            color: 'forest', disabled: true
+        } only %}
+
+        {% include 'components/_dashboard_tile.html.twig' with {
+            label: 'Factures', icon: 'fa-file-invoice',
+            color: 'gold', disabled: true
+        } only %}
+
+        {% include 'components/_dashboard_tile.html.twig' with {
+            label: 'Liste fournisseurs', icon: 'fa-handshake',
+            url: path('app_fournisseurs_liste'), color: 'navy',
+            badge_count: fournisseur_count
+        } only %}
+
+        {# Row 2 #}
+        {% include 'components/_dashboard_tile.html.twig' with {
+            label: 'Contrats', icon: 'fa-file-signature',
+            color: 'purple', disabled: true
+        } only %}
+
+        {% include 'components/_dashboard_tile.html.twig' with {
+            label: 'Nouveau fournisseur', icon: 'fa-plus-circle',
+            color: 'green', disabled: true
+        } only %}
+
+        {% include 'components/_dashboard_tile.html.twig' with {
+            label: 'Contacts', icon: 'fa-address-book',
+            color: 'cyan', disabled: true
+        } only %}
+    </div>
+</div>
+{% endblock %}

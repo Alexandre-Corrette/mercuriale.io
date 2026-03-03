@@ -31,7 +31,7 @@
 /* ── Separator ── */
 .m-breadcrumb__separator {
     margin: 0 var(--space-sm);
-    color: var(--mercuriale-cream-dark);
+    color: var(--mercuriale-navy);
     font-weight: 400;
     user-select: none;
 }
