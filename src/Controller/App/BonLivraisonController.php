@@ -10,6 +10,7 @@ use App\Entity\LigneBonLivraison;
 use App\Entity\Utilisateur;
 use App\Enum\StatutBonLivraison;
 use App\Form\BonLivraisonUploadType;
+use App\Repository\AlerteControleRepository;
 use App\Repository\BonLivraisonRepository;
 use App\Service\Controle\ControleService;
 use App\Service\Ocr\BonLivraisonExtractorService;
@@ -38,6 +39,51 @@ class BonLivraisonController extends AbstractController
         private readonly LoggerInterface $logger,
         private readonly RateLimiterFactory $blUploadLimiter,
     ) {
+    }
+
+    #[Route('', name: 'app_bl_hub', methods: ['GET'])]
+    public function hub(
+        BonLivraisonRepository $blRepo,
+        AlerteControleRepository $alerteRepo,
+    ): Response {
+        /** @var Utilisateur $user */
+        $user = $this->getUser();
+        $org = $user->getOrganisation();
+
+        return $this->render('app/bon_livraison/hub.html.twig', [
+            'pending_count' => $blRepo->countBrouillonForOrganisation($org),
+            'alerte_count' => $alerteRepo->countNonTraiteesForOrganisation($org),
+        ]);
+    }
+
+    #[Route('/en-attente', name: 'app_bl_pending', methods: ['GET'])]
+    public function pending(BonLivraisonRepository $blRepo): Response
+    {
+        /** @var Utilisateur $user */
+        $user = $this->getUser();
+        $org = $user->getOrganisation();
+
+        return $this->render('app/bon_livraison/pending.html.twig', [
+            'bons_livraison' => $blRepo->findBrouillonForOrganisation($org),
+        ]);
+    }
+
+    #[Route('/{id}/detail', name: 'app_bl_show', methods: ['GET'])]
+    public function show(BonLivraison $bonLivraison): Response
+    {
+        if (!$this->isGranted('VIEW', $bonLivraison->getEtablissement())) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $alertCount = 0;
+        foreach ($bonLivraison->getLignes() as $ligne) {
+            $alertCount += $ligne->getAlertes()->count();
+        }
+
+        return $this->render('app/bon_livraison/show.html.twig', [
+            'bonLivraison' => $bonLivraison,
+            'alertCount' => $alertCount,
+        ]);
     }
 
     #[Route('/upload', name: 'app_bl_upload', methods: ['GET', 'POST'])]

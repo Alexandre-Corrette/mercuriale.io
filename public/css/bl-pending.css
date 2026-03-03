@@ -1,0 +1,24 @@
+/* =============================================
+   BL Pending List — MERC-74
+   ============================================= */
+
+.bl-pending-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+/* Cards already styled via bl-consultation.css (.bl-card)
+   Additional touch-friendly adjustments below */
+
+.bl-pending-list .bl-card__inner {
+    min-height: var(--touch-target-min);
+    padding: 1rem;
+}
+
+@media (max-width: 480px) {
+    .bl-pending-list .bl-card__inner {
+        padding: 0.75rem;
+        gap: 0.75rem;
+    }
+}

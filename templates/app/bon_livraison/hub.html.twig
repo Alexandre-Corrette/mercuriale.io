@@ -1,0 +1,55 @@
+{% extends 'admin/hub/layout.html.twig' %}
+
+{% set hub_title = 'Bons de livraison' %}
+{% set hub_breadcrumbs = [
+    { label: 'Bons de livraison' }
+] %}
+
+{% block title %}Bons de livraison — Mercuriale.io{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/admin-dashboard.css') }}">
+{% endblock %}
+
+{% block hub_content %}
+<div class="dashboard-hub">
+    <h1 class="dashboard-hub__title">Bons de livraison</h1>
+
+    <div class="m-tile-grid">
+        {# Row 1 #}
+        {% include 'components/_dashboard_tile.html.twig' with {
+            label: 'Livraisons a valider', icon: 'fa-clipboard-check',
+            url: path('app_bl_pending'), color: 'coral',
+            badge_count: pending_count
+        } only %}
+
+        {% include 'components/_dashboard_tile.html.twig' with {
+            label: 'Alertes', icon: 'fa-triangle-exclamation',
+            url: path('app_bl_pending'), color: 'crimson',
+            badge_count: alerte_count
+        } only %}
+
+        {% include 'components/_dashboard_tile.html.twig' with {
+            label: 'Budget', icon: 'fa-coins',
+            color: 'gold', disabled: true
+        } only %}
+
+        {# Row 2 #}
+        {% include 'components/_dashboard_tile.html.twig' with {
+            label: 'Bons de livraison', icon: 'fa-file-invoice-dollar',
+            url: path('app_bl_list'), color: 'navy'
+        } only %}
+
+        {% include 'components/_dashboard_tile.html.twig' with {
+            label: 'Livraison en cours', icon: 'fa-truck',
+            url: path('app_bl_pending'), color: 'olive'
+        } only %}
+
+        {% include 'components/_dashboard_tile.html.twig' with {
+            label: 'Ajouter un bon', icon: 'fa-plus-circle',
+            url: path('app_bl_upload'), color: 'green'
+        } only %}
+    </div>
+</div>
+{% endblock %}

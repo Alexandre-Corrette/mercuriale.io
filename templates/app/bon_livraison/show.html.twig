@@ -1,0 +1,146 @@
+{% extends 'admin/hub/layout.html.twig' %}
+
+{% set hub_title = 'Bons de livraison' %}
+{% set hub_breadcrumbs = [
+    { label: 'Bons de livraison', url: path('app_bl_hub') },
+    { label: bonLivraison.numeroBl ? 'BL ' ~ bonLivraison.numeroBl : 'BL #' ~ bonLivraison.id }
+] %}
+
+{% block title %}{{ bonLivraison.numeroBl ? 'BL ' ~ bonLivraison.numeroBl : 'BL #' ~ bonLivraison.id }} — Mercuriale.io{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/bl-detail.css') }}">
+{% endblock %}
+
+{% block hub_content %}
+<div class="hub-content">
+    {# Header #}
+    <div class="bl-show-header">
+        <div>
+            <h1 class="hub-title">
+                <i class="fas fa-file-invoice"></i>
+                {{ bonLivraison.numeroBl ? 'BL ' ~ bonLivraison.numeroBl : 'BL #' ~ bonLivraison.id }}
+            </h1>
+            <p class="bl-show-header__meta">
+                {% if bonLivraison.fournisseur %}{{ bonLivraison.fournisseur.nom }} — {% endif %}
+                {{ bonLivraison.etablissement.nom }}
+                {% if bonLivraison.dateLivraison %} — {{ bonLivraison.dateLivraison|date('d/m/Y') }}{% endif %}
+            </p>
+        </div>
+        {% include 'components/_status_badge.html.twig' with {
+            label: bonLivraison.statut.label,
+            variant: bonLivraison.statut.color
+        } only %}
+    </div>
+
+    {# Stats row #}
+    <div class="hub-stats">
+        <div class="hub-stat-card">
+            <div class="hub-stat-card__value">{{ bonLivraison.lignes|length }}</div>
+            <div class="hub-stat-card__label">Lignes</div>
+        </div>
+        <div class="hub-stat-card hub-stat-card--coral">
+            <div class="hub-stat-card__value">{{ alertCount }}</div>
+            <div class="hub-stat-card__label">Alertes</div>
+        </div>
+        <div class="hub-stat-card hub-stat-card--gold">
+            <div class="hub-stat-card__value">{{ bonLivraison.totalHt ? bonLivraison.totalHt|number_format(2, ',', ' ') ~ ' €' : '—' }}</div>
+            <div class="hub-stat-card__label">Total HT</div>
+        </div>
+    </div>
+
+    {# Lines table #}
+    <div class="bl-show-table-wrapper">
+        <div class="bl-show-table-header">
+            <i class="fas fa-list"></i> Lignes du bon de livraison
+        </div>
+        <div class="bl-show-table-scroll">
+            <table class="bl-show-table">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Designation</th>
+                        <th class="bl-show-table__center">Qte</th>
+                        <th class="bl-show-table__right">PU BL</th>
+                        <th class="bl-show-table__right">PU Mercuriale</th>
+                        <th class="bl-show-table__center">Ecart</th>
+                        <th class="bl-show-table__right">Total HT</th>
+                        <th class="bl-show-table__center">Statut</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ligne in bonLivraison.lignes %}
+                        {% set hasAlert = ligne.alertes|length > 0 %}
+                        {% set prixMercuriale = null %}
+                        {% set ecartPct = null %}
+                        {% for alerte in ligne.alertes %}
+                            {% if alerte.valeurAttendue %}
+                                {% set prixMercuriale = alerte.valeurAttendue %}
+                            {% endif %}
+                            {% if alerte.ecartPct %}
+                                {% set ecartPct = alerte.ecartPctAsFloat %}
+                            {% endif %}
+                        {% endfor %}
+                        <tr class="{% if hasAlert %}bl-show-row--alert{% endif %}">
+                            <td class="bl-show-cell--code">{{ ligne.codeProduitBl ?? '—' }}</td>
+                            <td>{{ ligne.designationBl }}</td>
+                            <td class="bl-show-table__center">
+                                {{ ligne.quantiteLivree|number_format(2, ',', ' ') }}
+                                {% if ligne.unite %}<span class="bl-show-cell--muted">{{ ligne.unite }}</span>{% endif %}
+                            </td>
+                            <td class="bl-show-table__right">{{ ligne.prixUnitaire|number_format(4, ',', ' ') }} €</td>
+                            <td class="bl-show-table__right">
+                                {% if prixMercuriale %}
+                                    {{ prixMercuriale|number_format(4, ',', ' ') }} €
+                                {% else %}
+                                    <span class="bl-show-cell--muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="bl-show-table__center">
+                                {% if ecartPct is not null %}
+                                    {% include 'components/_variance_indicator.html.twig' with {
+                                        value: ecartPct,
+                                        threshold: 5.0,
+                                        size: 'sm'
+                                    } only %}
+                                {% else %}
+                                    <span class="bl-show-cell--muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="bl-show-table__right">{{ ligne.totalLigne|number_format(2, ',', ' ') }} €</td>
+                            <td class="bl-show-table__center">
+                                {% include 'components/_status_badge.html.twig' with {
+                                    label: ligne.statutControle.label,
+                                    variant: ligne.statutControle.color,
+                                    size: 'sm'
+                                } only %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {# Action buttons #}
+    <div class="bl-show-actions">
+        {% if bonLivraison.statut.value == 'BROUILLON' and is_granted('MANAGE', bonLivraison.etablissement) %}
+            <form action="{{ path('app_bl_valider', {id: bonLivraison.id}) }}" method="post">
+                <input type="hidden" name="_token" value="{{ csrf_token('valider_bl_' ~ bonLivraison.id) }}">
+                <button type="submit" class="btn btn--success">
+                    <i class="fas fa-check"></i> Valider et controler
+                </button>
+            </form>
+        {% endif %}
+
+        <button type="button" class="btn btn--danger" disabled title="Disponible en V2 (MERC-23)">
+            <i class="fas fa-file-invoice"></i> Avoir
+        </button>
+
+        <button type="button" class="btn btn--outline" disabled title="Disponible en V2 (MERC-23)">
+            <i class="fas fa-paper-plane"></i> Demande avoir fournisseur
+        </button>
+    </div>
+</div>
+{% endblock %}
