@@ -22,10 +22,6 @@ use App\Entity\Unite;
 use App\Entity\Utilisateur;
 use App\Entity\UtilisateurEtablissement;
 use App\Repository\AlerteControleRepository;
-use App\Repository\BonLivraisonRepository;
-use App\Repository\FournisseurRepository;
-use App\Repository\MercurialeRepository;
-use App\Repository\ProduitFournisseurRepository;
 use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminDashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
@@ -40,11 +36,7 @@ use Symfony\Component\HttpFoundation\Response;
 class DashboardController extends AbstractDashboardController
 {
     public function __construct(
-        private readonly BonLivraisonRepository $blRepo,
         private readonly AlerteControleRepository $alerteRepo,
-        private readonly MercurialeRepository $mercurialeRepo,
-        private readonly ProduitFournisseurRepository $produitRepo,
-        private readonly FournisseurRepository $fournisseurRepo,
     ) {
     }
 
@@ -55,12 +47,7 @@ class DashboardController extends AbstractDashboardController
         $org = $user->getOrganisation();
 
         return $this->render('admin/dashboard.html.twig', [
-            'bl_count' => $this->blRepo->countByMonthForOrganisation($org),
             'alerte_count' => $this->alerteRepo->countNonTraiteesForOrganisation($org),
-            'mercuriale_count' => $this->mercurialeRepo->countActiveForOrganisation($org),
-            'produit_count' => $this->produitRepo->countActiveForOrganisation($org),
-            'fournisseur_count' => $this->fournisseurRepo->countActiveForOrganisation($org),
-            'recent_bls' => $this->blRepo->findRecentForOrganisation($org, 5),
         ]);
     }
 

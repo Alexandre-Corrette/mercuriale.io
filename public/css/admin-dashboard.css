@@ -1,5 +1,5 @@
 /* =============================================
-   Dashboard Portail — MERC-42
+   Dashboard Hub — MERC-73
    ============================================= */
 
 /* Welcome toast */
@@ -36,148 +36,21 @@
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Portal cards layout */
-.dashboard-portail .portail-card {
-    cursor: pointer;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.dashboard-portail .portail-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 12px 20px -4px rgba(0, 0, 0, 0.15);
-}
-
-/* Card header: icon + title */
-.portail-card__header {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 1.25rem;
-}
-
-.portail-card__header h5 {
-    margin: 0;
-    font-weight: 700;
-}
-
-/* Stats grid inside each card */
-.portail-card__stats {
-    display: flex;
-    gap: 1.5rem;
-}
-
-.portail-card__stat {
-    display: flex;
-    flex-direction: column;
-}
-
-.portail-card__stat-value {
-    font-size: 1.75rem;
-    font-weight: 800;
-    line-height: 1.2;
-}
-
-.portail-card__stat-label {
-    font-size: 0.8rem;
-    opacity: 0.85;
-}
-
-/* Card footer with multiple CTAs */
-.portail-card .card-footer {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-around;
-    gap: 1rem;
-    padding: 0.75rem 1.25rem;
-}
-
-/* CTA link in card footer */
-.portail-card__cta,
-.portail-card__cta i {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    text-decoration: none;
-    color: var(--mercuriale-navy) !important;
-    font-weight: 700;
-    font-size: 0.9rem;
-}
-
-.portail-card__cta:hover,
-.portail-card__cta:hover i {
-    text-decoration: none;
-    color: var(--mercuriale-coral) !important;
-}
-
-.portail-card__cta--secondary {
-    font-weight: 700;
-    font-size: 0.85rem;
-}
-
-/* Activity section */
-.dashboard-activity .table {
-    margin-bottom: 0;
-}
-
-.dashboard-activity .table th {
-    border-top: none;
-}
-
-.dashboard-activity .table td {
-    vertical-align: middle;
-}
-
-/* Params section */
-.dashboard-params__link {
-    display: block;
-    padding: 0.75rem 1rem;
-    border-radius: 0.5rem;
+/* Hub heading */
+.dashboard-hub__title {
+    text-align: center;
     color: var(--mercuriale-navy);
-    text-decoration: none;
-    font-weight: 600;
-    transition: background-color 0.2s ease, padding-left 0.2s ease;
+    font-size: var(--text-2xl);
+    font-weight: 800;
+    text-transform: uppercase;
+    margin: 0;
 }
 
-.dashboard-params__link:hover {
-    background-color: var(--mercuriale-cream);
-    padding-left: 1.25rem;
-    color: var(--mercuriale-coral);
-}
-
-.dashboard-params__link i {
-    color: var(--mercuriale-gold);
-}
-
-/* =============================================
-   Responsive — single column on mobile
-   ============================================= */
-
-@media (max-width: 768px) {
-    .portail-card__stats {
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-
-    .portail-card__stat-value {
-        font-size: 1.5rem;
-    }
-
-    .dashboard-params .row > div {
-        margin-bottom: var(--space-sm);
-    }
-}
-
-@media (max-width: 480px) {
-    .portail-card__header h5 {
-        font-size: 1rem;
-    }
-
-    .portail-card__stat-value {
-        font-size: 1.25rem;
-    }
-
-    .portail-card__cta {
-        font-size: 0.8rem;
-        min-height: var(--touch-target-min);
-    }
+.dashboard-hub__date {
+    text-align: center;
+    color: var(--mercuriale-navy);
+    font-size: var(--text-sm);
+    margin: var(--space-xs) 0 var(--space-xl);
+    opacity: 0.7;
+    text-transform: uppercase;
 }
