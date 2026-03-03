@@ -159,6 +159,26 @@ class BonLivraisonRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    /**
+     * @return BonLivraison[]
+     */
+    public function findRecentByFournisseurForOrganisation(Fournisseur $fournisseur, Organisation $org, int $limit = 10): array
+    {
+        return $this->createQueryBuilder('bl')
+            ->select('bl', 'e')
+            ->innerJoin('bl.etablissement', 'e')
+            ->where('bl.fournisseur = :fournisseur')
+            ->andWhere('e.organisation = :org')
+            ->andWhere('e.actif = :actif')
+            ->setParameter('fournisseur', $fournisseur)
+            ->setParameter('org', $org)
+            ->setParameter('actif', true)
+            ->orderBy('bl.dateLivraison', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
     public function countBrouillonForOrganisation(Organisation $org): int
     {
         return (int) $this->createQueryBuilder('bl')
