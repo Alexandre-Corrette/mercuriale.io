@@ -1,0 +1,85 @@
+/* =============================================
+   App Layout — Mercuriale.io
+   Page structure: header + main + footer.
+   Pushes footer to bottom via flexbox.
+   ============================================= */
+
+/* ── Page wrapper ── */
+.app-layout {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* ── Main content area ── */
+.app-layout__main {
+    flex: 1;
+    background-color: var(--mercuriale-cream);
+}
+
+.app-layout__content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: var(--space-lg);
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .app-layout__content {
+        padding: var(--space-md);
+    }
+}
+
+@media (max-width: 480px) {
+    .app-layout__content {
+        padding: var(--space-sm);
+    }
+}
+
+/* =============================================
+   Flash Messages — m-flash
+   ============================================= */
+
+.m-flash {
+    margin: 0 auto;
+    max-width: 1400px;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    font-family: var(--font-family-base);
+    margin-top: var(--space-sm);
+    margin-left: var(--space-lg);
+    margin-right: var(--space-lg);
+}
+
+.m-flash--success {
+    background-color: var(--color-success-bg);
+    border: 1px solid var(--color-success);
+    color: var(--color-success);
+}
+
+.m-flash--error,
+.m-flash--danger {
+    background-color: var(--color-danger-bg);
+    border: 1px solid var(--color-danger);
+    color: var(--color-danger);
+}
+
+.m-flash--warning {
+    background-color: var(--color-warning-bg);
+    border: 1px solid var(--color-warning-light);
+    color: var(--color-warning);
+}
+
+.m-flash--welcome {
+    background-color: var(--color-success-bg);
+    border: 1px solid var(--color-success);
+    color: var(--color-success);
+}
+
+@media (max-width: 768px) {
+    .m-flash {
+        margin-left: var(--space-md);
+        margin-right: var(--space-md);
+    }
+}
