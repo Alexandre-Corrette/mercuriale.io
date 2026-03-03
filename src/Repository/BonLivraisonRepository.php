@@ -159,6 +159,42 @@ class BonLivraisonRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    public function countBrouillonForOrganisation(Organisation $org): int
+    {
+        return (int) $this->createQueryBuilder('bl')
+            ->select('COUNT(bl.id)')
+            ->innerJoin('bl.etablissement', 'e')
+            ->where('bl.statut = :statut')
+            ->andWhere('e.organisation = :org')
+            ->andWhere('e.actif = :actif')
+            ->setParameter('statut', StatutBonLivraison::BROUILLON)
+            ->setParameter('org', $org)
+            ->setParameter('actif', true)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
+     * @return BonLivraison[]
+     */
+    public function findBrouillonForOrganisation(Organisation $org, int $limit = 50): array
+    {
+        return $this->createQueryBuilder('bl')
+            ->select('bl', 'f', 'e')
+            ->leftJoin('bl.fournisseur', 'f')
+            ->innerJoin('bl.etablissement', 'e')
+            ->where('bl.statut = :statut')
+            ->andWhere('e.organisation = :org')
+            ->andWhere('e.actif = :actif')
+            ->setParameter('statut', StatutBonLivraison::BROUILLON)
+            ->setParameter('org', $org)
+            ->setParameter('actif', true)
+            ->orderBy('bl.dateLivraison', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
     /**
      * @return array<array{bl: BonLivraison, alertCount: int, ligneCount: int}>
      */

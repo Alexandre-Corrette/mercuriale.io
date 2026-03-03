@@ -1,0 +1,58 @@
+{% extends 'admin/hub/layout.html.twig' %}
+
+{% set hub_title = 'Bons de livraison' %}
+{% set hub_breadcrumbs = [
+    { label: 'Bons de livraison', url: path('app_bl_hub') },
+    { label: 'Livraisons a valider' }
+] %}
+
+{% block title %}Livraisons a valider — Mercuriale.io{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/bl-pending.css') }}">
+{% endblock %}
+
+{% block hub_content %}
+<div class="hub-content">
+    <h1 class="hub-title"><i class="fas fa-clipboard-check"></i> Livraisons a valider</h1>
+
+    {% if bons_livraison is empty %}
+        {% include 'components/_empty_state.html.twig' with {
+            icon: 'fa-check-circle',
+            title: 'Aucune livraison en attente',
+            description: 'Tous les bons de livraison ont ete traites.',
+            action_label: 'Scanner un bon',
+            action_url: path('app_bl_upload'),
+            action_icon: 'fa-camera'
+        } only %}
+    {% else %}
+        <div class="bl-pending-list">
+            {% for bl in bons_livraison %}
+                <a href="{{ path('app_bl_extraction', {id: bl.id}) }}" class="bl-card">
+                    <div class="bl-card__inner">
+                        <div class="bl-card__body">
+                            <div class="bl-card__fournisseur">
+                                {{ bl.fournisseur ? bl.fournisseur.nom : 'Fournisseur inconnu' }}
+                            </div>
+                            <div class="bl-card__meta">
+                                {% if bl.numeroBl %}BL {{ bl.numeroBl }} — {% endif %}
+                                {{ bl.dateLivraison|date('d/m/Y') }}
+                                — {{ bl.etablissement.nom }}
+                            </div>
+                        </div>
+                        <div class="bl-card__right">
+                            {% include 'components/_status_badge.html.twig' with {
+                                label: bl.statut.label,
+                                variant: bl.statut.color,
+                                size: 'sm'
+                            } only %}
+                            <span class="bl-card__chevron"><i class="fas fa-chevron-right"></i></span>
+                        </div>
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

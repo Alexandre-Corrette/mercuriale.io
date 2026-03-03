@@ -1,0 +1,132 @@
+/* =============================================
+   BL Detail Page — MERC-74
+   ============================================= */
+
+/* ── Header ── */
+.bl-show-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.bl-show-header__meta {
+    color: #6b7280;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+/* ── Table wrapper ── */
+.bl-show-table-wrapper {
+    background: #fff;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+.bl-show-table-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--mercuriale-cream-dark);
+    font-weight: 700;
+    color: var(--mercuriale-navy);
+    font-size: 1rem;
+}
+
+.bl-show-table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* ── Table ── */
+.bl-show-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.bl-show-table th {
+    text-align: left;
+    padding: 0.625rem 1rem;
+    background: #f9fafb;
+    color: #6b7280;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid #e5e7eb;
+    white-space: nowrap;
+}
+
+.bl-show-table td {
+    padding: 0.625rem 1rem;
+    border-bottom: 1px solid #f3f4f6;
+    color: #374151;
+}
+
+.bl-show-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* ── Alignments ── */
+.bl-show-table__right {
+    text-align: right;
+}
+
+.bl-show-table__center {
+    text-align: center;
+}
+
+/* ── Alert rows ── */
+.bl-show-row--alert {
+    border-left: 3px solid var(--mercuriale-coral);
+    background-color: rgba(240, 117, 96, 0.06);
+}
+
+.bl-show-row--alert td:first-child {
+    padding-left: calc(1rem - 3px);
+}
+
+/* ── Cell variants ── */
+.bl-show-cell--code {
+    font-family: var(--font-mono, 'SF Mono', 'Consolas', monospace);
+    font-size: 0.8125rem;
+}
+
+.bl-show-cell--muted {
+    color: #9ca3af;
+}
+
+/* ── Action buttons ── */
+.bl-show-actions {
+    display: flex;
+    flex-direction: row;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .bl-show-header {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .bl-show-actions {
+        flex-direction: column;
+    }
+
+    .bl-show-actions .btn {
+        width: 100%;
+    }
+
+    .bl-show-table {
+        font-size: 0.8125rem;
+    }
+
+    .bl-show-table th,
+    .bl-show-table td {
+        padding: 0.5rem 0.625rem;
+    }
+}
