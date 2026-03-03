@@ -1,0 +1,165 @@
+/* =============================================
+   Produit Detail Page — MERC-75
+   ============================================= */
+
+/* ── Header ── */
+.produit-show-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.produit-show-header__meta {
+    color: #6b7280;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+/* ── Info grid ── */
+.produit-show-info {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    background: #fff;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.produit-show-info__item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.produit-show-info__label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b7280;
+}
+
+.produit-show-info__value {
+    font-size: 0.9375rem;
+    color: #1f2937;
+    font-weight: 500;
+}
+
+/* ── Deliveries table ── */
+.produit-show-deliveries {
+    background: #fff;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+.produit-show-deliveries__header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--mercuriale-cream-dark);
+    font-weight: 700;
+    color: var(--mercuriale-navy);
+    font-size: 1rem;
+}
+
+.produit-show-deliveries__empty {
+    padding: 2rem 1.5rem;
+    text-align: center;
+    color: #9ca3af;
+    font-size: 0.875rem;
+}
+
+.produit-show-deliveries__scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.produit-show-deliveries__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.produit-show-deliveries__table th {
+    text-align: left;
+    padding: 0.625rem 1rem;
+    background: #f9fafb;
+    color: #6b7280;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid #e5e7eb;
+    white-space: nowrap;
+}
+
+.produit-show-deliveries__table td {
+    padding: 0.625rem 1rem;
+    border-bottom: 1px solid #f3f4f6;
+    color: #374151;
+}
+
+.produit-show-deliveries__table tr:last-child td {
+    border-bottom: none;
+}
+
+.produit-show-deliveries__right {
+    text-align: right;
+}
+
+.produit-show-deliveries__link {
+    color: var(--mercuriale-navy);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.produit-show-deliveries__link:hover {
+    text-decoration: underline;
+}
+
+.produit-show-deliveries__muted {
+    color: #9ca3af;
+    font-size: 0.8125rem;
+    margin-left: 0.25rem;
+}
+
+/* ── V2 placeholder ── */
+.produit-show-placeholder {
+    background: #fff;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 2rem;
+    text-align: center;
+    color: #9ca3af;
+}
+
+.produit-show-placeholder i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .produit-show-header {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .produit-show-info {
+        grid-template-columns: 1fr;
+    }
+
+    .produit-show-deliveries__table {
+        font-size: 0.8125rem;
+    }
+
+    .produit-show-deliveries__table th,
+    .produit-show-deliveries__table td {
+        padding: 0.5rem 0.625rem;
+    }
+}
