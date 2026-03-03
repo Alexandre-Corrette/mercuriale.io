@@ -88,55 +88,6 @@
     border-top: none;
 }
 
-/* Custom card colors using logo palette */
-.card.card-navy {
-    background: linear-gradient(135deg, var(--mercuriale-navy) 0%, var(--mercuriale-navy-light) 100%) !important;
-    color: white !important;
-}
-
-.card.card-navy .card-body h5,
-.card.card-navy .card-body h6,
-.card.card-navy .card-body h2,
-.card.card-navy .card-body i {
-    color: white !important;
-}
-
-.card.card-coral {
-    background: linear-gradient(135deg, var(--mercuriale-coral) 0%, var(--mercuriale-coral-light) 100%) !important;
-    color: white !important;
-}
-
-.card.card-coral .card-body h5,
-.card.card-coral .card-body h6,
-.card.card-coral .card-body h2,
-.card.card-coral .card-body i {
-    color: white !important;
-}
-
-.card.card-gold {
-    background: linear-gradient(135deg, var(--mercuriale-gold) 0%, var(--mercuriale-gold-light) 100%) !important;
-    color: white !important;
-}
-
-.card.card-gold .card-body h5,
-.card.card-gold .card-body h6,
-.card.card-gold .card-body h2,
-.card.card-gold .card-body i {
-    color: white !important;
-}
-
-.card.card-navy-light {
-    background: linear-gradient(135deg, var(--mercuriale-navy-light) 0%, var(--mercuriale-navy) 100%) !important;
-    color: white !important;
-}
-
-.card.card-navy-light h5,
-.card.card-navy-light h6,
-.card.card-navy-light h2,
-.card.card-navy-light i {
-    color: white !important;
-}
-
 .card.bg-primary {
     background: linear-gradient(135deg, var(--mercuriale-navy) 0%, var(--mercuriale-navy-light) 100%) !important;
 }
@@ -215,31 +166,6 @@
 .form-select:focus {
     border-color: var(--mercuriale-coral);
     box-shadow: 0 0 0 0.2rem rgba(240, 117, 96, 0.25);
-}
-
-/* Quick links */
-.list-unstyled li {
-    padding: 0.5rem 0;
-    border-bottom: 1px solid var(--mercuriale-cream-dark);
-}
-
-.list-unstyled li:last-child {
-    border-bottom: none;
-}
-
-.list-unstyled li a {
-    color: var(--mercuriale-navy);
-    text-decoration: none;
-    transition: all 0.2s ease;
-}
-
-.list-unstyled li a:hover {
-    color: var(--mercuriale-coral);
-    padding-left: 5px;
-}
-
-.list-unstyled li a i {
-    color: var(--mercuriale-gold);
 }
 
 /* Page content background */
