@@ -115,6 +115,36 @@ class FournisseurRepository extends ServiceEntityRepository
     }
 
     /**
+     * @return array<array{fournisseur: Fournisseur, productCount: int, blCount: int, lastDelivery: ?string}>
+     */
+    public function findWithStatsForOrganisation(Organisation $organisation): array
+    {
+        $rows = $this->createQueryBuilder('f')
+            ->select('f', 'COUNT(DISTINCT pf.id) AS productCount', 'COUNT(DISTINCT bl.id) AS blCount', 'MAX(bl.dateLivraison) AS lastDelivery')
+            ->innerJoin('f.organisationFournisseurs', 'orgf')
+            ->leftJoin('f.produitsFournisseur', 'pf', 'WITH', 'pf.actif = true')
+            ->leftJoin('f.bonsLivraison', 'bl')
+            ->leftJoin('bl.etablissement', 'e', 'WITH', 'e.organisation = :organisation AND e.actif = true')
+            ->where('orgf.organisation = :organisation')
+            ->andWhere('orgf.actif = :actif')
+            ->andWhere('f.actif = :fournisseurActif')
+            ->setParameter('organisation', $organisation)
+            ->setParameter('actif', true)
+            ->setParameter('fournisseurActif', true)
+            ->groupBy('f.id')
+            ->orderBy('f.nom', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        return array_map(fn (array $row) => [
+            'fournisseur' => $row[0],
+            'productCount' => (int) $row['productCount'],
+            'blCount' => (int) $row['blCount'],
+            'lastDelivery' => $row['lastDelivery'],
+        ], $rows);
+    }
+
+    /**
      * @return array<array{fournisseur: Fournisseur, productCount: int}>
      */
     public function findWithProductCountForOrganisation(Organisation $organisation): array

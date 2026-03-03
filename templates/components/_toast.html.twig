@@ -1,0 +1,13 @@
+{#
+  Toast Notification Container
+
+  Include once in base.html.twig.
+  Toasts are created dynamically via the Stimulus controller.
+  Dispatch: document.dispatchEvent(new CustomEvent('toast:show', {
+      detail: { message: '...', variant: 'success', duration: 5000 }
+  }))
+#}
+<div class="m-toast-container"
+     data-controller="toast"
+     data-toast-duration-value="5000">
+</div>

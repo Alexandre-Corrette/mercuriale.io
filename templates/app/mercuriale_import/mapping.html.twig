@@ -1,222 +1,203 @@
-{% extends 'base.html.twig' %}
+{% extends 'admin/hub/layout.html.twig' %}
+
+{% set hub_title = 'Mercuriale' %}
+{% set hub_breadcrumbs = [
+    { label: 'Mercuriale', url: path('admin_hub_mercuriale') },
+    { label: 'Mapping' }
+] %}
 
 {% block title %}Mapping des colonnes - Import Mercuriale{% endblock %}
 
-{% block body %}
-<div class="min-h-screen bg-gradient-to-br from-cream to-cream-dark py-8 px-4">
-    <div class="max-w-5xl mx-auto">
-        {# Header #}
-        <div class="text-center mb-8">
-            <h1 class="text-2xl font-bold text-navy mb-2">
-                <i class="fas fa-columns mr-2"></i>Mapping des colonnes
-            </h1>
-            <p class="text-gray-500">Associez les colonnes du fichier aux champs de la mercuriale</p>
-        </div>
+{% block hub_content %}
+<div class="hub-content hub-content--medium">
+    <h1 class="hub-title"><i class="fas fa-columns"></i> Mapping des colonnes</h1>
 
-        {# Progress steps #}
-        <div class="flex items-center justify-center gap-4 mb-8">
-            <div class="flex items-center gap-2 text-green-600">
-                <div class="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center">
-                    <i class="fas fa-check"></i>
-                </div>
-                <span class="font-medium">Upload</span>
+    {# Progress steps #}
+    <div class="flex items-center justify-center gap-4 mb-8">
+        <div class="flex items-center gap-2 text-green-600">
+            <div class="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center">
+                <i class="fas fa-check"></i>
             </div>
-            <div class="w-16 h-0.5 bg-coral"></div>
-            <div class="flex items-center gap-2 text-coral">
-                <div class="w-8 h-8 rounded-full bg-coral text-white flex items-center justify-center">2</div>
-                <span class="font-medium">Mapping</span>
-            </div>
-            <div class="w-16 h-0.5 bg-gray-300"></div>
-            <div class="flex items-center gap-2 text-gray-400">
-                <div class="w-8 h-8 rounded-full bg-gray-300 text-white flex items-center justify-center">3</div>
-                <span class="font-medium">Preview</span>
-            </div>
-            <div class="w-16 h-0.5 bg-gray-300"></div>
-            <div class="flex items-center gap-2 text-gray-400">
-                <div class="w-8 h-8 rounded-full bg-gray-300 text-white flex items-center justify-center">4</div>
-                <span class="font-medium">Import</span>
+            <span class="font-medium">Upload</span>
+        </div>
+        <div class="w-16 h-0.5 bg-coral"></div>
+        <div class="flex items-center gap-2 text-coral">
+            <div class="w-8 h-8 rounded-full bg-coral text-white flex items-center justify-center">2</div>
+            <span class="font-medium">Mapping</span>
+        </div>
+        <div class="w-16 h-0.5 bg-gray-300"></div>
+        <div class="flex items-center gap-2 text-gray-400">
+            <div class="w-8 h-8 rounded-full bg-gray-300 text-white flex items-center justify-center">3</div>
+            <span class="font-medium">Preview</span>
+        </div>
+        <div class="w-16 h-0.5 bg-gray-300"></div>
+        <div class="flex items-center gap-2 text-gray-400">
+            <div class="w-8 h-8 rounded-full bg-gray-300 text-white flex items-center justify-center">4</div>
+            <span class="font-medium">Import</span>
+        </div>
+    </div>
+
+    {# Import info #}
+    <div class="hub-import-info">
+        <div>
+            <div class="hub-import-info__filename">{{ import.originalFilename }}</div>
+            <div class="hub-import-info__meta">
+                {{ import.fournisseur.nom }}
+                {% if import.etablissements|length > 0 %}
+                    - {{ import.etablissements|map(e => e.nom)|join(', ') }}
+                {% else %}
+                    - Prix groupe
+                {% endif %}
             </div>
         </div>
+        <div class="text-right">
+            <div class="hub-stat-card__value">{{ import.totalRows }}</div>
+            <div class="hub-stat-card__label">lignes</div>
+        </div>
+    </div>
 
-        {# Import info #}
-        <div class="bg-white rounded-2xl shadow-lg overflow-hidden mb-6">
-            <div class="p-6 bg-navy text-white">
-                <div class="flex items-center justify-between">
+    {{ form_start(form, {'attr': {'id': 'mapping-form', 'novalidate': 'novalidate'}}) }}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {# Mapping form #}
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div class="p-6">
+                <h2 class="hub-section__title mb-6">
+                    <i class="fas fa-link mr-2"></i>Association des colonnes
+                </h2>
+
+                <div class="space-y-4">
+                    {# Required fields #}
+                    <div class="pb-4 border-b border-gray-200">
+                        <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Champs obligatoires</h3>
+
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block font-medium text-gray-700 mb-1">
+                                    Code produit fournisseur <span class="text-red-500">*</span>
+                                </label>
+                                {{ form_widget(form.mapping_code_fournisseur, {'attr': {'class': 'w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-coral'}}) }}
+                            </div>
+
+                            <div>
+                                <label class="block font-medium text-gray-700 mb-1">
+                                    Designation <span class="text-red-500">*</span>
+                                </label>
+                                {{ form_widget(form.mapping_designation, {'attr': {'class': 'w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-coral'}}) }}
+                            </div>
+
+                            <div>
+                                <label class="block font-medium text-gray-700 mb-1">
+                                    Prix unitaire HT <span class="text-red-500">*</span>
+                                </label>
+                                {{ form_widget(form.mapping_prix, {'attr': {'class': 'w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-coral'}}) }}
+                            </div>
+                        </div>
+                    </div>
+
+                    {# Optional fields #}
+                    <div class="pb-4 border-b border-gray-200">
+                        <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Champs optionnels</h3>
+
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block font-medium text-gray-700 mb-1">Unite</label>
+                                {{ form_widget(form.mapping_unite, {'attr': {'class': 'w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-coral'}}) }}
+                            </div>
+
+                            <div>
+                                <label class="block font-medium text-gray-700 mb-1">Conditionnement</label>
+                                {{ form_widget(form.mapping_conditionnement, {'attr': {'class': 'w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-coral'}}) }}
+                            </div>
+
+                            <div>
+                                <label class="block font-medium text-gray-700 mb-1">Date de debut</label>
+                                {{ form_widget(form.mapping_date_debut, {'attr': {'class': 'w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-coral'}}) }}
+                            </div>
+
+                            <div>
+                                <label class="block font-medium text-gray-700 mb-1">Date de fin</label>
+                                {{ form_widget(form.mapping_date_fin, {'attr': {'class': 'w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-coral'}}) }}
+                            </div>
+                        </div>
+                    </div>
+
+                    {# Options #}
                     <div>
-                        <div class="text-lg font-semibold">{{ import.originalFilename }}</div>
-                        <div class="text-cream/80">
-                            {{ import.fournisseur.nom }}
-                            {% if import.etablissements|length > 0 %}
-                                - {{ import.etablissements|map(e => e.nom)|join(', ') }}
-                            {% else %}
-                                - Prix groupe
-                            {% endif %}
+                        <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Options</h3>
+
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-3">
+                                {{ form_widget(form.hasHeaderRow) }}
+                                <label class="text-gray-700">La premiere ligne contient les en-tetes</label>
+                            </div>
+
+                            <div>
+                                <label class="block font-medium text-gray-700 mb-1">Unite par defaut</label>
+                                {{ form_widget(form.defaultUnite, {'attr': {'class': 'w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-coral'}}) }}
+                            </div>
+
+                            <div>
+                                <label class="block font-medium text-gray-700 mb-1">Date de debut par defaut</label>
+                                {{ form_widget(form.defaultDateDebut, {'attr': {'class': 'w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-coral'}}) }}
+                            </div>
                         </div>
-                    </div>
-                    <div class="text-right">
-                        <div class="text-2xl font-bold">{{ import.totalRows }}</div>
-                        <div class="text-cream/80">lignes</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        {{ form_start(form, {'attr': {'id': 'mapping-form', 'novalidate': 'novalidate'}}) }}
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {# Mapping form #}
-            <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
-                <div class="p-6">
-                    <h2 class="text-lg font-bold text-navy mb-6">
-                        <i class="fas fa-link mr-2"></i>Association des colonnes
-                    </h2>
+        {# Preview data #}
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div class="p-6">
+                <h2 class="hub-section__title mb-4">
+                    <i class="fas fa-table mr-2"></i>Apercu des donnees
+                </h2>
+                <p class="text-sm text-gray-500 mb-4">Premieres lignes du fichier</p>
 
-                    {# Flash messages #}
-                    {% for flash_message in app.flashes('error') %}
-                        <div class="flex items-center gap-3 p-4 mb-4 bg-red-50 text-red-800 border border-red-200 rounded-xl">
-                            <i class="fas fa-exclamation-circle"></i>
-                            <span>{{ flash_message }}</span>
-                        </div>
-                    {% endfor %}
-
-                    <div class="space-y-4">
-                        {# Required fields #}
-                        <div class="pb-4 border-b border-gray-200">
-                            <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Champs obligatoires</h3>
-
-                            <div class="space-y-4">
-                                <div>
-                                    <label class="block font-medium text-gray-700 mb-1">
-                                        Code produit fournisseur <span class="text-red-500">*</span>
-                                    </label>
-                                    {{ form_widget(form.mapping_code_fournisseur, {'attr': {'class': 'w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-coral'}}) }}
-                                </div>
-
-                                <div>
-                                    <label class="block font-medium text-gray-700 mb-1">
-                                        Designation <span class="text-red-500">*</span>
-                                    </label>
-                                    {{ form_widget(form.mapping_designation, {'attr': {'class': 'w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-coral'}}) }}
-                                </div>
-
-                                <div>
-                                    <label class="block font-medium text-gray-700 mb-1">
-                                        Prix unitaire HT <span class="text-red-500">*</span>
-                                    </label>
-                                    {{ form_widget(form.mapping_prix, {'attr': {'class': 'w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-coral'}}) }}
-                                </div>
-                            </div>
-                        </div>
-
-                        {# Optional fields #}
-                        <div class="pb-4 border-b border-gray-200">
-                            <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Champs optionnels</h3>
-
-                            <div class="space-y-4">
-                                <div>
-                                    <label class="block font-medium text-gray-700 mb-1">Unite</label>
-                                    {{ form_widget(form.mapping_unite, {'attr': {'class': 'w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-coral'}}) }}
-                                </div>
-
-                                <div>
-                                    <label class="block font-medium text-gray-700 mb-1">Conditionnement</label>
-                                    {{ form_widget(form.mapping_conditionnement, {'attr': {'class': 'w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-coral'}}) }}
-                                </div>
-
-                                <div>
-                                    <label class="block font-medium text-gray-700 mb-1">Date de debut</label>
-                                    {{ form_widget(form.mapping_date_debut, {'attr': {'class': 'w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-coral'}}) }}
-                                </div>
-
-                                <div>
-                                    <label class="block font-medium text-gray-700 mb-1">Date de fin</label>
-                                    {{ form_widget(form.mapping_date_fin, {'attr': {'class': 'w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-coral'}}) }}
-                                </div>
-                            </div>
-                        </div>
-
-                        {# Options #}
-                        <div>
-                            <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Options</h3>
-
-                            <div class="space-y-4">
-                                <div class="flex items-center gap-3">
-                                    {{ form_widget(form.hasHeaderRow) }}
-                                    <label class="text-gray-700">La premiere ligne contient les en-tetes</label>
-                                </div>
-
-                                <div>
-                                    <label class="block font-medium text-gray-700 mb-1">Unite par defaut</label>
-                                    {{ form_widget(form.defaultUnite, {'attr': {'class': 'w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-coral'}}) }}
-                                </div>
-
-                                <div>
-                                    <label class="block font-medium text-gray-700 mb-1">Date de debut par defaut</label>
-                                    {{ form_widget(form.defaultDateDebut, {'attr': {'class': 'w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-coral'}}) }}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {# Preview data #}
-            <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
-                <div class="p-6">
-                    <h2 class="text-lg font-bold text-navy mb-4">
-                        <i class="fas fa-table mr-2"></i>Apercu des donnees
-                    </h2>
-                    <p class="text-sm text-gray-500 mb-4">Premieres lignes du fichier</p>
-
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm">
-                            <thead>
-                                <tr class="bg-gray-50">
-                                    <th class="px-3 py-2 text-left text-gray-500 font-medium">#</th>
-                                    {% for header in headers %}
-                                        <th class="px-3 py-2 text-left font-medium text-navy">
-                                            {{ header ?: '(vide)' }}
-                                        </th>
+                <div class="overflow-x-auto">
+                    <table class="hub-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                {% for header in headers %}
+                                    <th>{{ header ?: '(vide)' }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for index, row in previewRows %}
+                                <tr>
+                                    <td class="text-gray-400">{{ index + 2 }}</td>
+                                    {% for cell in row %}
+                                        <td class="truncate max-w-[150px]" title="{{ cell }}">
+                                            {{ cell ?: '-' }}
+                                        </td>
                                     {% endfor %}
                                 </tr>
-                            </thead>
-                            <tbody>
-                                {% for index, row in previewRows %}
-                                    <tr class="border-t border-gray-100 hover:bg-gray-50">
-                                        <td class="px-3 py-2 text-gray-400">{{ index + 2 }}</td>
-                                        {% for cell in row %}
-                                            <td class="px-3 py-2 truncate max-w-[150px]" title="{{ cell }}">
-                                                {{ cell ?: '-' }}
-                                            </td>
-                                        {% endfor %}
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {% if import.totalRows > 5 %}
-                        <p class="mt-4 text-sm text-gray-500 text-center">
-                            <i class="fas fa-info-circle mr-1"></i>
-                            + {{ import.totalRows - 5 }} autres lignes
-                        </p>
-                    {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
+
+                {% if import.totalRows > 5 %}
+                    <p class="mt-4 text-sm text-gray-500 text-center">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        + {{ import.totalRows - 5 }} autres lignes
+                    </p>
+                {% endif %}
             </div>
         </div>
-
-        {# Actions #}
-        <div class="flex items-center justify-between mt-6">
-            <a href="{{ path('app_mercuriale_import') }}" class="inline-flex items-center gap-2 px-6 py-3 text-gray-600 hover:text-coral transition-colors">
-                <i class="fas fa-arrow-left"></i>
-                Retour
-            </a>
-
-            <button type="submit" class="px-8 py-3 bg-gradient-to-r from-navy to-navy-light text-white font-semibold rounded-xl flex items-center gap-2 hover:shadow-lg transition-all">
-                Previsualiser l'import
-                <i class="fas fa-arrow-right"></i>
-            </button>
-        </div>
-        {{ form_end(form) }}
     </div>
+
+    {# Actions #}
+    <div class="hub-actions-bar">
+        <a href="{{ path('app_mercuriale_import') }}" class="hub-cta hub-cta--outline">
+            <i class="fas fa-arrow-left"></i> Retour
+        </a>
+        <button type="submit" class="hub-cta hub-cta--primary">
+            Previsualiser l'import <i class="fas fa-arrow-right"></i>
+        </button>
+    </div>
+    {{ form_end(form) }}
 </div>
 {% endblock %}

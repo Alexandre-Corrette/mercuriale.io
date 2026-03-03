@@ -1,0 +1,187 @@
+/* =============================================
+   Profil Section — MERC-77
+   ============================================= */
+
+/* ── Section card ── */
+.profil-section {
+    background: #fff;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+.profil-section__header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--mercuriale-cream-dark);
+    font-weight: 700;
+    color: var(--mercuriale-navy);
+    font-size: 1rem;
+}
+
+.profil-section__body {
+    padding: 1.5rem;
+}
+
+.profil-section__muted {
+    color: #9ca3af;
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+/* ── Info grid ── */
+.profil-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    padding: 1.5rem;
+}
+
+.profil-info-grid__item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.profil-info-grid__label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b7280;
+}
+
+.profil-info-grid__value {
+    font-size: 0.9375rem;
+    color: #1f2937;
+    font-weight: 500;
+}
+
+/* ── Etablissements list ── */
+.profil-etablissements {
+    padding: 0 1.5rem 1.5rem;
+}
+
+.profil-etablissements__title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b7280;
+    margin-bottom: 0.75rem;
+}
+
+.profil-etablissement-card {
+    background: var(--mercuriale-cream);
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.profil-etablissement-card:last-child {
+    margin-bottom: 0;
+}
+
+.profil-etablissement-card__name {
+    font-weight: 600;
+    color: var(--mercuriale-navy);
+    font-size: 0.9375rem;
+    margin-bottom: 0.125rem;
+}
+
+.profil-etablissement-card__address {
+    font-size: 0.8125rem;
+    color: #6b7280;
+}
+
+.profil-etablissement-card__phone {
+    font-size: 0.8125rem;
+    color: #6b7280;
+    margin-top: 0.25rem;
+}
+
+.profil-etablissement-card__phone i {
+    margin-right: 0.25rem;
+}
+
+/* ── Hub links (V2 placeholders) ── */
+.profil-hub-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 2rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.profil-hub-links__item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 1.25rem;
+    background: #fff;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--mercuriale-navy);
+}
+
+.profil-hub-links__item--disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.profil-hub-links__item i {
+    color: #9ca3af;
+}
+
+.profil-hub-links__badge {
+    margin-left: auto;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: var(--mercuriale-cream-dark);
+    color: #6b7280;
+    padding: 0.125rem 0.5rem;
+    border-radius: var(--radius-sm);
+}
+
+/* ── Logout button ── */
+.profil-logout {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.profil-logout__btn {
+    display: inline-block;
+    padding: 0.75rem 2rem;
+    background-color: var(--mercuriale-coral);
+    color: #fff;
+    border-radius: var(--radius-lg);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    transition: background-color var(--transition-fast);
+}
+
+.profil-logout__btn:hover {
+    background-color: var(--mercuriale-coral-dark);
+}
+
+.profil-logout__btn i {
+    margin-right: 0.5rem;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .profil-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .profil-hub-links {
+        margin-top: 1.5rem;
+    }
+}

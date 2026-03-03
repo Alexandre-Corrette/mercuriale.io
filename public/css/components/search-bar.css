@@ -1,0 +1,46 @@
+/* =============================================
+   Search Bar Component — Mercuriale.io
+   Input with search icon prefix.
+   ============================================= */
+
+/* ── Base ── */
+.m-search-bar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    font-family: var(--font-family-base);
+}
+
+/* ── Search icon ── */
+.m-search-bar__icon {
+    position: absolute;
+    left: var(--space-sm);
+    color: #9ca3af;
+    font-size: var(--text-sm);
+    pointer-events: none;
+}
+
+/* ── Input ── */
+.m-search-bar__input {
+    width: 100%;
+    min-height: var(--touch-target-min);
+    padding: var(--space-sm) var(--space-sm) var(--space-sm) calc(var(--space-sm) + 1.5em);
+    font-size: var(--text-sm);
+    font-family: var(--font-family-base);
+    color: var(--mercuriale-navy);
+    background-color: #fff;
+    border: 1.5px solid var(--mercuriale-cream-dark);
+    border-radius: var(--radius-md);
+    transition: border-color var(--transition-fast),
+                box-shadow var(--transition-fast);
+}
+
+.m-search-bar__input::placeholder {
+    color: #9ca3af;
+}
+
+.m-search-bar__input:focus {
+    outline: none;
+    border-color: var(--mercuriale-coral);
+    box-shadow: 0 0 0 3px rgba(240, 117, 96, 0.15);
+}

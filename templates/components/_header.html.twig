@@ -1,0 +1,42 @@
+{#
+  Header Component
+
+  Params:
+    logo_path:       string (optional, default: 'images/logo-mercuriale-rectangulaire.png')
+    restaurant_name: string (optional)
+    current_date:    string (optional) — formatted date e.g. "Lundi 3 mars 2026"
+    show_user_info:  bool   (optional, default: true)
+#}
+{% set _logo = logo_path|default('images/logo-mercuriale-rectangulaire.png') %}
+{% set _show_user = show_user_info|default(true) %}
+
+<header class="m-header">
+    <div class="m-header__inner">
+        <a href="{{ path('admin') }}" class="m-header__logo-link">
+            <img src="{{ asset(_logo) }}" alt="Mercuriale.io" class="m-header__logo">
+        </a>
+
+        {% if _show_user and app.user %}
+        <div class="m-header__right">
+            <div class="m-header__user">
+                <i class="fas fa-user-circle" aria-hidden="true"></i>
+                <span class="m-header__user-name">{{ app.user.prenom|default('') }} {{ app.user.nom|default('') }}</span>
+            </div>
+
+            {% if restaurant_name is defined and restaurant_name %}
+            <div class="m-header__restaurant">
+                <i class="fas fa-store" aria-hidden="true"></i>
+                <span class="m-header__restaurant-name">{{ restaurant_name }}</span>
+            </div>
+            {% endif %}
+
+            {% if current_date is defined and current_date %}
+            <div class="m-header__date">
+                <i class="fas fa-calendar" aria-hidden="true"></i>
+                <span>{{ current_date }}</span>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</header>

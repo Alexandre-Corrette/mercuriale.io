@@ -1,0 +1,63 @@
+/* =============================================
+   Badge Counter Component — Mercuriale.io
+   Notification counter badge (red circle with number).
+   ============================================= */
+
+/* ── Base ── */
+.m-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: #fff;
+    border-radius: var(--radius-full);
+    line-height: 1;
+    white-space: nowrap;
+}
+
+/* ── Sizes ── */
+.m-badge--sm {
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    font-size: var(--text-xs);
+}
+
+.m-badge--md {
+    min-width: 22px;
+    height: 22px;
+    padding: 0 5px;
+    font-size: var(--text-sm);
+}
+
+.m-badge--lg {
+    min-width: 28px;
+    height: 28px;
+    padding: 0 6px;
+    font-size: var(--text-base);
+}
+
+/* ── Color Variants ── */
+.m-badge--danger {
+    background-color: var(--color-danger);
+}
+
+.m-badge--warning {
+    background-color: var(--color-warning-light);
+}
+
+.m-badge--success {
+    background-color: var(--color-success);
+}
+
+.m-badge--info {
+    background-color: var(--tile-blue);
+}
+
+.m-badge--navy {
+    background-color: var(--mercuriale-navy);
+}
+
+.m-badge--coral {
+    background-color: var(--mercuriale-coral);
+}

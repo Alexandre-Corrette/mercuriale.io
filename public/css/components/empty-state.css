@@ -1,0 +1,46 @@
+/* =============================================
+   Empty State Component — Mercuriale.io
+   Placeholder for empty lists/tables with optional CTA.
+   ============================================= */
+
+/* ── Base ── */
+.m-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: var(--space-xl) var(--space-lg);
+    font-family: var(--font-family-base);
+}
+
+/* ── Icon ── */
+.m-empty-state__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    border-radius: var(--radius-full);
+    background-color: var(--mercuriale-cream);
+    color: var(--mercuriale-navy);
+    font-size: 1.5rem;
+    margin-bottom: var(--space-md);
+}
+
+/* ── Text ── */
+.m-empty-state__title {
+    font-size: var(--text-lg);
+    font-weight: 700;
+    color: var(--mercuriale-navy);
+    margin: 0 0 var(--space-xs);
+}
+
+.m-empty-state__description {
+    font-size: var(--text-sm);
+    color: #6b7280;
+    margin: 0 0 var(--space-lg);
+    max-width: 320px;
+}
+
+/* ── CTA follows — uses .btn component directly ── */

@@ -1,0 +1,37 @@
+{#
+  Confirm Modal Container
+
+  Include once in base.html.twig.
+  Opened via Stimulus controller from any trigger element with data-action="confirm-modal#open"
+  and data-confirm-* attributes.
+
+  Trigger example:
+    <button data-action="confirm-modal#open"
+            data-confirm-modal-title-param="Supprimer ce BL ?"
+            data-confirm-modal-message-param="Cette action est irreversible."
+            data-confirm-modal-confirm-label-param="Supprimer"
+            data-confirm-modal-variant-param="danger"
+            data-confirm-modal-url-param="/admin/bl/42/delete">
+        Supprimer
+    </button>
+#}
+<div class="m-confirm-modal"
+     data-controller="confirm-modal"
+     data-confirm-modal-target="overlay"
+     aria-hidden="true">
+    <div class="m-confirm-modal__dialog" role="alertdialog" aria-modal="true"
+         aria-labelledby="confirm-modal-title" aria-describedby="confirm-modal-message">
+        <div class="m-confirm-modal__icon" data-confirm-modal-target="icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <h3 class="m-confirm-modal__title" id="confirm-modal-title"
+            data-confirm-modal-target="title">Confirmer</h3>
+        <p class="m-confirm-modal__message" id="confirm-modal-message"
+           data-confirm-modal-target="message">Etes-vous sur ?</p>
+        <div class="m-confirm-modal__actions">
+            <button class="btn btn--ghost" data-action="confirm-modal#cancel">Annuler</button>
+            <button class="btn btn--danger" data-action="confirm-modal#confirm"
+                    data-confirm-modal-target="confirmBtn">Confirmer</button>
+        </div>
+    </div>
+</div>

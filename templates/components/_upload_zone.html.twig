@@ -1,0 +1,45 @@
+{#
+  Upload Zone Component
+
+  Params:
+    accept_label:    string (optional, default: 'JPEG, PNG, HEIC ou PDF')
+    max_size_label:  string (optional, default: 'Maximum 20 Mo par fichier')
+    icon:            string (optional, default: 'fa-cloud-upload-alt')
+    title:           string (optional, default: 'Glissez vos fichiers ici')
+    subtitle:        string (optional, default: 'ou cliquez pour parcourir')
+    browse_label:    string (optional, default: 'Choisir des fichiers')
+    input_name:      string (optional, default: 'file')
+    input_accept:    string (optional, default: 'image/jpeg,image/png,image/heic,application/pdf')
+    stimulus_target: string (optional) — e.g. 'dropZone'
+    class:           string (optional)
+#}
+{% set _icon = icon|default('fa-cloud-upload-alt') %}
+{% set _title = title|default('Glissez vos fichiers ici') %}
+{% set _subtitle = subtitle|default('ou cliquez pour parcourir') %}
+{% set _browse = browse_label|default('Choisir des fichiers') %}
+{% set _accept_label = accept_label|default('JPEG, PNG, HEIC ou PDF') %}
+{% set _max_size = max_size_label|default('Maximum 20 Mo par fichier') %}
+{% set _input_name = input_name|default('file') %}
+{% set _input_accept = input_accept|default('image/jpeg,image/png,image/heic,application/pdf') %}
+
+<div class="m-upload-zone{{ class is defined and class ? ' ' ~ class : '' }}"
+     {% if stimulus_target is defined and stimulus_target %}data-{{ stimulus_target }}{% endif %}>
+
+    <div class="m-upload-zone__icon">
+        <i class="fas {{ _icon }}" aria-hidden="true"></i>
+    </div>
+
+    <p class="m-upload-zone__title">{{ _title }}</p>
+    <p class="m-upload-zone__subtitle">{{ _subtitle }}</p>
+
+    <label class="m-upload-zone__browse">
+        <i class="fas fa-folder-open" aria-hidden="true"></i>
+        {{ _browse }}
+        <input type="file"
+               name="{{ _input_name }}"
+               accept="{{ _input_accept }}"
+               class="m-upload-zone__input">
+    </label>
+
+    <p class="m-upload-zone__hint">{{ _accept_label }} — {{ _max_size }}</p>
+</div>

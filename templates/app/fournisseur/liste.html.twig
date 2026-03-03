@@ -1,0 +1,81 @@
+{% extends 'admin/hub/layout.html.twig' %}
+
+{% set hub_title = 'Fournisseurs' %}
+{% set hub_breadcrumbs = [
+    { label: 'Fournisseurs', url: path('app_fournisseurs_hub') },
+    { label: 'Liste fournisseurs' }
+] %}
+
+{% block title %}Liste fournisseurs — Mercuriale.io{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/fournisseur.css') }}">
+{% endblock %}
+
+{% block hub_content %}
+<div class="hub-content">
+    <h1 class="hub-title"><i class="fas fa-handshake"></i> Liste fournisseurs</h1>
+
+    {# Stats #}
+    <div class="hub-stats">
+        <div class="hub-stat-card hub-stat-card--coral">
+            <div class="hub-stat-card__value">{{ fournisseur_count }}</div>
+            <div class="hub-stat-card__label">fournisseurs actifs</div>
+        </div>
+    </div>
+
+    {# Search #}
+    <div class="fournisseur-search">
+        <input type="text"
+               class="fournisseur-search__input"
+               id="fournisseur-search"
+               placeholder="Rechercher un fournisseur...">
+    </div>
+
+    {# Cards #}
+    {% if fournisseurs is empty %}
+        <div class="fournisseur-empty">
+            <i class="fas fa-handshake"></i>
+            <p>Aucun fournisseur enregistre.</p>
+        </div>
+    {% else %}
+        <div class="fournisseur-cards" id="fournisseur-cards">
+            {% for row in fournisseurs %}
+                <a href="{{ path('app_fournisseur_show', {id: row.fournisseur.id}) }}" class="fournisseur-card" data-name="{{ row.fournisseur.nom|lower }}">
+                    <div class="fournisseur-card__name">{{ row.fournisseur.nom }}</div>
+                    {% if row.fournisseur.code %}
+                        <div class="fournisseur-card__code">Code : {{ row.fournisseur.code }}</div>
+                    {% endif %}
+                    <div class="fournisseur-card__stats">
+                        <span><i class="fas fa-basket-shopping"></i> {{ row.productCount }} produit{{ row.productCount > 1 ? 's' : '' }}</span>
+                        <span><i class="fas fa-file-invoice-dollar"></i> {{ row.blCount }} BL</span>
+                    </div>
+                    {% if row.lastDelivery %}
+                        <div class="fournisseur-card__date">
+                            <i class="fas fa-calendar"></i> Derniere livraison : {{ row.lastDelivery|date('d/m/Y') }}
+                        </div>
+                    {% endif %}
+                </a>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var input = document.getElementById('fournisseur-search');
+    var cards = document.getElementById('fournisseur-cards');
+    if (!input || !cards) return;
+
+    input.addEventListener('keyup', function () {
+        var query = input.value.toLowerCase().trim();
+        var items = cards.querySelectorAll('.fournisseur-card');
+        items.forEach(function (card) {
+            var name = card.getAttribute('data-name') || '';
+            card.style.display = name.indexOf(query) !== -1 ? '' : 'none';
+        });
+    });
+});
+</script>
+{% endblock %}

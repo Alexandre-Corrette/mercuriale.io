@@ -1,0 +1,106 @@
+/* =============================================
+   Data Card Component — Mercuriale.io
+   Mobile-optimized card for list items (BL, product, supplier).
+   Replaces table rows on small screens.
+   ============================================= */
+
+/* ── Base ── */
+.m-data-card {
+    background: #fff;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: var(--space-md) var(--space-lg);
+    border-left: 4px solid var(--mercuriale-navy);
+    transition: transform var(--transition-normal),
+                box-shadow var(--transition-normal);
+    font-family: var(--font-family-base);
+}
+
+/* ── Clickable ── */
+a.m-data-card {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+a.m-data-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    text-decoration: none;
+    color: inherit;
+}
+
+/* ── Accent Variants ── */
+.m-data-card--navy   { border-left-color: var(--mercuriale-navy); }
+.m-data-card--coral  { border-left-color: var(--mercuriale-coral); }
+.m-data-card--gold   { border-left-color: var(--mercuriale-gold); }
+.m-data-card--green  { border-left-color: var(--color-success); }
+.m-data-card--danger { border-left-color: var(--color-danger); }
+
+/* ── Header row ── */
+.m-data-card__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-sm);
+}
+
+/* ── Title / Subtitle / Meta ── */
+.m-data-card__title {
+    font-size: var(--text-base);
+    font-weight: 700;
+    color: var(--mercuriale-navy);
+    margin: 0;
+    line-height: 1.3;
+}
+
+.m-data-card__subtitle {
+    font-size: var(--text-sm);
+    color: #6b7280;
+    margin: 0.15em 0 0;
+}
+
+.m-data-card__meta {
+    font-size: var(--text-xs);
+    color: #9ca3af;
+    margin: 0.25em 0 0;
+}
+
+/* ── Key-value data pairs ── */
+.m-data-card__pairs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm) var(--space-lg);
+    margin-top: var(--space-sm);
+    padding-top: var(--space-sm);
+    border-top: 1px solid var(--mercuriale-cream-dark);
+}
+
+.m-data-card__pair {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.m-data-card__pair-label {
+    font-size: var(--text-xs);
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    font-weight: 600;
+}
+
+.m-data-card__pair-value {
+    font-size: var(--text-sm);
+    font-weight: 700;
+    color: var(--mercuriale-navy);
+}
+
+/* ── Badges ── */
+.m-data-card__badges {
+    display: flex;
+    gap: var(--space-xs);
+    flex-wrap: wrap;
+}

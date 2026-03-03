@@ -1,0 +1,107 @@
+/* =============================================
+   Header Component — Mercuriale.io
+   Global app header: logo + user + restaurant + date.
+   Replaces .app-header formerly in tokens.css.
+   ============================================= */
+
+/* ── Base ── */
+.m-header {
+    background: #fff;
+    border-bottom: 2px solid var(--mercuriale-coral);
+    position: sticky;
+    top: 0;
+    z-index: var(--z-header);
+}
+
+.m-header__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-sm) var(--space-lg);
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* ── Logo ── */
+.m-header__logo-link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    flex-shrink: 0;
+}
+
+.m-header__logo {
+    height: 45px;
+    width: auto;
+    display: block;
+}
+
+/* ── Right section ── */
+.m-header__right {
+    display: flex;
+    align-items: center;
+    gap: var(--space-lg);
+}
+
+/* ── User / Restaurant / Date ── */
+.m-header__user,
+.m-header__restaurant,
+.m-header__date {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    color: var(--mercuriale-navy);
+    font-size: var(--text-sm);
+    font-family: var(--font-family-base);
+}
+
+.m-header__user i,
+.m-header__restaurant i,
+.m-header__date i {
+    color: var(--mercuriale-coral);
+    font-size: var(--text-base);
+}
+
+.m-header__user-name,
+.m-header__restaurant-name {
+    font-weight: 600;
+}
+
+.m-header__date {
+    color: #6b7280;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .m-header__inner {
+        padding: var(--space-sm) var(--space-md);
+    }
+
+    .m-header__right {
+        gap: var(--space-md);
+    }
+
+    .m-header__date {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .m-header__logo {
+        height: 35px;
+    }
+
+    .m-header__right {
+        gap: var(--space-sm);
+    }
+
+    .m-header__user-name,
+    .m-header__restaurant-name {
+        display: none;
+    }
+
+    .m-header__user i,
+    .m-header__restaurant i {
+        font-size: var(--text-lg);
+    }
+}

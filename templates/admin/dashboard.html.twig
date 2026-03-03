@@ -1,180 +1,50 @@
-{% extends 'admin/layout.html.twig' %}
+{% extends 'layouts/app.html.twig' %}
 
-{% block page_title %}{% endblock %}
-{% block content_header_wrapper %}{% endblock %}
+{% block title %}Tableau de bord — Mercuriale.io{% endblock %}
 
-{% block main %}
-<div class="container-fluid dashboard-portail">
-    <div class="row">
-        <div class="col-12">
-            <h1 class="mb-4">Bienvenue sur Mercuriale.io</h1>
-        </div>
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/admin-dashboard.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-hub">
+    <h1 class="dashboard-hub__title">Tableau de bord</h1>
+    <p class="dashboard-hub__date">{{ current_date() }}</p>
+
+    <div class="m-tile-grid">
+        {# Row 1 #}
+        {% include 'components/_dashboard_tile.html.twig' with {
+            label: 'Bons de livraison', icon: 'fa-file-invoice-dollar',
+            url: path('app_bl_hub'), color: 'olive',
+            badge_count: alerte_count
+        } only %}
+
+        {% include 'components/_dashboard_tile.html.twig' with {
+            label: 'Produits', icon: 'fa-basket-shopping',
+            url: path('app_produits_hub'), color: 'purple'
+        } only %}
+
+        {% include 'components/_dashboard_tile.html.twig' with {
+            label: 'Fournisseurs', icon: 'fa-handshake',
+            url: path('app_fournisseurs_hub'), color: 'crimson'
+        } only %}
+
+        {# Row 2 #}
+        {% include 'components/_dashboard_tile.html.twig' with {
+            label: 'Statistiques', icon: 'fa-chart-bar',
+            color: 'forest', disabled: true
+        } only %}
+
+        {% include 'components/_dashboard_tile.html.twig' with {
+            label: 'Production', icon: 'fa-clipboard-list',
+            color: 'orange', disabled: true
+        } only %}
+
+        {% include 'components/_dashboard_tile.html.twig' with {
+            label: 'Profil', icon: 'fa-id-card',
+            url: path('app_profil_hub'), color: 'cyan'
+        } only %}
     </div>
-
-    {# ====== 3 Portal Cards ====== #}
-    <div class="row">
-        {# Card BL — Navy #}
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 card-navy portail-card">
-                <div class="card-body">
-                    <div class="portail-card__header">
-                        <i class="fas fa-file-invoice fa-2x"></i>
-                        <h5>Bons de livraison</h5>
-                    </div>
-                    <div class="portail-card__stats">
-                        <div class="portail-card__stat">
-                            <span class="portail-card__stat-value">{{ bl_count }}</span>
-                            <span class="portail-card__stat-label">BL ce mois</span>
-                        </div>
-                        <div class="portail-card__stat">
-                            <span class="portail-card__stat-value">{{ alerte_count }}</span>
-                            <span class="portail-card__stat-label">alertes en attente</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer">
-                    <a href="{{ path('app_bl_upload') }}" class="portail-card__cta">
-                        <i class="fas fa-camera"></i> Uploader un BL
-                    </a>
-                    <a href="{{ path('admin_hub_bl') }}" class="portail-card__cta portail-card__cta--secondary">
-                        Consulter les BL <i class="fas fa-arrow-right"></i>
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        {# Card Mercuriale — Gold #}
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 card-gold portail-card">
-                <div class="card-body">
-                    <div class="portail-card__header">
-                        <i class="fas fa-tags fa-2x"></i>
-                        <h5>Mercuriale</h5>
-                    </div>
-                    <div class="portail-card__stats">
-                        <div class="portail-card__stat">
-                            <span class="portail-card__stat-value">{{ mercuriale_count }}</span>
-                            <span class="portail-card__stat-label">prix actifs</span>
-                        </div>
-                        <div class="portail-card__stat">
-                            <span class="portail-card__stat-value">{{ fournisseur_count }}</span>
-                            <span class="portail-card__stat-label">fournisseurs</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer">
-                    <a href="{{ path('app_mercuriale_import') }}" class="portail-card__cta">
-                        <i class="fas fa-file-excel"></i> Importer une mercuriale
-                    </a>
-                    <a href="{{ path('admin_hub_mercuriale') }}" class="portail-card__cta portail-card__cta--secondary">
-                        Voir les prix <i class="fas fa-arrow-right"></i>
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        {# Card Produits — Coral #}
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 card-coral portail-card">
-                <div class="card-body">
-                    <div class="portail-card__header">
-                        <i class="fas fa-box fa-2x"></i>
-                        <h5>Produits</h5>
-                    </div>
-                    <div class="portail-card__stats">
-                        <div class="portail-card__stat">
-                            <span class="portail-card__stat-value">{{ produit_count }}</span>
-                            <span class="portail-card__stat-label">produits actifs</span>
-                        </div>
-                        <div class="portail-card__stat">
-                            <span class="portail-card__stat-value">{{ fournisseur_count }}</span>
-                            <span class="portail-card__stat-label">fournisseurs</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer">
-                    <a href="{{ path('admin_hub_produits') }}" class="portail-card__cta">
-                        Voir les produits <i class="fas fa-arrow-right"></i>
-                    </a>
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-    {# ====== Activity Feed ====== #}
-    <div class="row mt-2">
-        <div class="col-12">
-            <div class="card dashboard-activity">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Activité récente</h5>
-                </div>
-                <div class="card-body p-0">
-                    {% if recent_bls is empty %}
-                        <p class="text-muted p-3 mb-0">Aucun bon de livraison récent.</p>
-                    {% else %}
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Fournisseur</th>
-                                        <th>Lignes</th>
-                                        <th>Statut</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for bl in recent_bls %}
-                                        <tr>
-                                            <td>{{ bl.dateLivraison|date('d/m/Y') }}</td>
-                                            <td>{{ bl.fournisseur ? bl.fournisseur.nom : '—' }}</td>
-                                            <td>{{ bl.lignes|length }}</td>
-                                            <td>
-                                                <span class="badge bg-{{ bl.statut.color }}">
-                                                    {{ bl.statut.label }}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {# ====== Paramètres (ADMIN+ only) ====== #}
-    {% if is_granted('ROLE_ADMIN') %}
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="card dashboard-params">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-cog me-2"></i>Paramètres</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <a href="{{ ea_url().setController('App\\Controller\\Admin\\EtablissementCrudController').setAction('index') }}" class="dashboard-params__link">
-                                <i class="fas fa-store me-2"></i>Établissements
-                            </a>
-                        </div>
-                        <div class="col-md-4">
-                            <a href="{{ ea_url().setController('App\\Controller\\Admin\\UtilisateurCrudController').setAction('index') }}" class="dashboard-params__link">
-                                <i class="fas fa-users me-2"></i>Utilisateurs
-                            </a>
-                        </div>
-                        <div class="col-md-4">
-                            <a href="{{ ea_url().setController('App\\Controller\\Admin\\UniteCrudController').setAction('index') }}" class="dashboard-params__link">
-                                <i class="fas fa-ruler me-2"></i>Unités
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
 </div>
 {% endblock %}
