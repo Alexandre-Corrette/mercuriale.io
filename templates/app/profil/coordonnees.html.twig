@@ -1,0 +1,133 @@
+{% extends 'admin/hub/layout.html.twig' %}
+
+{% set hub_title = 'Profil' %}
+{% set hub_breadcrumbs = [
+    { label: 'Profil', url: path('app_profil_hub') },
+    { label: 'Mes coordonnees' }
+] %}
+
+{% block title %}Mes coordonnees — Mercuriale.io{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/profil.css') }}">
+{% endblock %}
+
+{% block hub_content %}
+<div class="hub-content">
+    <h1 class="hub-title"><i class="fas fa-id-card"></i> Mes coordonnees</h1>
+
+    {# Mon compte #}
+    <div class="profil-section">
+        <div class="profil-section__header">
+            <i class="fas fa-user"></i> Mon compte
+        </div>
+        <div class="profil-info-grid">
+            <div class="profil-info-grid__item">
+                <div class="profil-info-grid__label">Prenom</div>
+                <div class="profil-info-grid__value">{{ user.prenom }}</div>
+            </div>
+            <div class="profil-info-grid__item">
+                <div class="profil-info-grid__label">Nom</div>
+                <div class="profil-info-grid__value">{{ user.nom }}</div>
+            </div>
+            <div class="profil-info-grid__item">
+                <div class="profil-info-grid__label">Email</div>
+                <div class="profil-info-grid__value">{{ user.email }}</div>
+            </div>
+            <div class="profil-info-grid__item">
+                <div class="profil-info-grid__label">Role</div>
+                <div class="profil-info-grid__value">
+                    {% set role_label = 'Utilisateur' %}
+                    {% if 'ROLE_ADMIN' in user.roles %}
+                        {% set role_label = 'Administrateur' %}
+                    {% elseif 'ROLE_MANAGER' in user.roles %}
+                        {% set role_label = 'Gerant' %}
+                    {% elseif 'ROLE_OPERATOR' in user.roles %}
+                        {% set role_label = 'Operateur' %}
+                    {% endif %}
+                    {% include 'components/_status_badge.html.twig' with {
+                        label: role_label,
+                        variant: 'navy',
+                        size: 'sm'
+                    } only %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Organisation / Etablissement #}
+    <div class="profil-section">
+        <div class="profil-section__header">
+            <i class="fas fa-building"></i> Organisation
+        </div>
+        <div class="profil-info-grid">
+            <div class="profil-info-grid__item">
+                <div class="profil-info-grid__label">Organisation</div>
+                <div class="profil-info-grid__value">{{ organisation.nom }}</div>
+            </div>
+            <div class="profil-info-grid__item">
+                <div class="profil-info-grid__label">SIRET</div>
+                <div class="profil-info-grid__value">{{ organisation.siret ?? '—' }}</div>
+            </div>
+        </div>
+
+        {% if etablissements is not empty %}
+            <div class="profil-etablissements">
+                <div class="profil-etablissements__title">Etablissements rattaches</div>
+                {% for etab in etablissements %}
+                    <div class="profil-etablissement-card">
+                        <div class="profil-etablissement-card__name">{{ etab.nom }}</div>
+                        {% if etab.adresseComplete %}
+                            <div class="profil-etablissement-card__address">{{ etab.adresseComplete }}</div>
+                        {% endif %}
+                        {% if etab.telephone %}
+                            <div class="profil-etablissement-card__phone"><i class="fas fa-phone"></i> {{ etab.telephone }}</div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    {# Preferences #}
+    <div class="profil-section">
+        <div class="profil-section__header">
+            <i class="fas fa-sliders"></i> Preferences
+        </div>
+        <div class="profil-info-grid">
+            <div class="profil-info-grid__item">
+                <div class="profil-info-grid__label">Seuil d'alerte prix</div>
+                <div class="profil-info-grid__value">5 % (par defaut)</div>
+            </div>
+            <div class="profil-info-grid__item">
+                <div class="profil-info-grid__label">Notifications push</div>
+                <div class="profil-info-grid__value">
+                    {% include 'components/_status_badge.html.twig' with {
+                        label: 'Active',
+                        variant: 'success',
+                        size: 'sm'
+                    } only %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Mot de passe — placeholder #}
+    <div class="profil-section">
+        <div class="profil-section__header">
+            <i class="fas fa-lock"></i> Securite
+        </div>
+        <div class="profil-section__body">
+            <p class="profil-section__muted">La modification du mot de passe sera disponible prochainement.</p>
+        </div>
+    </div>
+
+    {# Deconnexion #}
+    <div class="profil-logout">
+        <a href="{{ path('app_logout') }}" class="profil-logout__btn">
+            <i class="fas fa-right-from-bracket"></i> Se deconnecter
+        </a>
+    </div>
+</div>
+{% endblock %}
