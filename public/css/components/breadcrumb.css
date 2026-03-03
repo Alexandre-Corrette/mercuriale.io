@@ -1,0 +1,67 @@
+/* =============================================
+   Breadcrumb Component — Mercuriale.io
+   Navigation trail: Tableau de bord > Section > Page.
+   ============================================= */
+
+/* ── Base ── */
+.m-breadcrumb {
+    background-color: var(--mercuriale-cream);
+    padding: var(--space-sm) var(--space-lg);
+    font-family: var(--font-family-base);
+}
+
+.m-breadcrumb__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.m-breadcrumb__item {
+    display: flex;
+    align-items: center;
+    font-size: var(--text-sm);
+}
+
+/* ── Separator ── */
+.m-breadcrumb__separator {
+    margin: 0 var(--space-sm);
+    color: var(--mercuriale-cream-dark);
+    font-weight: 400;
+    user-select: none;
+}
+
+/* ── Links ── */
+.m-breadcrumb__link {
+    color: var(--mercuriale-navy);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color var(--transition-fast);
+}
+
+.m-breadcrumb__link:hover {
+    color: var(--mercuriale-coral);
+    text-decoration: underline;
+}
+
+/* ── Current page (no link) ── */
+.m-breadcrumb__current {
+    color: var(--mercuriale-navy);
+    font-weight: 700;
+}
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+    .m-breadcrumb {
+        padding: var(--space-xs) var(--space-md);
+    }
+
+    .m-breadcrumb__item {
+        font-size: var(--text-xs);
+    }
+}

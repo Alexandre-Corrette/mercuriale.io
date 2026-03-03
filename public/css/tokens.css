@@ -54,26 +54,27 @@
     --transition-fast: 0.15s ease;
     --transition-normal: 0.2s ease;
     --transition-slow: 0.3s ease;
-}
 
-/* =============================================
-   App Header (base.html.twig — all pages)
-   ============================================= */
+    /* ── Tile Colors (maquette palette) ── */
+    --tile-navy: var(--mercuriale-navy);
+    --tile-coral: var(--mercuriale-coral);
+    --tile-gold: var(--mercuriale-gold);
+    --tile-green: #2d6a4f;
+    --tile-orange: #ea580c;
+    --tile-blue: #2563eb;
 
-.app-header {
-    background: #fff;
-    border-bottom: 2px solid var(--mercuriale-coral);
-    padding: var(--space-sm) var(--space-lg);
-}
+    /* ── Z-Index Scale ── */
+    --z-header: 100;
+    --z-toast: 1060;
+    --z-modal-backdrop: 1070;
+    --z-modal: 1080;
 
-.app-header__logo {
-    height: 45px;
-    width: auto;
-    display: block;
-}
-
-@media (max-width: 480px) {
-    .app-header__logo {
-        height: 35px;
-    }
+    /* ── Typography ── */
+    --font-family-base: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text-base: 0.9375rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.25rem;
+    --text-2xl: 1.5rem;
 }

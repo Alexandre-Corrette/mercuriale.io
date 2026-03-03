@@ -1,0 +1,18 @@
+{#
+  Status Badge Component
+
+  Params:
+    label:   string  (required) — display text
+    variant: string  (required) — success|danger|warning|secondary|navy|coral|gold|dark
+    icon:    string  (optional) — Font Awesome class e.g. 'fa-check'
+    size:    string  (optional, default: 'md') — sm|md
+    class:   string  (optional) — additional CSS classes
+#}
+{% set _size = size|default('md') %}
+
+<span class="m-status-badge m-status-badge--{{ variant }} m-status-badge--{{ _size }}{{ class is defined and class ? ' ' ~ class : '' }}">
+    {%- if icon is defined and icon -%}
+        <i class="fas {{ icon }} m-status-badge__icon" aria-hidden="true"></i>
+    {%- endif -%}
+    {{- label -}}
+</span>

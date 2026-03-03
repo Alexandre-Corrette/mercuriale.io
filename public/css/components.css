@@ -1,0 +1,20 @@
+/* =============================================
+   Components Aggregator — Mercuriale.io
+   Imports all reusable UI component CSS files.
+   Loaded in base.html.twig.
+   ============================================= */
+
+@import url('components/badge.css');
+@import url('components/status-badge.css');
+@import url('components/header.css');
+@import url('components/breadcrumb.css');
+@import url('components/footer.css');
+@import url('components/dashboard-tile.css');
+@import url('components/variance-indicator.css');
+@import url('components/search-bar.css');
+@import url('components/filter-dropdown.css');
+@import url('components/data-card.css');
+@import url('components/toast.css');
+@import url('components/confirm-modal.css');
+@import url('components/empty-state.css');
+@import url('components/upload-zone.css');

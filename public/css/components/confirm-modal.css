@@ -1,0 +1,100 @@
+/* =============================================
+   Confirm Modal Component — Mercuriale.io
+   Centered confirmation dialog with backdrop.
+   ============================================= */
+
+/* ── Backdrop / Overlay ── */
+.m-confirm-modal {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-modal-backdrop);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(2px);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--transition-normal),
+                visibility var(--transition-normal);
+}
+
+.m-confirm-modal.is-open {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* ── Dialog card ── */
+.m-confirm-modal__dialog {
+    z-index: var(--z-modal);
+    background: #fff;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+    padding: var(--space-xl);
+    max-width: 400px;
+    width: calc(100% - var(--space-xl) * 2);
+    text-align: center;
+    font-family: var(--font-family-base);
+    transform: scale(0.9);
+    transition: transform var(--transition-normal);
+}
+
+.m-confirm-modal.is-open .m-confirm-modal__dialog {
+    transform: scale(1);
+}
+
+/* ── Icon ── */
+.m-confirm-modal__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    border-radius: var(--radius-full);
+    background-color: var(--color-warning-bg);
+    color: var(--color-warning-light);
+    font-size: var(--text-xl);
+    margin: 0 auto var(--space-md);
+}
+
+/* ── Title ── */
+.m-confirm-modal__title {
+    font-size: var(--text-lg);
+    font-weight: 700;
+    color: var(--mercuriale-navy);
+    margin: 0 0 var(--space-sm);
+}
+
+/* ── Message ── */
+.m-confirm-modal__message {
+    font-size: var(--text-sm);
+    color: #6b7280;
+    margin: 0 0 var(--space-lg);
+    line-height: 1.5;
+}
+
+/* ── Actions ── */
+.m-confirm-modal__actions {
+    display: flex;
+    gap: var(--space-sm);
+    justify-content: center;
+}
+
+.m-confirm-modal__actions .btn {
+    min-width: 100px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+    .m-confirm-modal__dialog {
+        padding: var(--space-lg);
+    }
+
+    .m-confirm-modal__actions {
+        flex-direction: column;
+    }
+
+    .m-confirm-modal__actions .btn {
+        width: 100%;
+    }
+}

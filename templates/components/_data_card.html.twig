@@ -1,0 +1,63 @@
+{#
+  Data Card Component (mobile-optimized list item)
+
+  Params:
+    title:        string (required) — main title
+    subtitle:     string (optional)
+    meta:         string (optional) — tertiary text (e.g. date)
+    url:          string (optional) — makes card clickable
+    status_badge: hash   (optional) — { label: string, variant: string }
+    badges:       array  (optional) — [{ label: string, variant: string }]
+    data_pairs:   array  (optional) — [{ label: string, value: string }]
+    accent:       string (optional, default: 'navy') — navy|coral|gold|green|danger
+    class:        string (optional)
+#}
+{% set _accent = accent|default('navy') %}
+{% set _tag = url is defined and url ? 'a' : 'div' %}
+
+<{{ _tag }}{% if url is defined and url %} href="{{ url }}"{% endif %}
+    class="m-data-card m-data-card--{{ _accent }}{{ class is defined and class ? ' ' ~ class : '' }}">
+
+    <div class="m-data-card__header">
+        <div>
+            <p class="m-data-card__title">{{ title }}</p>
+            {% if subtitle is defined and subtitle %}
+                <p class="m-data-card__subtitle">{{ subtitle }}</p>
+            {% endif %}
+            {% if meta is defined and meta %}
+                <p class="m-data-card__meta">{{ meta }}</p>
+            {% endif %}
+        </div>
+
+        <div class="m-data-card__badges">
+            {% if status_badge is defined and status_badge %}
+                {% include 'components/_status_badge.html.twig' with {
+                    label: status_badge.label,
+                    variant: status_badge.variant,
+                    size: 'sm'
+                } only %}
+            {% endif %}
+
+            {% if badges is defined and badges %}
+                {% for badge in badges %}
+                    {% include 'components/_status_badge.html.twig' with {
+                        label: badge.label,
+                        variant: badge.variant,
+                        size: 'sm'
+                    } only %}
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+
+    {% if data_pairs is defined and data_pairs|length > 0 %}
+    <div class="m-data-card__pairs">
+        {% for pair in data_pairs %}
+        <div class="m-data-card__pair">
+            <span class="m-data-card__pair-label">{{ pair.label }}</span>
+            <span class="m-data-card__pair-value">{{ pair.value }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</{{ _tag }}>

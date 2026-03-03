@@ -51,7 +51,8 @@ class LoginLogSubscriber implements EventSubscriberInterface
         $this->persistLog($log);
 
         $session = $this->requestStack->getSession();
-        $session->getFlashBag()->add('welcome', $user->getPrenom() ?? $user->getEmail());
+        $prenom = $user->getPrenom() ?? $user->getEmail();
+        $session->getFlashBag()->add('success', 'Bienvenue, ' . $prenom . ' !');
     }
 
     public function onLoginFailure(LoginFailureEvent $event): void

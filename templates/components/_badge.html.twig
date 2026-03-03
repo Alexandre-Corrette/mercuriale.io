@@ -1,0 +1,20 @@
+{#
+  Badge Counter Component
+
+  Params:
+    count:          int     (required) — number to display
+    variant:        string  (optional, default: 'danger') — danger|warning|success|info|navy|coral
+    size:           string  (optional, default: 'md') — sm|md|lg
+    hidden_if_zero: bool    (optional, default: true)
+    class:          string  (optional) — additional CSS classes
+#}
+{% set _variant = variant|default('danger') %}
+{% set _size = size|default('md') %}
+{% set _hidden = (hidden_if_zero|default(true)) and count|default(0) == 0 %}
+
+{% if not _hidden %}
+<span class="m-badge m-badge--{{ _variant }} m-badge--{{ _size }}{{ class is defined and class ? ' ' ~ class : '' }}"
+      aria-label="{{ count }} notification{{ count > 1 ? 's' : '' }}">
+    {{- count -}}
+</span>
+{% endif %}
