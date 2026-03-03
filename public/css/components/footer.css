@@ -1,0 +1,38 @@
+/* =============================================
+   Footer Component — Mercuriale.io
+   Navy blue bar at bottom of every page.
+   ============================================= */
+
+/* ── Base ── */
+.m-footer {
+    background-color: var(--mercuriale-navy);
+    color: #fff;
+    margin-top: auto;
+}
+
+.m-footer__inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-md) var(--space-lg);
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.m-footer__text {
+    font-size: var(--text-sm);
+    font-family: var(--font-family-base);
+    font-weight: 500;
+    opacity: 0.9;
+}
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+    .m-footer__inner {
+        padding: var(--space-sm) var(--space-md);
+    }
+
+    .m-footer__text {
+        font-size: var(--text-xs);
+    }
+}

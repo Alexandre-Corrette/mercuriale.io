@@ -1,0 +1,14 @@
+{#
+  Footer Component
+
+  Params:
+    text:  string (optional, default: 'Mercuriale.io')
+    class: string (optional) — additional CSS classes
+#}
+{% set _text = text|default('Mercuriale.io') %}
+
+<footer class="m-footer{{ class is defined and class ? ' ' ~ class : '' }}">
+    <div class="m-footer__inner">
+        <span class="m-footer__text">{{ _text }}</span>
+    </div>
+</footer>

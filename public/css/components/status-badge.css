@@ -1,0 +1,72 @@
+/* =============================================
+   Status Badge Component — Mercuriale.io
+   Pill-shaped label for entity status display.
+   ============================================= */
+
+/* ── Base ── */
+.m-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3em;
+    font-weight: 600;
+    border-radius: var(--radius-full);
+    white-space: nowrap;
+    line-height: 1.2;
+}
+
+/* ── Sizes ── */
+.m-status-badge--sm {
+    padding: 0.15em 0.55em;
+    font-size: var(--text-xs);
+}
+
+.m-status-badge--md {
+    padding: 0.2em 0.65em;
+    font-size: var(--text-sm);
+}
+
+/* ── Color Variants (tinted background + solid text for WCAG AA) ── */
+.m-status-badge--success {
+    background-color: var(--color-success-bg);
+    color: var(--color-success);
+}
+
+.m-status-badge--danger {
+    background-color: var(--color-danger-bg);
+    color: var(--color-danger);
+}
+
+.m-status-badge--warning {
+    background-color: var(--color-warning-bg);
+    color: var(--color-warning);
+}
+
+.m-status-badge--secondary {
+    background-color: var(--mercuriale-cream-dark);
+    color: #6b7280;
+}
+
+.m-status-badge--navy {
+    background-color: rgba(30, 58, 95, 0.1);
+    color: var(--mercuriale-navy);
+}
+
+.m-status-badge--coral {
+    background-color: rgba(240, 117, 96, 0.12);
+    color: var(--mercuriale-coral-dark);
+}
+
+.m-status-badge--gold {
+    background-color: rgba(212, 168, 75, 0.15);
+    color: #92400e;
+}
+
+.m-status-badge--dark {
+    background-color: var(--mercuriale-navy);
+    color: #fff;
+}
+
+/* ── Icon inside badge ── */
+.m-status-badge__icon {
+    font-size: 0.85em;
+}

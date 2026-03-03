@@ -1,0 +1,45 @@
+/* =============================================
+   Variance Indicator Component — Mercuriale.io
+   Displays price ecart % with directional arrow.
+   ============================================= */
+
+/* ── Base ── */
+.m-variance {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25em;
+    font-weight: 700;
+    font-family: var(--font-family-base);
+    white-space: nowrap;
+}
+
+/* ── Sizes ── */
+.m-variance--sm {
+    font-size: var(--text-xs);
+}
+
+.m-variance--md {
+    font-size: var(--text-sm);
+}
+
+/* ── Direction + Severity ── */
+.m-variance--up.m-variance--alert {
+    color: var(--color-danger);
+}
+
+.m-variance--up.m-variance--minor {
+    color: var(--color-warning-light);
+}
+
+.m-variance--down {
+    color: var(--color-success);
+}
+
+.m-variance--neutral {
+    color: #9ca3af;
+}
+
+/* ── Arrow icon ── */
+.m-variance__arrow {
+    font-size: 0.85em;
+}

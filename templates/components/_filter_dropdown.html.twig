@@ -1,0 +1,39 @@
+{#
+  Filter Dropdown Component
+
+  Params:
+    options:         array  (required for select) — [{ value: string, label: string }]
+    placeholder:     string (optional, default: 'Tous')
+    name:            string (optional, default: 'filter')
+    selected:        string (optional)
+    stimulus_target: string (optional) — e.g. 'fournisseurFilter'
+    stimulus_action: string (optional) — e.g. 'change->mercuriale-hub#onFilterChange'
+    type:            string (optional, default: 'select') — select|date
+    class:           string (optional)
+#}
+{% set _type = type|default('select') %}
+{% set _name = name|default('filter') %}
+
+<div class="m-filter-dropdown{{ class is defined and class ? ' ' ~ class : '' }}">
+    {% if _type == 'date' %}
+        <input type="date"
+               name="{{ _name }}"
+               class="m-filter-dropdown__date"
+               value="{{ selected|default('') }}"
+               {% if stimulus_target is defined and stimulus_target %}data-{{ stimulus_target }}{% endif %}
+               {% if stimulus_action is defined and stimulus_action %}data-action="{{ stimulus_action }}"{% endif %}>
+    {% else %}
+        <select name="{{ _name }}"
+                class="m-filter-dropdown__select"
+                {% if stimulus_target is defined and stimulus_target %}data-{{ stimulus_target }}{% endif %}
+                {% if stimulus_action is defined and stimulus_action %}data-action="{{ stimulus_action }}"{% endif %}>
+            <option value="">{{ placeholder|default('Tous') }}</option>
+            {% for option in options|default([]) %}
+                <option value="{{ option.value }}"
+                        {% if selected is defined and selected == option.value %}selected{% endif %}>
+                    {{ option.label }}
+                </option>
+            {% endfor %}
+        </select>
+    {% endif %}
+</div>
