@@ -1,0 +1,47 @@
+{#
+  Dashboard Tile Component
+
+  Params:
+    label:          string (required) — tile text label
+    icon:           string (required) — Font Awesome class e.g. 'fa-file-invoice'
+    url:            string (optional) — link destination (full-card click)
+    color:          string (optional, default: 'navy') — navy|coral|gold|green|orange|blue|olive|purple|crimson|forest|cyan|white
+    badge_count:    int    (optional, default: 0) — red counter badge
+    disabled:       bool   (optional, default: false) — greyed-out V2 tile
+    disabled_label: string (optional, default: 'Bientot') — text on disabled badge
+    turbo:          bool   (optional, default: true) — data-turbo attribute
+    class:          string (optional) — additional CSS classes
+#}
+{% set _color = color|default('navy') %}
+{% set _disabled = disabled|default(false) %}
+{% set _badge = badge_count|default(0) %}
+{% set _turbo = turbo|default(true) %}
+{% set _url = url|default('#') %}
+
+{% set _classes = 'm-tile m-tile--' ~ _color %}
+{% if _disabled %}{% set _classes = _classes ~ ' m-tile--disabled' %}{% endif %}
+{% if class is defined and class %}{% set _classes = _classes ~ ' ' ~ class %}{% endif %}
+
+<a href="{{ _url }}"
+   class="{{ _classes }}"
+   {% if not _turbo %}data-turbo="false"{% endif %}
+   {% if _disabled %}aria-disabled="true" tabindex="-1"{% endif %}>
+
+    <div class="m-tile__icon-wrap">
+        <i class="fas {{ icon }} m-tile__icon" aria-hidden="true"></i>
+    </div>
+
+    <span class="m-tile__label">{{ label }}</span>
+
+    {% if _badge > 0 and not _disabled %}
+        {% include 'components/_badge.html.twig' with {
+            count: _badge,
+            variant: 'danger',
+            size: 'sm'
+        } only %}
+    {% endif %}
+
+    {% if _disabled %}
+        <span class="m-tile__soon-badge">{{ disabled_label|default('Bientot') }}</span>
+    {% endif %}
+</a>

@@ -1,0 +1,18 @@
+{% if field.value %}
+    <table class="table table-sm">
+        <thead>
+            <tr><th>Champ</th><th>Avant</th><th>Après</th></tr>
+        </thead>
+        <tbody>
+            {% for fieldName, values in field.value %}
+                <tr>
+                    <td><strong>{{ fieldName }}</strong></td>
+                    <td class="text-danger">{{ values[0] ?? '—' }}</td>
+                    <td class="text-success">{{ values[1] ?? '—' }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <em>Aucun détail</em>
+{% endif %}

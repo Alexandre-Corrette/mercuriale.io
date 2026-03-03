@@ -1,0 +1,30 @@
+{#
+  Breadcrumb Component
+
+  Params:
+    breadcrumbs: array of { label: string, url: string|null }
+    home_url:    string (optional, default: path('admin'))
+    home_label:  string (optional, default: 'Tableau de bord')
+    class:       string (optional) — additional CSS classes
+#}
+{% set _home_url = home_url|default(path('admin')) %}
+{% set _home_label = home_label|default('Tableau de bord') %}
+
+<nav class="m-breadcrumb{{ class is defined and class ? ' ' ~ class : '' }}" aria-label="Fil d'Ariane">
+    <ol class="m-breadcrumb__list">
+        <li class="m-breadcrumb__item">
+            <a href="{{ _home_url }}" class="m-breadcrumb__link" data-turbo="false">{{ _home_label }}</a>
+        </li>
+
+        {% for crumb in breadcrumbs|default([]) %}
+        <li class="m-breadcrumb__item"{% if loop.last %} aria-current="page"{% endif %}>
+            <span class="m-breadcrumb__separator" aria-hidden="true">&gt;</span>
+            {% if crumb.url is defined and crumb.url and not loop.last %}
+                <a href="{{ crumb.url }}" class="m-breadcrumb__link">{{ crumb.label }}</a>
+            {% else %}
+                <span class="m-breadcrumb__current">{{ crumb.label }}</span>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ol>
+</nav>

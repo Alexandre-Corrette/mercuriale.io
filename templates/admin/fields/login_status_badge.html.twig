@@ -1,0 +1,5 @@
+{% set color_map = { 'success': 'success', 'failure': 'danger', 'logout': 'secondary' } %}
+{% set label_map = { 'success': 'Connecté', 'failure': 'Échec', 'logout': 'Déconnecté' } %}
+<span class="badge badge-{{ color_map[field.value] ?? 'secondary' }}">
+    {{ label_map[field.value] ?? field.value }}
+</span>

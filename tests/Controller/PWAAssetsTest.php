@@ -48,7 +48,7 @@ class PWAAssetsTest extends TestCase
         $this->assertFileExists($path);
 
         $content = file_get_contents($path);
-        $this->assertStringContainsString('mercuriale-v1.5.0', $content);
+        $this->assertStringContainsString('mercuriale-v1.7.0', $content);
         $this->assertStringContainsString('APP_SHELL_FILES', $content);
     }
 

@@ -1,0 +1,25 @@
+{#
+  Search Bar Component
+
+  Params:
+    placeholder:     string (optional, default: 'Rechercher...')
+    name:            string (optional, default: 'q')
+    value:           string (optional, default: '')
+    stimulus_target: string (optional) — e.g. 'searchInput'
+    stimulus_action: string (optional) — e.g. 'input->mercuriale-hub#onSearchInput'
+    class:           string (optional)
+#}
+{% set _placeholder = placeholder|default('Rechercher...') %}
+{% set _name = name|default('q') %}
+
+<div class="m-search-bar{{ class is defined and class ? ' ' ~ class : '' }}">
+    <i class="fas fa-search m-search-bar__icon" aria-hidden="true"></i>
+    <input type="search"
+           name="{{ _name }}"
+           class="m-search-bar__input"
+           placeholder="{{ _placeholder }}"
+           value="{{ value|default('') }}"
+           {% if stimulus_target is defined and stimulus_target %}data-{{ stimulus_target }}{% endif %}
+           {% if stimulus_action is defined and stimulus_action %}data-action="{{ stimulus_action }}"{% endif %}
+           autocomplete="off">
+</div>

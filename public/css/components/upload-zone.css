@@ -1,0 +1,111 @@
+/* =============================================
+   Upload Zone Component — Mercuriale.io
+   Drag-and-drop file upload area.
+   ============================================= */
+
+/* ── Base ── */
+.m-upload-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-md);
+    padding: var(--space-xl);
+    border: 2px dashed var(--mercuriale-cream-dark);
+    border-radius: var(--radius-xl);
+    background-color: #fff;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color var(--transition-normal),
+                background-color var(--transition-normal);
+    font-family: var(--font-family-base);
+    min-height: 200px;
+}
+
+.m-upload-zone:hover {
+    border-color: var(--mercuriale-coral);
+    background-color: rgba(240, 117, 96, 0.03);
+}
+
+/* ── Drag active state ── */
+.m-upload-zone.is-drag-active {
+    border-color: var(--mercuriale-coral);
+    background-color: rgba(240, 117, 96, 0.06);
+    border-style: solid;
+}
+
+/* ── Icon ── */
+.m-upload-zone__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    border-radius: var(--radius-full);
+    background: linear-gradient(135deg, var(--mercuriale-navy) 0%, var(--mercuriale-navy-light) 100%);
+    color: #fff;
+    font-size: 1.5rem;
+}
+
+/* ── Text ── */
+.m-upload-zone__title {
+    font-size: var(--text-lg);
+    font-weight: 700;
+    color: var(--mercuriale-navy);
+    margin: 0;
+}
+
+.m-upload-zone__subtitle {
+    font-size: var(--text-sm);
+    color: #6b7280;
+    margin: 0;
+}
+
+/* ── Browse button ── */
+.m-upload-zone__browse {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-sm) var(--space-md);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--mercuriale-coral);
+    background: transparent;
+    border: 1.5px solid var(--mercuriale-coral);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: background-color var(--transition-fast),
+                color var(--transition-fast);
+    min-height: var(--touch-target-min);
+}
+
+.m-upload-zone__browse:hover {
+    background-color: var(--mercuriale-coral);
+    color: #fff;
+}
+
+/* ── Accepted formats hint ── */
+.m-upload-zone__hint {
+    font-size: var(--text-xs);
+    color: #9ca3af;
+    margin: 0;
+}
+
+/* ── Hidden file input ── */
+.m-upload-zone__input {
+    display: none;
+}
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+    .m-upload-zone {
+        padding: var(--space-lg) var(--space-md);
+        min-height: 160px;
+    }
+
+    .m-upload-zone__icon {
+        width: 52px;
+        height: 52px;
+        font-size: 1.25rem;
+    }
+}

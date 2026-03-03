@@ -1,0 +1,60 @@
+/* =============================================
+   Filter Dropdown Component — Mercuriale.io
+   Select and date inputs for filtering lists.
+   ============================================= */
+
+/* ── Base ── */
+.m-filter-dropdown {
+    position: relative;
+    font-family: var(--font-family-base);
+}
+
+/* ── Select / Date input ── */
+.m-filter-dropdown__select,
+.m-filter-dropdown__date {
+    min-height: var(--touch-target-min);
+    min-width: 160px;
+    padding: var(--space-sm) var(--space-md);
+    font-size: var(--text-sm);
+    font-family: var(--font-family-base);
+    color: var(--mercuriale-navy);
+    background-color: #fff;
+    border: 1.5px solid var(--mercuriale-cream-dark);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: border-color var(--transition-fast),
+                box-shadow var(--transition-fast);
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+/* ── Select arrow ── */
+.m-filter-dropdown__select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%236b7280'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right var(--space-sm) center;
+    background-size: 1.25em;
+    padding-right: calc(var(--space-md) + 1.5em);
+}
+
+/* ── Date input ── */
+.m-filter-dropdown__date {
+    min-width: 140px;
+}
+
+/* ── Focus ── */
+.m-filter-dropdown__select:focus,
+.m-filter-dropdown__date:focus {
+    outline: none;
+    border-color: var(--mercuriale-coral);
+    box-shadow: 0 0 0 3px rgba(240, 117, 96, 0.15);
+}
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+    .m-filter-dropdown__select,
+    .m-filter-dropdown__date {
+        min-width: 0;
+        width: 100%;
+    }
+}

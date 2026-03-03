@@ -1,0 +1,120 @@
+{% extends 'admin/hub/layout.html.twig' %}
+
+{% set hub_title = 'Produits' %}
+{% set hub_breadcrumbs = [
+    { label: 'Produits', url: path('app_produits_hub') },
+    { label: 'Liste produits', url: path('app_produits_liste') },
+    { label: produit.designationFournisseur }
+] %}
+
+{% block title %}{{ produit.designationFournisseur }} — Mercuriale.io{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/produit-detail.css') }}">
+{% endblock %}
+
+{% block hub_content %}
+<div class="hub-content">
+    {# Header #}
+    <div class="produit-show-header">
+        <div>
+            <h1 class="hub-title">
+                <i class="fas fa-basket-shopping"></i>
+                {{ produit.designationFournisseur }}
+            </h1>
+            <p class="produit-show-header__meta">
+                {{ produit.fournisseur.nom }} — Code {{ produit.codeFournisseur }}
+            </p>
+        </div>
+        {% include 'components/_status_badge.html.twig' with {
+            label: produit.actif ? 'Actif' : 'Inactif',
+            variant: produit.actif ? 'success' : 'secondary'
+        } only %}
+    </div>
+
+    {# Info grid #}
+    <div class="produit-show-info">
+        <div class="produit-show-info__item">
+            <div class="produit-show-info__label">Code fournisseur</div>
+            <div class="produit-show-info__value">{{ produit.codeFournisseur }}</div>
+        </div>
+        <div class="produit-show-info__item">
+            <div class="produit-show-info__label">Fournisseur</div>
+            <div class="produit-show-info__value">{{ produit.fournisseur.nom }}</div>
+        </div>
+        <div class="produit-show-info__item">
+            <div class="produit-show-info__label">Unite d'achat</div>
+            <div class="produit-show-info__value">{{ produit.uniteAchat }}</div>
+        </div>
+        <div class="produit-show-info__item">
+            <div class="produit-show-info__label">Conditionnement</div>
+            <div class="produit-show-info__value">{{ produit.conditionnementAsFloat }}</div>
+        </div>
+        <div class="produit-show-info__item">
+            <div class="produit-show-info__label">Categorie</div>
+            <div class="produit-show-info__value">{{ produit.produit and produit.produit.categorie ? produit.produit.categorie.nom : '—' }}</div>
+        </div>
+        <div class="produit-show-info__item">
+            <div class="produit-show-info__label">Statut</div>
+            <div class="produit-show-info__value">
+                {% include 'components/_status_badge.html.twig' with {
+                    label: produit.actif ? 'Actif' : 'Inactif',
+                    variant: produit.actif ? 'success' : 'secondary',
+                    size: 'sm'
+                } only %}
+            </div>
+        </div>
+    </div>
+
+    {# Recent deliveries #}
+    <div class="produit-show-deliveries">
+        <div class="produit-show-deliveries__header">
+            <i class="fas fa-truck"></i> Dernieres livraisons
+        </div>
+        {% if recent_lignes is empty %}
+            <div class="produit-show-deliveries__empty">
+                Aucune livraison enregistree pour ce produit.
+            </div>
+        {% else %}
+            <div class="produit-show-deliveries__scroll">
+                <table class="produit-show-deliveries__table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>BL</th>
+                            <th class="produit-show-deliveries__right">Qte</th>
+                            <th class="produit-show-deliveries__right">PU</th>
+                            <th class="produit-show-deliveries__right">Total HT</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ligne in recent_lignes %}
+                            <tr>
+                                <td>{{ ligne.bonLivraison.dateLivraison ? ligne.bonLivraison.dateLivraison|date('d/m/Y') : '—' }}</td>
+                                <td>
+                                    <a href="{{ path('app_bl_show', {id: ligne.bonLivraison.id}) }}" class="produit-show-deliveries__link">
+                                        {{ ligne.bonLivraison.numeroBl ?? 'BL #' ~ ligne.bonLivraison.id }}
+                                    </a>
+                                </td>
+                                <td class="produit-show-deliveries__right">
+                                    {{ ligne.quantiteLivree|number_format(2, ',', ' ') }}
+                                    {% if ligne.unite %}<span class="produit-show-deliveries__muted">{{ ligne.unite }}</span>{% endif %}
+                                </td>
+                                <td class="produit-show-deliveries__right">{{ ligne.prixUnitaire|number_format(4, ',', ' ') }} &euro;</td>
+                                <td class="produit-show-deliveries__right">{{ ligne.totalLigne|number_format(2, ',', ' ') }} &euro;</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </div>
+
+    {# Placeholder V2 — Historique prix #}
+    <div class="produit-show-placeholder" hidden>
+        <i class="fas fa-chart-line"></i>
+        <p>Historique des prix (V2 — MERC-15)</p>
+    </div>
+</div>
+{% endblock %}

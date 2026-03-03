@@ -9,6 +9,8 @@ export default class extends Controller {
         this._currentFournisseur = null;
         this._currentCategorie = null;
         this._currentPage = 1;
+        this._onRowClick = this._handleRowClick.bind(this);
+        this.resultsTarget.addEventListener('click', this._onRowClick);
 
         this.fetchProducts();
     }
@@ -16,6 +18,14 @@ export default class extends Controller {
     disconnect() {
         if (this._debounceTimer) {
             clearTimeout(this._debounceTimer);
+        }
+        this.resultsTarget.removeEventListener('click', this._onRowClick);
+    }
+
+    _handleRowClick(event) {
+        const row = event.target.closest('tr[data-href]');
+        if (row) {
+            window.location.href = row.dataset.href;
         }
     }
 
@@ -152,16 +162,18 @@ export default class extends Controller {
             return;
         }
 
-        const rows = data.items.map(item => `
-            <tr>
+        const rows = data.items.map(item => {
+            const clickAttr = item.url ? ` class="hub-table__row--clickable" data-href="${this.escapeHtml(item.url)}"` : '';
+            return `
+            <tr${clickAttr}>
                 <td>${this.escapeHtml(item.code)}</td>
                 <td>${this.escapeHtml(item.designation)}</td>
                 <td>${this.escapeHtml(item.fournisseur)}</td>
                 <td>${item.categorie ? this.escapeHtml(item.categorie) : '<span class="hub-badge hub-badge--secondary">—</span>'}</td>
                 <td>${item.conditionnement}</td>
                 <td>${this.escapeHtml(item.unite)}</td>
-            </tr>
-        `).join('');
+            </tr>`;
+        }).join('');
 
         this.resultsTarget.innerHTML = `
             <table class="hub-table">

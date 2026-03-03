@@ -1,0 +1,106 @@
+{% extends 'admin/hub/layout.html.twig' %}
+
+{% set hub_title = 'Bons de livraison' %}
+{% set hub_breadcrumbs = [
+    { label: 'Bons de livraison', url: path('app_bl_hub') },
+    { label: 'Livraisons a valider' }
+] %}
+
+{% block title %}Livraisons a valider — Mercuriale.io{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/bl-pending.css') }}">
+{% endblock %}
+
+{% block hub_content %}
+{% if bons_livraison is empty %}
+    <div class="hub-content">
+        <h1 class="hub-title"><i class="fas fa-clipboard-check"></i> Livraisons a valider</h1>
+        {% include 'components/_empty_state.html.twig' with {
+            icon: 'fa-check-circle',
+            title: 'Aucune livraison en attente',
+            description: 'Tous les bons de livraison ont ete traites.',
+            action_label: 'Scanner un bon',
+            action_url: path('app_bl_upload'),
+            action_icon: 'fa-camera'
+        } only %}
+    </div>
+{% else %}
+    <div class="bl-pending-split">
+        {# Left panel — BL list #}
+        <div class="bl-pending-split__list">
+            <div class="bl-pending-split__list-header">
+                <h2 class="bl-pending-split__list-title">
+                    <i class="fas fa-clipboard-check"></i> Livraisons a valider
+                </h2>
+                <span class="bl-pending-split__count">{{ bons_livraison|length }}</span>
+            </div>
+            <div class="bl-pending-split__list-scroll">
+                {% for bl in bons_livraison %}
+                    <div class="bl-pending-item{% if selected_bl and bl.id == selected_bl.id %} bl-pending-item--active{% endif %}"
+                         data-bl-id="{{ bl.id }}"
+                         data-url="{{ path('app_bl_pending_detail', {id: bl.id}) }}">
+                        <div class="bl-pending-item__number">
+                            {{ bl.numeroBl ? 'BL ' ~ bl.numeroBl : 'BL #' ~ bl.id }}
+                        </div>
+                        <div class="bl-pending-item__meta">
+                            <span class="bl-pending-item__date">{{ bl.dateLivraison|date('d/m/Y') }}</span>
+                            <span class="bl-pending-item__fournisseur">{{ bl.fournisseur ? bl.fournisseur.nom : 'Inconnu' }}</span>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        {# Right panel — BL detail #}
+        <div class="bl-pending-split__detail" id="bl-pending-detail">
+            {% if selected_bl %}
+                {% include 'app/bon_livraison/_pending_detail.html.twig' with {
+                    bonLivraison: selected_bl,
+                    alertCount: selected_alert_count
+                } %}
+            {% else %}
+                <div class="bl-pending-split__placeholder">
+                    <i class="fas fa-hand-pointer"></i>
+                    <p>Selectionnez un bon de livraison</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var items = document.querySelectorAll('.bl-pending-item');
+    var detailContainer = document.getElementById('bl-pending-detail');
+    if (!items.length || !detailContainer) return;
+
+    items.forEach(function (item) {
+        item.addEventListener('click', function () {
+            var url = item.getAttribute('data-url');
+            if (!url) return;
+
+            // Update active state
+            items.forEach(function (i) { i.classList.remove('bl-pending-item--active'); });
+            item.classList.add('bl-pending-item--active');
+
+            // Load detail fragment
+            detailContainer.innerHTML = '<div class="bl-pending-split__loading"><i class="fas fa-spinner fa-spin"></i></div>';
+
+            fetch(url, { credentials: 'same-origin' })
+                .then(function (response) {
+                    if (!response.ok) throw new Error('Erreur ' + response.status);
+                    return response.text();
+                })
+                .then(function (html) {
+                    detailContainer.innerHTML = html;
+                })
+                .catch(function () {
+                    detailContainer.innerHTML = '<div class="bl-pending-split__error"><i class="fas fa-exclamation-triangle"></i> Erreur de chargement</div>';
+                });
+        });
+    });
+});
+</script>
+{% endblock %}

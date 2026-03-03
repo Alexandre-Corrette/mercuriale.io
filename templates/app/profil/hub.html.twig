@@ -1,0 +1,64 @@
+{% extends 'admin/hub/layout.html.twig' %}
+
+{% set hub_title = 'Profil' %}
+{% set hub_breadcrumbs = [
+    { label: 'Profil' }
+] %}
+
+{% block title %}Profil — Mercuriale.io{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/admin-dashboard.css') }}">
+{% endblock %}
+
+{% block hub_content %}
+<div class="dashboard-hub">
+    <h1 class="dashboard-hub__title">Profil</h1>
+    <p class="dashboard-hub__date">{{ current_date() }}</p>
+
+    <div class="m-tile-grid">
+        {# Row 1 #}
+        {% include 'components/_dashboard_tile.html.twig' with {
+            label: 'Todo', icon: 'fa-list-check',
+            color: 'coral', disabled: true
+        } only %}
+
+        {% include 'components/_dashboard_tile.html.twig' with {
+            label: 'Ma photo de profil', icon: 'fa-camera',
+            color: 'purple', disabled: true
+        } only %}
+
+        {% include 'components/_dashboard_tile.html.twig' with {
+            label: 'Mes contacts', icon: 'fa-address-book',
+            color: 'cyan', disabled: true
+        } only %}
+
+        {# Row 2 #}
+        {% include 'components/_dashboard_tile.html.twig' with {
+            label: 'Mes coordonnees', icon: 'fa-id-card',
+            url: path('app_profil_coordonnees'), color: 'navy'
+        } only %}
+
+        {% include 'components/_dashboard_tile.html.twig' with {
+            label: 'Mes pourboires', icon: 'fa-coins',
+            color: 'gold', disabled: true
+        } only %}
+
+        {% include 'components/_dashboard_tile.html.twig' with {
+            label: 'Mon planning', icon: 'fa-calendar-days',
+            color: 'forest', disabled: true
+        } only %}
+    </div>
+
+    {# Section basse — liens V2 #}
+    <div class="profil-hub-links">
+        <div class="profil-hub-links__item profil-hub-links__item--disabled">
+            <i class="fas fa-link"></i> Link Tipup API <span class="profil-hub-links__badge">V2</span>
+        </div>
+        <div class="profil-hub-links__item profil-hub-links__item--disabled">
+            <i class="fas fa-building"></i> Mode multi-etablissement <span class="profil-hub-links__badge">V2</span>
+        </div>
+    </div>
+</div>
+{% endblock %}

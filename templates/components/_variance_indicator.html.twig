@@ -1,0 +1,35 @@
+{#
+  Variance Indicator Component
+
+  Params:
+    value:      float  (required) — percentage variance (positive = price increase)
+    threshold:  float  (optional, default: 5.0) — alert threshold %
+    show_icon:  bool   (optional, default: true)
+    show_value: bool   (optional, default: true)
+    size:       string (optional, default: 'md') — sm|md
+    class:      string (optional)
+#}
+{% set _threshold = threshold|default(5.0) %}
+{% set _size = size|default('md') %}
+{% set _show_icon = show_icon|default(true) %}
+{% set _show_value = show_value|default(true) %}
+{% set _abs = value < 0 ? (value * -1) : value %}
+{% set _direction = value > 0 ? 'up' : (value < 0 ? 'down' : 'neutral') %}
+{% set _severity = _abs >= _threshold ? 'alert' : (_abs > 0 ? 'minor' : '') %}
+
+{% set _classes = 'm-variance m-variance--' ~ _size ~ ' m-variance--' ~ _direction %}
+{% if _severity %}{% set _classes = _classes ~ ' m-variance--' ~ _severity %}{% endif %}
+{% if class is defined and class %}{% set _classes = _classes ~ ' ' ~ class %}{% endif %}
+
+<span class="{{ _classes }}" title="Ecart : {{ value > 0 ? '+' : '' }}{{ value|number_format(1) }}%">
+    {%- if _show_icon and _direction == 'up' -%}
+        <i class="fas fa-arrow-up m-variance__arrow" aria-hidden="true"></i>
+    {%- elseif _show_icon and _direction == 'down' -%}
+        <i class="fas fa-arrow-down m-variance__arrow" aria-hidden="true"></i>
+    {%- elseif _show_icon -%}
+        <i class="fas fa-minus m-variance__arrow" aria-hidden="true"></i>
+    {%- endif -%}
+    {%- if _show_value -%}
+        {{ value > 0 ? '+' : '' }}{{ value|number_format(1) }}%
+    {%- endif -%}
+</span>
