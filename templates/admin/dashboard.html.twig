@@ -2,28 +2,49 @@
 
 {% block title %}Tableau de bord — Mercuriale.io{% endblock %}
 
-{% block breadcrumb %}
-    {% include 'components/_breadcrumb.html.twig' %}
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/admin-dashboard.css') }}">
 {% endblock %}
 
 {% block content %}
 <div class="dashboard-hub">
+    <h1 class="dashboard-hub__title">Tableau de bord</h1>
+    <p class="dashboard-hub__date">{{ current_date() }}</p>
+
     <div class="m-tile-grid">
-        {# Tile 1: Bons de livraison — active #}
+        {# Row 1 #}
         {% include 'components/_dashboard_tile.html.twig' with {
-            label: 'Bons de livraison', icon: 'fa-file-invoice',
-            url: path('admin_hub_bl'), color: 'navy',
+            label: 'Bons de livraison', icon: 'fa-file-invoice-dollar',
+            url: path('admin_hub_bl'), color: 'olive',
             badge_count: alerte_count
         } only %}
 
-        {# Tile 2: Produits — active #}
         {% include 'components/_dashboard_tile.html.twig' with {
-            label: 'Produits', icon: 'fa-box',
-            url: path('admin_hub_produits'), color: 'coral'
+            label: 'Produits', icon: 'fa-basket-shopping',
+            url: path('admin_hub_produits'), color: 'purple'
         } only %}
 
-        {# Tiles 3-6: hidden until their hub pages exist (MERC-74-77) #}
-        {# Fournisseurs (blue), Statistiques (green), Production (orange), Profil (blue) #}
+        {% include 'components/_dashboard_tile.html.twig' with {
+            label: 'Fournisseurs', icon: 'fa-handshake',
+            color: 'crimson', disabled: true
+        } only %}
+
+        {# Row 2 #}
+        {% include 'components/_dashboard_tile.html.twig' with {
+            label: 'Statistiques', icon: 'fa-chart-bar',
+            color: 'forest', disabled: true
+        } only %}
+
+        {% include 'components/_dashboard_tile.html.twig' with {
+            label: 'Production', icon: 'fa-clipboard-list',
+            color: 'orange', disabled: true
+        } only %}
+
+        {% include 'components/_dashboard_tile.html.twig' with {
+            label: 'Profil', icon: 'fa-id-card',
+            color: 'cyan', disabled: true
+        } only %}
     </div>
 </div>
 {% endblock %}

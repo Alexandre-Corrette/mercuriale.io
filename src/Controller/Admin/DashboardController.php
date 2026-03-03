@@ -4,23 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller\Admin;
 
-use App\Entity\AlerteControle;
-use App\Entity\AuditLog;
-use App\Entity\BonLivraison;
-use App\Entity\CategorieProduit;
-use App\Entity\ConversionUnite;
-use App\Entity\Etablissement;
-use App\Entity\Fournisseur;
-use App\Entity\LigneBonLivraison;
-use App\Entity\LoginLog;
-use App\Entity\Mercuriale;
-use App\Entity\Organisation;
-use App\Entity\OrganisationFournisseur;
-use App\Entity\Produit;
-use App\Entity\ProduitFournisseur;
-use App\Entity\Unite;
 use App\Entity\Utilisateur;
-use App\Entity\UtilisateurEtablissement;
 use App\Repository\AlerteControleRepository;
 use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminDashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
@@ -62,92 +46,6 @@ class DashboardController extends AbstractDashboardController
     public function configureMenuItems(): iterable
     {
         yield MenuItem::linkToDashboard('Tableau de bord', 'fas fa-tachometer-alt');
-
-        if ($this->isGranted('ROLE_SUPER_ADMIN')) {
-            // ========================================
-            // SUPER_ADMIN : sidebar complete
-            // ========================================
-            yield MenuItem::section('OPÉRATIONS');
-
-            yield MenuItem::linkToUrl('Uploader un BL', 'fas fa-camera', '/app/bl/upload')
-                ->setCssClass('menu-item-highlight');
-
-            yield MenuItem::linkToCrud('Bons de livraison', 'fas fa-file-invoice', BonLivraison::class)
-                ->setPermission('ROLE_SUPER_ADMIN')
-                ->setDefaultSort(['dateLivraison' => 'DESC']);
-
-            yield MenuItem::linkToCrud('Lignes BL', 'fas fa-list', LigneBonLivraison::class)
-                ->setPermission('ROLE_SUPER_ADMIN');
-
-            yield MenuItem::linkToUrl('Import mercuriale', 'fas fa-file-excel', '/app/mercuriale/import')
-                ->setCssClass('menu-item-highlight');
-
-            yield MenuItem::linkToCrud('Alertes', 'fas fa-exclamation-triangle', AlerteControle::class)
-                ->setPermission('ROLE_SUPER_ADMIN')
-                ->setDefaultSort(['createdAt' => 'DESC']);
-
-            yield MenuItem::section('RÉFÉRENTIELS');
-
-            yield MenuItem::subMenu('Fournisseurs & Produits', 'fas fa-boxes')
-                ->setPermission('ROLE_SUPER_ADMIN')
-                ->setSubItems([
-                    MenuItem::linkToCrud('Fournisseurs', 'fas fa-truck', Fournisseur::class)
-                        ->setPermission('ROLE_SUPER_ADMIN'),
-                    MenuItem::linkToCrud('Associations Fournisseurs', 'fas fa-link', OrganisationFournisseur::class)
-                        ->setPermission('ROLE_SUPER_ADMIN'),
-                    MenuItem::linkToCrud('Produits', 'fas fa-box', ProduitFournisseur::class)
-                        ->setPermission('ROLE_SUPER_ADMIN'),
-                    MenuItem::linkToCrud('Mercuriale (prix)', 'fas fa-tags', Mercuriale::class)
-                        ->setPermission('ROLE_SUPER_ADMIN')
-                        ->setDefaultSort(['dateDebut' => 'DESC']),
-                ]);
-
-            yield MenuItem::subMenu('Catalogue', 'fas fa-book')
-                ->setPermission('ROLE_SUPER_ADMIN')
-                ->setSubItems([
-                    MenuItem::linkToCrud('Catalogue interne', 'fas fa-apple-whole', Produit::class)
-                        ->setPermission('ROLE_SUPER_ADMIN'),
-                    MenuItem::linkToCrud('Catégories', 'fas fa-folder', CategorieProduit::class)
-                        ->setPermission('ROLE_SUPER_ADMIN'),
-                ]);
-
-            yield MenuItem::subMenu('Unités', 'fas fa-ruler-combined')
-                ->setPermission('ROLE_SUPER_ADMIN')
-                ->setSubItems([
-                    MenuItem::linkToCrud('Unités', 'fas fa-ruler', Unite::class)
-                        ->setPermission('ROLE_SUPER_ADMIN'),
-                    MenuItem::linkToCrud('Conversions', 'fas fa-exchange-alt', ConversionUnite::class)
-                        ->setPermission('ROLE_SUPER_ADMIN'),
-                ]);
-
-            yield MenuItem::section('ADMINISTRATION');
-
-            yield MenuItem::subMenu('Configuration', 'fas fa-cog')
-                ->setPermission('ROLE_SUPER_ADMIN')
-                ->setSubItems([
-                    MenuItem::linkToCrud('Établissements', 'fas fa-store', Etablissement::class)
-                        ->setPermission('ROLE_SUPER_ADMIN'),
-                    MenuItem::linkToCrud('Utilisateurs', 'fas fa-users', Utilisateur::class)
-                        ->setPermission('ROLE_SUPER_ADMIN'),
-                    MenuItem::linkToCrud('Droits établissements', 'fas fa-user-shield', UtilisateurEtablissement::class)
-                        ->setPermission('ROLE_SUPER_ADMIN'),
-                    MenuItem::linkToCrud('Organisations', 'fas fa-sitemap', Organisation::class)
-                        ->setPermission('ROLE_SUPER_ADMIN'),
-                ]);
-
-            yield MenuItem::subMenu('Supervision', 'fas fa-chart-line')
-                ->setPermission('ROLE_SUPER_ADMIN')
-                ->setSubItems([
-                    MenuItem::linkToCrud('Stats Connexion', 'fas fa-sign-in-alt', LoginLog::class)
-                        ->setPermission('ROLE_SUPER_ADMIN')
-                        ->setDefaultSort(['createdAt' => 'DESC']),
-                    MenuItem::linkToCrud('Audit Trail', 'fas fa-history', AuditLog::class)
-                        ->setPermission('ROLE_SUPER_ADMIN')
-                        ->setDefaultSort(['createdAt' => 'DESC']),
-                ]);
-        }
-        // ADMIN/MANAGER : pas d'items supplementaires (navigation par cards du dashboard)
-
         yield MenuItem::section('');
         yield MenuItem::linkToLogout('Déconnexion', 'fas fa-sign-out-alt');
     }
@@ -179,6 +77,7 @@ class DashboardController extends AbstractDashboardController
     {
         return Assets::new()
             ->addCssFile('css/tokens.css')
+            ->addCssFile('css/components.css')
             ->addCssFile('css/components/button.css')
             ->addCssFile('css/components/card.css')
             ->addCssFile('css/admin.css');

@@ -1,0 +1,21 @@
+/* =============================================
+   Dashboard Hub — MERC-73
+   ============================================= */
+
+.dashboard-hub__title {
+    text-align: center;
+    color: var(--mercuriale-navy);
+    font-size: var(--text-2xl);
+    font-weight: 800;
+    text-transform: uppercase;
+    margin: 0;
+}
+
+.dashboard-hub__date {
+    text-align: center;
+    color: var(--mercuriale-navy);
+    font-size: var(--text-sm);
+    margin: var(--space-xs) 0 var(--space-xl);
+    opacity: 0.7;
+    text-transform: uppercase;
+}
