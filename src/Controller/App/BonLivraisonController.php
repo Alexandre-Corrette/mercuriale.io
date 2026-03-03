@@ -63,8 +63,39 @@ class BonLivraisonController extends AbstractController
         $user = $this->getUser();
         $org = $user->getOrganisation();
 
+        $bonsLivraison = $blRepo->findBrouillonForOrganisation($org);
+
+        // Pre-select first BL for the detail panel
+        $selectedBl = $bonsLivraison[0] ?? null;
+        $selectedAlertCount = 0;
+        if ($selectedBl !== null) {
+            foreach ($selectedBl->getLignes() as $ligne) {
+                $selectedAlertCount += $ligne->getAlertes()->count();
+            }
+        }
+
         return $this->render('app/bon_livraison/pending.html.twig', [
-            'bons_livraison' => $blRepo->findBrouillonForOrganisation($org),
+            'bons_livraison' => $bonsLivraison,
+            'selected_bl' => $selectedBl,
+            'selected_alert_count' => $selectedAlertCount,
+        ]);
+    }
+
+    #[Route('/{id}/pending-detail', name: 'app_bl_pending_detail', methods: ['GET'])]
+    public function pendingDetail(BonLivraison $bonLivraison): Response
+    {
+        if (!$this->isGranted('VIEW', $bonLivraison->getEtablissement())) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $alertCount = 0;
+        foreach ($bonLivraison->getLignes() as $ligne) {
+            $alertCount += $ligne->getAlertes()->count();
+        }
+
+        return $this->render('app/bon_livraison/_pending_detail.html.twig', [
+            'bonLivraison' => $bonLivraison,
+            'alertCount' => $alertCount,
         ]);
     }
 
