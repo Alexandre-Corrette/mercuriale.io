@@ -1,0 +1,125 @@
+{# Fragment: BL detail panel for pending split layout #}
+<div class="bl-detail-panel" id="bl-detail-panel">
+    {# Header #}
+    <div class="bl-detail-panel__header">
+        <h2 class="bl-detail-panel__title">
+            <i class="fas fa-file-invoice"></i>
+            {{ bonLivraison.numeroBl ? 'BL ' ~ bonLivraison.numeroBl : 'BL #' ~ bonLivraison.id }}
+        </h2>
+        <p class="bl-detail-panel__meta">
+            {% if bonLivraison.fournisseur %}{{ bonLivraison.fournisseur.nom }} — {% endif %}
+            {{ bonLivraison.dateLivraison ? bonLivraison.dateLivraison|date('d/m/Y') : '' }}
+            — {{ bonLivraison.etablissement.nom }}
+        </p>
+        {% include 'components/_status_badge.html.twig' with {
+            label: bonLivraison.statut.label,
+            variant: bonLivraison.statut.color,
+            size: 'sm'
+        } only %}
+    </div>
+
+    {# Stats #}
+    <div class="bl-detail-panel__stats">
+        <div class="bl-detail-panel__stat">
+            <span class="bl-detail-panel__stat-value">{{ bonLivraison.lignes|length }}</span>
+            <span class="bl-detail-panel__stat-label">Lignes</span>
+        </div>
+        <div class="bl-detail-panel__stat bl-detail-panel__stat--alert">
+            <span class="bl-detail-panel__stat-value">{{ alertCount }}</span>
+            <span class="bl-detail-panel__stat-label">Alertes</span>
+        </div>
+        <div class="bl-detail-panel__stat">
+            <span class="bl-detail-panel__stat-value">{{ bonLivraison.totalHt ? bonLivraison.totalHt|number_format(2, ',', ' ') ~ ' €' : '—' }}</span>
+            <span class="bl-detail-panel__stat-label">Total HT</span>
+        </div>
+    </div>
+
+    {# Lines table #}
+    <div class="bl-detail-panel__section">
+        <div class="bl-detail-panel__section-header">
+            <i class="fas fa-check-square"></i> Lignes BL a valider
+        </div>
+        <div class="bl-detail-panel__table-scroll">
+            <table class="bl-detail-panel__table">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Designation</th>
+                        <th class="bl-detail-panel__right">Qte</th>
+                        <th class="bl-detail-panel__right">PU BL</th>
+                        <th class="bl-detail-panel__right">PU Mercuriale</th>
+                        <th class="bl-detail-panel__center">Ecart</th>
+                        <th class="bl-detail-panel__right">Total HT</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ligne in bonLivraison.lignes %}
+                        {% set hasAlert = ligne.alertes|length > 0 %}
+                        {% set prixMercuriale = null %}
+                        {% set ecartPct = null %}
+                        {% for alerte in ligne.alertes %}
+                            {% if alerte.valeurAttendue %}
+                                {% set prixMercuriale = alerte.valeurAttendue %}
+                            {% endif %}
+                            {% if alerte.ecartPct %}
+                                {% set ecartPct = alerte.ecartPctAsFloat %}
+                            {% endif %}
+                        {% endfor %}
+                        <tr class="{% if hasAlert %}bl-detail-row--alert{% endif %}">
+                            <td class="bl-detail-cell--code">{{ ligne.codeProduitBl ?? '—' }}</td>
+                            <td>{{ ligne.designationBl }}</td>
+                            <td class="bl-detail-panel__right">
+                                {{ ligne.quantiteLivree|number_format(2, ',', ' ') }}
+                                {% if ligne.unite %}<span class="bl-detail-cell--muted">{{ ligne.unite }}</span>{% endif %}
+                            </td>
+                            <td class="bl-detail-panel__right">{{ ligne.prixUnitaire|number_format(4, ',', ' ') }} €</td>
+                            <td class="bl-detail-panel__right">
+                                {% if prixMercuriale %}
+                                    {{ prixMercuriale|number_format(4, ',', ' ') }} €
+                                {% else %}
+                                    <span class="bl-detail-cell--muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="bl-detail-panel__center">
+                                {% if ecartPct is not null %}
+                                    {% include 'components/_variance_indicator.html.twig' with {
+                                        value: ecartPct,
+                                        threshold: 5.0,
+                                        size: 'sm'
+                                    } only %}
+                                {% else %}
+                                    <span class="bl-detail-cell--muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="bl-detail-panel__right">{{ ligne.totalLigne|number_format(2, ',', ' ') }} €</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="bl-detail-panel__empty">Aucune ligne extraite</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {# Actions #}
+    <div class="bl-detail-panel__actions">
+        {% if bonLivraison.statut.value == 'BROUILLON' and is_granted('MANAGE', bonLivraison.etablissement) %}
+            <form action="{{ path('app_bl_valider', {id: bonLivraison.id}) }}" method="post" class="bl-detail-panel__form">
+                <input type="hidden" name="_token" value="{{ csrf_token('valider_bl_' ~ bonLivraison.id) }}">
+                <button type="submit" class="btn btn--success">
+                    <i class="fas fa-check"></i> Valider
+                </button>
+            </form>
+        {% endif %}
+
+        <button type="button" class="btn btn--outline btn--avoir" disabled title="Disponible en V2 (MERC-23)">
+            <i class="fas fa-file-invoice"></i> Avoir
+        </button>
+    </div>
+
+    <p class="bl-detail-panel__avoir-note">
+        Avoir : demande fournisseur de la valeur difference prix
+    </p>
+</div>
