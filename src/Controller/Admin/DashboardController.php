@@ -181,7 +181,6 @@ class DashboardController extends AbstractDashboardController
             ->addCssFile('css/tokens.css')
             ->addCssFile('css/components/button.css')
             ->addCssFile('css/components/card.css')
-            ->addCssFile('css/admin.css')
-            ->addCssFile('css/admin-dashboard.css');
+            ->addCssFile('css/admin.css');
     }
 }

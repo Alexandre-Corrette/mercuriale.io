@@ -2,20 +2,12 @@
 
 {% block title %}Tableau de bord — Mercuriale.io{% endblock %}
 
-{% block stylesheets %}
-    {{ parent() }}
-    <link rel="stylesheet" href="{{ asset('css/admin-dashboard.css') }}">
-{% endblock %}
-
 {% block breadcrumb %}
     {% include 'components/_breadcrumb.html.twig' %}
 {% endblock %}
 
 {% block content %}
 <div class="dashboard-hub">
-    <h1 class="dashboard-hub__title">Tableau de bord</h1>
-    <p class="dashboard-hub__date">{{ current_date() }}</p>
-
     <div class="m-tile-grid">
         {# Tile 1: Bons de livraison — active #}
         {% include 'components/_dashboard_tile.html.twig' with {
