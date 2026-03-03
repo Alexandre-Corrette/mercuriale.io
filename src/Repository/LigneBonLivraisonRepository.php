@@ -6,6 +6,7 @@ namespace App\Repository;
 
 use App\Entity\BonLivraison;
 use App\Entity\LigneBonLivraison;
+use App\Entity\ProduitFournisseur;
 use App\Enum\StatutControle;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -26,6 +27,22 @@ class LigneBonLivraisonRepository extends ServiceEntityRepository
     public function findByBonLivraison(BonLivraison $bonLivraison): array
     {
         return $this->findBy(['bonLivraison' => $bonLivraison], ['ordre' => 'ASC']);
+    }
+
+    /**
+     * @return LigneBonLivraison[]
+     */
+    public function findRecentByProduitFournisseur(ProduitFournisseur $pf, int $limit = 10): array
+    {
+        return $this->createQueryBuilder('l')
+            ->join('l.bonLivraison', 'bl')
+            ->join('bl.fournisseur', 'f')
+            ->where('l.produitFournisseur = :pf')
+            ->setParameter('pf', $pf)
+            ->orderBy('bl.dateLivraison', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
     }
 
     /**
