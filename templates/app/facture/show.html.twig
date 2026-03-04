@@ -1,0 +1,232 @@
+{% extends 'admin/hub/layout.html.twig' %}
+
+{% set hub_title = 'Facture ' ~ facture.numeroFacture %}
+{% set hub_breadcrumbs = [
+    { label: 'Tableau de bord', url: path('admin_dashboard') },
+    { label: 'Factures', url: path('app_factures_liste') },
+    { label: facture.numeroFacture }
+] %}
+
+{% block title %}Facture {{ facture.numeroFacture }} — Mercuriale.io{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/facture.css') }}">
+{% endblock %}
+
+{% block hub_content %}
+<div class="hub-content">
+    {# Flash messages #}
+    {% for type, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="facture-flash facture-flash--{{ type }}">
+                <i class="fas {{ type == 'success' ? 'fa-check-circle' : 'fa-exclamation-circle' }}"></i>
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    {# Header #}
+    <div class="facture-show-header">
+        <div>
+            <h1 class="hub-title">
+                <i class="fas fa-file-invoice"></i>
+                {{ facture.numeroFacture }}
+            </h1>
+            <p class="facture-show-header__meta">
+                {{ facture.fournisseur ? facture.fournisseur.nom : (facture.fournisseurNom ?? 'Fournisseur inconnu') }}
+                — {{ facture.dateEmission|date('d/m/Y') }}
+            </p>
+        </div>
+        {% include 'components/_status_badge.html.twig' with {
+            label: facture.statut.label,
+            variant: facture.statut.color
+        } only %}
+    </div>
+
+    {# Info grid #}
+    <div class="facture-show-info">
+        <div class="facture-show-info__item">
+            <div class="facture-show-info__label">Numero</div>
+            <div class="facture-show-info__value">{{ facture.numeroFacture }}</div>
+        </div>
+        <div class="facture-show-info__item">
+            <div class="facture-show-info__label">Date emission</div>
+            <div class="facture-show-info__value">{{ facture.dateEmission|date('d/m/Y') }}</div>
+        </div>
+        <div class="facture-show-info__item">
+            <div class="facture-show-info__label">Fournisseur</div>
+            <div class="facture-show-info__value">
+                {% if facture.fournisseur %}
+                    <a href="{{ path('app_fournisseur_show', {id: facture.fournisseur.id}) }}">
+                        {{ facture.fournisseur.nom }}
+                    </a>
+                {% else %}
+                    {{ facture.fournisseurNom ?? '—' }}
+                {% endif %}
+            </div>
+        </div>
+        <div class="facture-show-info__item">
+            <div class="facture-show-info__label">TVA fournisseur</div>
+            <div class="facture-show-info__value">{{ facture.fournisseurTva ?? '—' }}</div>
+        </div>
+        <div class="facture-show-info__item">
+            <div class="facture-show-info__label">SIREN</div>
+            <div class="facture-show-info__value">{{ facture.fournisseurSiren ?? '—' }}</div>
+        </div>
+        <div class="facture-show-info__item">
+            <div class="facture-show-info__label">Devise</div>
+            <div class="facture-show-info__value">{{ facture.devise }}</div>
+        </div>
+        <div class="facture-show-info__item">
+            <div class="facture-show-info__label">Montant HT</div>
+            <div class="facture-show-info__value facture-show-info__value--bold">
+                {{ facture.montantHt|number_format(2, ',', ' ') }} €
+            </div>
+        </div>
+        <div class="facture-show-info__item">
+            <div class="facture-show-info__label">TVA</div>
+            <div class="facture-show-info__value">
+                {{ facture.montantTva ? facture.montantTva|number_format(2, ',', ' ') ~ ' €' : '—' }}
+            </div>
+        </div>
+        <div class="facture-show-info__item">
+            <div class="facture-show-info__label">Montant TTC</div>
+            <div class="facture-show-info__value facture-show-info__value--bold">
+                {{ facture.montantTtc|number_format(2, ',', ' ') }} €
+            </div>
+        </div>
+        <div class="facture-show-info__item">
+            <div class="facture-show-info__label">Statut</div>
+            <div class="facture-show-info__value">
+                {% include 'components/_status_badge.html.twig' with {
+                    label: facture.statut.label,
+                    variant: facture.statut.color,
+                    size: 'sm'
+                } only %}
+            </div>
+        </div>
+        {% if facture.accepteeLe %}
+        <div class="facture-show-info__item">
+            <div class="facture-show-info__label">Acceptee le</div>
+            <div class="facture-show-info__value">{{ facture.accepteeLe|date('d/m/Y H:i') }}</div>
+        </div>
+        {% endif %}
+        {% if facture.payeeLe %}
+        <div class="facture-show-info__item">
+            <div class="facture-show-info__label">Payee le</div>
+            <div class="facture-show-info__value">{{ facture.payeeLe|date('d/m/Y H:i') }}</div>
+        </div>
+        {% endif %}
+        {% if facture.validatedBy %}
+        <div class="facture-show-info__item">
+            <div class="facture-show-info__label">Traitee par</div>
+            <div class="facture-show-info__value">{{ facture.validatedBy.email }}</div>
+        </div>
+        {% endif %}
+    </div>
+
+    {# Motif refus #}
+    {% if facture.motifRefus %}
+    <div class="facture-show-comment facture-show-comment--danger">
+        <div class="facture-show-comment__label">Motif du refus</div>
+        <div class="facture-show-comment__text">{{ facture.motifRefus }}</div>
+    </div>
+    {% endif %}
+
+    {# Lignes #}
+    <div class="facture-show-section">
+        <div class="facture-show-section__header">
+            <i class="fas fa-list"></i> Lignes ({{ facture.lignes|length }})
+        </div>
+        {% if facture.lignes is empty %}
+            <div class="facture-show-section__empty">
+                Aucune ligne pour cette facture.
+            </div>
+        {% else %}
+            <div class="facture-show-section__scroll">
+                <table class="facture-show-section__table">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Designation</th>
+                            <th>Unite</th>
+                            <th class="facture-show-section__right">Qte</th>
+                            <th class="facture-show-section__right">PU</th>
+                            <th class="facture-show-section__right">TVA</th>
+                            <th class="facture-show-section__right">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ligne in facture.lignes %}
+                            <tr>
+                                <td>{{ ligne.codeArticle ?? '—' }}</td>
+                                <td>{{ ligne.designation }}</td>
+                                <td>{{ ligne.unite ?? '—' }}</td>
+                                <td class="facture-show-section__right">{{ ligne.quantite }}</td>
+                                <td class="facture-show-section__right">{{ ligne.prixUnitaire|number_format(4, ',', ' ') }}</td>
+                                <td class="facture-show-section__right">{{ ligne.tauxTva ? ligne.tauxTva ~ '%' : '—' }}</td>
+                                <td class="facture-show-section__right">{{ ligne.montantLigne|number_format(2, ',', ' ') }} €</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="6" class="facture-show-section__right"><strong>Total HT</strong></td>
+                            <td class="facture-show-section__right"><strong>{{ facture.montantHt|number_format(2, ',', ' ') }} €</strong></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        {% endif %}
+    </div>
+
+    {# Actions #}
+    {% if can_accepter or can_refuser or can_payer %}
+    <div class="facture-show-actions">
+        {% if can_accepter %}
+            <form method="post" action="{{ path('app_facture_accepter', {id: facture.idAsString}) }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('facture_accepter_' ~ facture.idAsString) }}">
+                <button type="submit" class="facture-show-actions__btn facture-show-actions__btn--success">
+                    <i class="fas fa-check"></i> Accepter
+                </button>
+            </form>
+        {% endif %}
+
+        {% if can_payer %}
+            <form method="post" action="{{ path('app_facture_payer', {id: facture.idAsString}) }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('facture_payer_' ~ facture.idAsString) }}">
+                <button type="submit" class="facture-show-actions__btn facture-show-actions__btn--gold">
+                    <i class="fas fa-coins"></i> Marquer payee
+                </button>
+            </form>
+        {% endif %}
+
+        {% if can_refuser %}
+            <button type="button" class="facture-show-actions__btn facture-show-actions__btn--danger" onclick="document.getElementById('refus-form').style.display='block'">
+                <i class="fas fa-times"></i> Refuser
+            </button>
+        {% endif %}
+    </div>
+
+    {# Inline refus form #}
+    {% if can_refuser %}
+    <div id="refus-form" class="facture-show-refus" style="display:none">
+        <form method="post" action="{{ path('app_facture_refuser', {id: facture.idAsString}) }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('facture_refuser_' ~ facture.idAsString) }}">
+            <label for="motif" class="facture-show-refus__label">Motif du refus</label>
+            <textarea name="motif" id="motif" class="facture-show-refus__textarea" required placeholder="Indiquez le motif du refus..."></textarea>
+            <div class="facture-show-refus__actions">
+                <button type="submit" class="facture-show-actions__btn facture-show-actions__btn--danger">
+                    Confirmer le refus
+                </button>
+                <button type="button" class="facture-show-actions__btn facture-show-actions__btn--secondary" onclick="document.getElementById('refus-form').style.display='none'">
+                    Annuler
+                </button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+    {% endif %}
+</div>
+{% endblock %}
