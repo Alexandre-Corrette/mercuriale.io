@@ -89,7 +89,7 @@ export async function syncOne(blId) {
             formData.append('file', photo.blob, photo.originalName || 'photo.jpg');
             formData.append('etablissementId', String(bl.etablissementId));
 
-            const response = await fetch('/api/delivery-notes', {
+            const response = await fetch('/api/bons-livraison', {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: {
