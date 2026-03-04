@@ -78,12 +78,17 @@ class Fournisseur
     #[ORM\JoinTable(name: 'fournisseur_etablissement')]
     private Collection $etablissements;
 
+    /** @var Collection<int, AvoirFournisseur> */
+    #[ORM\OneToMany(targetEntity: AvoirFournisseur::class, mappedBy: 'fournisseur')]
+    private Collection $avoirs;
+
     public function __construct()
     {
         $this->organisationFournisseurs = new ArrayCollection();
         $this->produitsFournisseur = new ArrayCollection();
         $this->bonsLivraison = new ArrayCollection();
         $this->etablissements = new ArrayCollection();
+        $this->avoirs = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -266,6 +271,14 @@ class Fournisseur
         $this->etablissements->removeElement($etablissement);
 
         return $this;
+    }
+
+    /**
+     * @return Collection<int, AvoirFournisseur>
+     */
+    public function getAvoirs(): Collection
+    {
+        return $this->avoirs;
     }
 
     public function getAdresseComplete(): string

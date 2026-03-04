@@ -29,3 +29,9 @@ framework:
             policy: sliding_window
             limit: 5
             interval: '1 hour'
+
+        # Rate limiter for avoir creation (20 per minute per user)
+        avoir_create:
+            policy: sliding_window
+            limit: 20
+            interval: '1 minute'
