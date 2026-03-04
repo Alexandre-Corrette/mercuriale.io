@@ -6,6 +6,7 @@ namespace App\Controller\App;
 
 use App\Entity\Fournisseur;
 use App\Entity\Utilisateur;
+use App\Repository\AvoirFournisseurRepository;
 use App\Repository\BonLivraisonRepository;
 use App\Repository\FournisseurRepository;
 use App\Repository\ProduitFournisseurRepository;
@@ -53,6 +54,7 @@ class FournisseurController extends AbstractController
         Fournisseur $fournisseur,
         ProduitFournisseurRepository $produitRepo,
         BonLivraisonRepository $blRepo,
+        AvoirFournisseurRepository $avoirRepo,
     ): Response {
         $this->denyAccessUnlessGranted('VIEW', $fournisseur);
 
@@ -64,6 +66,7 @@ class FournisseurController extends AbstractController
             'fournisseur' => $fournisseur,
             'produits' => $produitRepo->findByFournisseur($fournisseur),
             'bons_livraison' => $blRepo->findRecentByFournisseurForOrganisation($fournisseur, $org),
+            'avoirs' => $avoirRepo->findByFournisseurForOrganisation($fournisseur, $org),
         ]);
     }
 }
