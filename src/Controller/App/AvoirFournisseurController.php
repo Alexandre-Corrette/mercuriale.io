@@ -168,10 +168,15 @@ class AvoirFournisseurController extends AbstractController
         }
 
         // GET : afficher le formulaire
+        // Lignes pré-sélectionnées depuis le panneau pending (query params)
+        $preselected = $request->query->all('lignes');
+        $preselectedIds = !empty($preselected) ? array_map('intval', $preselected) : null;
+
         return $this->render('app/avoir/demande.html.twig', [
             'bonLivraison' => $bonLivraison,
             'lignesEnAlerte' => $lignesEnAlerte,
             'motifs' => MotifAvoir::cases(),
+            'preselectedIds' => $preselectedIds,
         ]);
     }
 }

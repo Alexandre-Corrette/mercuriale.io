@@ -286,6 +286,21 @@
     color: #9ca3af;
 }
 
+/* ── Checkbox column ── */
+.bl-detail-panel__check-col {
+    width: 36px;
+    text-align: center;
+    padding-left: 0.5rem;
+    padding-right: 0;
+}
+
+.bl-detail-panel__check-col input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--mercuriale-coral);
+}
+
 /* ── Alert rows ── */
 .bl-detail-row--alert {
     border-left: 3px solid var(--mercuriale-coral);
