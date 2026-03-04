@@ -1,0 +1,207 @@
+{% extends 'admin/hub/layout.html.twig' %}
+
+{% set hub_title = 'Demande d\'avoir' %}
+{% set hub_breadcrumbs = [
+    { label: 'Bons de livraison', route: 'app_bl_hub' },
+    { label: 'Livraisons a valider', route: 'app_bl_pending' },
+    { label: 'Demande d\'avoir' }
+] %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/avoir.css') }}">
+{% endblock %}
+
+{% block hub_content %}
+    <div class="avoir-demande">
+        <div class="avoir-demande__header">
+            <h1 class="avoir-demande__title">
+                <i class="fas fa-file-invoice"></i>
+                Demande d'avoir
+            </h1>
+            <p class="avoir-demande__subtitle">
+                BL {{ bonLivraison.numeroBl ?? '#' ~ bonLivraison.id }}
+                — {{ bonLivraison.fournisseur ? bonLivraison.fournisseur.nom : '' }}
+                — {{ bonLivraison.dateLivraison ? bonLivraison.dateLivraison|date('d/m/Y') : '' }}
+            </p>
+        </div>
+
+        {% for message in app.flashes('error') %}
+            <div class="avoir-demande__flash avoir-demande__flash--error">
+                <i class="fas fa-exclamation-circle"></i> {{ message }}
+            </div>
+        {% endfor %}
+
+        <form method="post" action="{{ path('app_avoir_demande', {id: bonLivraison.id}) }}" class="avoir-demande__form">
+            <input type="hidden" name="_token" value="{{ csrf_token('avoir_demande_' ~ bonLivraison.id) }}">
+
+            {# Info BL #}
+            <div class="avoir-demande__section">
+                <h2 class="avoir-demande__section-title">
+                    <i class="fas fa-info-circle"></i> Informations
+                </h2>
+                <div class="avoir-demande__info-grid">
+                    <div class="avoir-demande__info-item">
+                        <span class="avoir-demande__info-label">Fournisseur</span>
+                        <span class="avoir-demande__info-value">{{ bonLivraison.fournisseur ? bonLivraison.fournisseur.nom : '—' }}</span>
+                    </div>
+                    <div class="avoir-demande__info-item">
+                        <span class="avoir-demande__info-label">Etablissement</span>
+                        <span class="avoir-demande__info-value">{{ bonLivraison.etablissement.nom }}</span>
+                    </div>
+                    <div class="avoir-demande__info-item">
+                        <span class="avoir-demande__info-label">BL d'origine</span>
+                        <span class="avoir-demande__info-value">{{ bonLivraison.numeroBl ?? '#' ~ bonLivraison.id }}</span>
+                    </div>
+                    <div class="avoir-demande__info-item">
+                        <span class="avoir-demande__info-label">Date livraison</span>
+                        <span class="avoir-demande__info-value">{{ bonLivraison.dateLivraison ? bonLivraison.dateLivraison|date('d/m/Y') : '—' }}</span>
+                    </div>
+                </div>
+            </div>
+
+            {# Motif #}
+            <div class="avoir-demande__section">
+                <h2 class="avoir-demande__section-title">
+                    <i class="fas fa-tag"></i> Motif de la demande
+                </h2>
+                <select name="motif" required class="avoir-demande__select">
+                    <option value="">-- Choisir un motif --</option>
+                    {% for motif in motifs %}
+                        <option value="{{ motif.value }}">{{ motif.label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            {# Lignes en alerte #}
+            <div class="avoir-demande__section">
+                <h2 class="avoir-demande__section-title">
+                    <i class="fas fa-exclamation-triangle"></i> Lignes en ecart ({{ lignesEnAlerte|length }})
+                </h2>
+
+                {% if lignesEnAlerte|length > 0 %}
+                    <div class="avoir-demande__table-scroll">
+                        <table class="avoir-demande__table">
+                            <thead>
+                                <tr>
+                                    <th class="avoir-demande__check-col">
+                                        <input type="checkbox" id="select-all" checked>
+                                    </th>
+                                    <th>Designation</th>
+                                    <th class="avoir-demande__right">Qte</th>
+                                    <th class="avoir-demande__right">PU BL</th>
+                                    <th class="avoir-demande__right">PU Mercuriale</th>
+                                    <th class="avoir-demande__right">Ecart unitaire</th>
+                                    <th class="avoir-demande__right">Montant</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for data in lignesEnAlerte %}
+                                    <tr class="avoir-demande__row" data-montant="{{ data.montantLigne }}">
+                                        <td class="avoir-demande__check-col">
+                                            <input type="checkbox"
+                                                   name="lignes[]"
+                                                   value="{{ data.ligne.id }}"
+                                                   class="ligne-checkbox"
+                                                   checked>
+                                        </td>
+                                        <td>{{ data.ligne.designationBl }}</td>
+                                        <td class="avoir-demande__right">
+                                            {{ data.ligne.quantiteLivree|number_format(2, ',', ' ') }}
+                                            {% if data.ligne.unite %}
+                                                <span class="avoir-demande__muted">{{ data.ligne.unite }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="avoir-demande__right">{{ data.ligne.prixUnitaire|number_format(4, ',', ' ') }} &euro;</td>
+                                        <td class="avoir-demande__right">
+                                            {% if data.alerte.valeurAttendue %}
+                                                {{ data.alerte.valeurAttendue|number_format(4, ',', ' ') }} &euro;
+                                            {% else %}
+                                                <span class="avoir-demande__muted">&mdash;</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="avoir-demande__right avoir-demande__ecart">
+                                            {{ data.ecartUnitaire|number_format(4, ',', ' ') }} &euro;
+                                        </td>
+                                        <td class="avoir-demande__right avoir-demande__montant">
+                                            {{ data.montantLigne|number_format(2, ',', ' ') }} &euro;
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="6" class="avoir-demande__right avoir-demande__total-label">Total HT demande :</td>
+                                    <td class="avoir-demande__right avoir-demande__total-value" id="total-ht">0,00 &euro;</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="avoir-demande__empty">Aucune ligne en ecart detectee sur ce BL.</p>
+                {% endif %}
+            </div>
+
+            {# Commentaire #}
+            <div class="avoir-demande__section">
+                <h2 class="avoir-demande__section-title">
+                    <i class="fas fa-comment"></i> Commentaire
+                </h2>
+                <textarea name="commentaire"
+                          class="avoir-demande__textarea"
+                          rows="3"
+                          placeholder="Commentaire libre (optionnel)..."
+                          maxlength="2000"></textarea>
+            </div>
+
+            {# Actions #}
+            <div class="avoir-demande__actions">
+                <a href="{{ path('app_bl_pending') }}" class="btn btn--secondary">
+                    <i class="fas fa-arrow-left"></i> Retour
+                </a>
+                {% if lignesEnAlerte|length > 0 %}
+                    <button type="submit" class="btn btn--avoir">
+                        <i class="fas fa-paper-plane"></i> Envoyer la demande
+                    </button>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const checkboxes = document.querySelectorAll('.ligne-checkbox');
+            const selectAll = document.getElementById('select-all');
+            const totalEl = document.getElementById('total-ht');
+
+            function updateTotal() {
+                let total = 0;
+                checkboxes.forEach(function(cb) {
+                    if (cb.checked) {
+                        const row = cb.closest('tr');
+                        total += parseFloat(row.dataset.montant) || 0;
+                    }
+                });
+                totalEl.innerHTML = total.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' &euro;';
+            }
+
+            if (selectAll) {
+                selectAll.addEventListener('change', function() {
+                    checkboxes.forEach(function(cb) { cb.checked = selectAll.checked; });
+                    updateTotal();
+                });
+            }
+
+            checkboxes.forEach(function(cb) {
+                cb.addEventListener('change', function() {
+                    if (selectAll) {
+                        selectAll.checked = Array.from(checkboxes).every(function(c) { return c.checked; });
+                    }
+                    updateTotal();
+                });
+            });
+
+            updateTotal();
+        });
+    </script>
+{% endblock %}
