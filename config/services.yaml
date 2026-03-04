@@ -64,3 +64,15 @@ services:
     App\Twig\Extension\PushNotificationExtension:
         arguments:
             $vapidPublicKey: '%env(VAPID_PUBLIC_KEY)%'
+
+    App\Service\EInvoicing\PdpClientInterface:
+        alias: App\Service\EInvoicing\B2BRouterPdpClient
+
+    App\Service\EInvoicing\B2BRouterPdpClient:
+        arguments:
+            $apiUrl: '%env(B2BROUTER_API_URL)%'
+            $apiKey: '%env(B2BROUTER_API_KEY)%'
+
+    App\MessageHandler\FetchPendingInvoicesHandler:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
