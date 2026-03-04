@@ -43,6 +43,11 @@
             <table class="bl-detail-panel__table">
                 <thead>
                     <tr>
+                        {% if bonLivraison.statut.value == 'ANOMALIE' and is_granted('MANAGE', bonLivraison.etablissement) %}
+                            <th class="bl-detail-panel__check-col">
+                                <input type="checkbox" id="pending-select-all" title="Tout selectionner">
+                            </th>
+                        {% endif %}
                         <th>Code</th>
                         <th>Designation</th>
                         <th class="bl-detail-panel__right">Qte</th>
@@ -53,11 +58,16 @@
                     </tr>
                 </thead>
                 <tbody>
+                    {% set showCheckboxes = bonLivraison.statut.value == 'ANOMALIE' and is_granted('MANAGE', bonLivraison.etablissement) %}
                     {% for ligne in bonLivraison.lignes %}
                         {% set hasAlert = ligne.alertes|length > 0 %}
+                        {% set isEcart = false %}
                         {% set prixMercuriale = null %}
                         {% set ecartPct = null %}
                         {% for alerte in ligne.alertes %}
+                            {% if alerte.typeAlerte.value in ['ECART_PRIX', 'ECART_QUANTITE'] %}
+                                {% set isEcart = true %}
+                            {% endif %}
                             {% if alerte.valeurAttendue %}
                                 {% set prixMercuriale = alerte.valeurAttendue %}
                             {% endif %}
@@ -66,6 +76,15 @@
                             {% endif %}
                         {% endfor %}
                         <tr class="{% if hasAlert %}bl-detail-row--alert{% endif %}">
+                            {% if showCheckboxes %}
+                                <td class="bl-detail-panel__check-col">
+                                    <input type="checkbox"
+                                           class="pending-ligne-cb"
+                                           value="{{ ligne.id }}"
+                                           {{ isEcart ? 'checked' : '' }}
+                                           title="Inclure dans la demande d'avoir">
+                                </td>
+                            {% endif %}
                             <td class="bl-detail-cell--code">{{ ligne.codeProduitBl ?? '—' }}</td>
                             <td>{{ ligne.designationBl }}</td>
                             <td class="bl-detail-panel__right">
@@ -95,7 +114,7 @@
                         </tr>
                     {% else %}
                         <tr>
-                            <td colspan="7" class="bl-detail-panel__empty">Aucune ligne extraite</td>
+                            <td colspan="{{ showCheckboxes ? 8 : 7 }}" class="bl-detail-panel__empty">Aucune ligne extraite</td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -115,7 +134,10 @@
         {% endif %}
 
         {% if bonLivraison.statut.value == 'ANOMALIE' and is_granted('MANAGE', bonLivraison.etablissement) %}
-            <a href="{{ path('app_avoir_demande', {id: bonLivraison.id}) }}" class="btn btn--avoir">
+            <a href="{{ path('app_avoir_demande', {id: bonLivraison.id}) }}"
+               id="btn-avoir-demande"
+               class="btn btn--avoir"
+               data-base-url="{{ path('app_avoir_demande', {id: bonLivraison.id}) }}">
                 <i class="fas fa-file-invoice"></i> Avoir
             </a>
         {% else %}
@@ -124,4 +146,38 @@
             </button>
         {% endif %}
     </div>
+
+    {% if bonLivraison.statut.value == 'ANOMALIE' and is_granted('MANAGE', bonLivraison.etablissement) %}
+        <script>
+            (function() {
+                var selectAll = document.getElementById('pending-select-all');
+                var checkboxes = document.querySelectorAll('.pending-ligne-cb');
+                var btnAvoir = document.getElementById('btn-avoir-demande');
+
+                if (selectAll && checkboxes.length) {
+                    selectAll.checked = true;
+
+                    selectAll.addEventListener('change', function() {
+                        checkboxes.forEach(function(cb) { cb.checked = selectAll.checked; });
+                    });
+
+                    checkboxes.forEach(function(cb) {
+                        cb.addEventListener('change', function() {
+                            selectAll.checked = Array.from(checkboxes).every(function(c) { return c.checked; });
+                        });
+                    });
+                }
+
+                if (btnAvoir) {
+                    btnAvoir.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        var baseUrl = btnAvoir.dataset.baseUrl;
+                        var selected = Array.from(document.querySelectorAll('.pending-ligne-cb:checked'));
+                        var params = selected.map(function(cb) { return 'lignes[]=' + cb.value; }).join('&');
+                        window.location.href = params ? baseUrl + '?' + params : baseUrl;
+                    });
+                }
+            })();
+        </script>
+    {% endif %}
 </div>

@@ -97,13 +97,14 @@
                             </thead>
                             <tbody>
                                 {% for data in lignesEnAlerte %}
+                                    {% set isChecked = preselectedIds is null or data.ligne.id in preselectedIds %}
                                     <tr class="avoir-demande__row" data-montant="{{ data.montantLigne }}">
                                         <td class="avoir-demande__check-col">
                                             <input type="checkbox"
                                                    name="lignes[]"
                                                    value="{{ data.ligne.id }}"
                                                    class="ligne-checkbox"
-                                                   checked>
+                                                   {{ isChecked ? 'checked' : '' }}>
                                         </td>
                                         <td>{{ data.ligne.designationBl }}</td>
                                         <td class="avoir-demande__right">
