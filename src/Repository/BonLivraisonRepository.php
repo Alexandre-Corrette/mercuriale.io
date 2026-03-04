@@ -218,6 +218,110 @@ class BonLivraisonRepository extends ServiceEntityRepository
     /**
      * @return array<array{bl: BonLivraison, alertCount: int, ligneCount: int}>
      */
+    public function findByEtablissementWithAlertCount(Etablissement $etablissement, int $limit = 50): array
+    {
+        $rows = $this->createQueryBuilder('bl')
+            ->select('bl', 'f', 'COUNT(DISTINCT a.id) AS alertCount', 'COUNT(DISTINCT l.id) AS ligneCount')
+            ->leftJoin('bl.fournisseur', 'f')
+            ->leftJoin('bl.lignes', 'l')
+            ->leftJoin('l.alertes', 'a')
+            ->where('bl.etablissement = :etablissement')
+            ->setParameter('etablissement', $etablissement)
+            ->groupBy('bl.id')
+            ->orderBy('bl.dateLivraison', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+
+        return array_map(fn (array $row) => [
+            'bl' => $row[0],
+            'alertCount' => (int) $row['alertCount'],
+            'ligneCount' => (int) $row['ligneCount'],
+        ], $rows);
+    }
+
+    /**
+     * @return array<array{bl: BonLivraison, alertCount: int, ligneCount: int}>
+     */
+    public function findValidatedByEtablissementWithAlertCount(Etablissement $etablissement, int $limit = 50): array
+    {
+        $rows = $this->createQueryBuilder('bl')
+            ->select('bl', 'f', 'COUNT(DISTINCT a.id) AS alertCount', 'COUNT(DISTINCT l.id) AS ligneCount')
+            ->leftJoin('bl.fournisseur', 'f')
+            ->leftJoin('bl.lignes', 'l')
+            ->leftJoin('l.alertes', 'a')
+            ->where('bl.etablissement = :etablissement')
+            ->andWhere('bl.statut = :statut')
+            ->setParameter('etablissement', $etablissement)
+            ->setParameter('statut', StatutBonLivraison::VALIDE)
+            ->groupBy('bl.id')
+            ->orderBy('bl.dateLivraison', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+
+        return array_map(fn (array $row) => [
+            'bl' => $row[0],
+            'alertCount' => (int) $row['alertCount'],
+            'ligneCount' => (int) $row['ligneCount'],
+        ], $rows);
+    }
+
+    /**
+     * @return array<array{bl: BonLivraison, alertCount: int, ligneCount: int}>
+     */
+    public function findAnomalieByEtablissementWithAlertCount(Etablissement $etablissement, int $limit = 50): array
+    {
+        $rows = $this->createQueryBuilder('bl')
+            ->select('bl', 'f', 'COUNT(DISTINCT a.id) AS alertCount', 'COUNT(DISTINCT l.id) AS ligneCount')
+            ->leftJoin('bl.fournisseur', 'f')
+            ->leftJoin('bl.lignes', 'l')
+            ->leftJoin('l.alertes', 'a')
+            ->where('bl.etablissement = :etablissement')
+            ->andWhere('bl.statut = :statut')
+            ->setParameter('etablissement', $etablissement)
+            ->setParameter('statut', StatutBonLivraison::ANOMALIE)
+            ->groupBy('bl.id')
+            ->orderBy('bl.dateLivraison', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+
+        return array_map(fn (array $row) => [
+            'bl' => $row[0],
+            'alertCount' => (int) $row['alertCount'],
+            'ligneCount' => (int) $row['ligneCount'],
+        ], $rows);
+    }
+
+    public function countAnomalieForOrganisation(Organisation $org): int
+    {
+        return (int) $this->createQueryBuilder('bl')
+            ->select('COUNT(bl.id)')
+            ->innerJoin('bl.etablissement', 'e')
+            ->where('bl.statut = :statut')
+            ->andWhere('e.organisation = :org')
+            ->andWhere('e.actif = :actif')
+            ->setParameter('statut', StatutBonLivraison::ANOMALIE)
+            ->setParameter('org', $org)
+            ->setParameter('actif', true)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function countByEtablissement(Etablissement $etablissement): int
+    {
+        return (int) $this->createQueryBuilder('bl')
+            ->select('COUNT(bl.id)')
+            ->where('bl.etablissement = :etablissement')
+            ->setParameter('etablissement', $etablissement)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
+     * @return array<array{bl: BonLivraison, alertCount: int, ligneCount: int}>
+     */
     public function findRecentWithAlertCountForOrganisation(Organisation $org, int $limit = 10): array
     {
         $rows = $this->createQueryBuilder('bl')

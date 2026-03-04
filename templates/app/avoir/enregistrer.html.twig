@@ -1,0 +1,145 @@
+{% extends 'admin/hub/layout.html.twig' %}
+
+{% set hub_title = 'Avoirs fournisseur' %}
+{% set hub_breadcrumbs = [
+    { label: 'Bons de livraison', url: path('app_bl_hub') },
+    { label: 'Avoirs fournisseur', url: path('app_avoirs_hub') },
+    { label: avoir.reference ?? 'Avoir #' ~ avoir.idAsString[:8], url: path('app_avoir_show', {id: avoir.idAsString}) },
+    { label: 'Enregistrer' }
+] %}
+
+{% block title %}Enregistrer avoir — Mercuriale.io{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/avoir.css') }}">
+{% endblock %}
+
+{% block hub_content %}
+    <div class="avoir-demande">
+        <div class="avoir-demande__header">
+            <h1 class="avoir-demande__title">
+                <i class="fas fa-check-circle"></i>
+                Enregistrer la reception
+            </h1>
+            <p class="avoir-demande__subtitle">
+                Avoir demande le {{ avoir.demandeLe|date('d/m/Y') }}
+                — {{ avoir.fournisseur ? avoir.fournisseur.nom : '' }}
+                — {{ avoir.montantHt ? avoir.montantHt|number_format(2, ',', ' ') ~ ' € HT demandes' : '' }}
+            </p>
+        </div>
+
+        {% for message in app.flashes('error') %}
+            <div class="avoir-demande__flash avoir-demande__flash--error">
+                <i class="fas fa-exclamation-circle"></i> {{ message }}
+            </div>
+        {% endfor %}
+
+        <form method="post" action="{{ path('app_avoir_enregistrer', {id: avoir.idAsString}) }}" class="avoir-demande__form">
+            <input type="hidden" name="_token" value="{{ csrf_token('avoir_enregistrer_' ~ avoir.idAsString) }}">
+
+            {# Reference #}
+            <div class="avoir-demande__section">
+                <h2 class="avoir-demande__section-title">
+                    <i class="fas fa-hashtag"></i> Reference de l'avoir
+                </h2>
+                <input type="text"
+                       name="reference"
+                       required
+                       class="avoir-demande__select"
+                       placeholder="Ex: AV-12345, FA-2026-0042..."
+                       maxlength="50"
+                       value="{{ avoir.reference ?? '' }}">
+            </div>
+
+            {# Montants #}
+            <div class="avoir-demande__section">
+                <h2 class="avoir-demande__section-title">
+                    <i class="fas fa-euro-sign"></i> Montants
+                </h2>
+                <div class="avoir-enregistrer__montants">
+                    <div class="avoir-enregistrer__field">
+                        <label class="avoir-enregistrer__label" for="montant_ht">Montant HT</label>
+                        <input type="number"
+                               id="montant_ht"
+                               name="montant_ht"
+                               step="0.01"
+                               min="0"
+                               class="avoir-demande__select"
+                               placeholder="0,00"
+                               value="{{ avoir.montantHt ?? '' }}">
+                    </div>
+                    <div class="avoir-enregistrer__field">
+                        <label class="avoir-enregistrer__label" for="montant_tva">Montant TVA</label>
+                        <input type="number"
+                               id="montant_tva"
+                               name="montant_tva"
+                               step="0.01"
+                               min="0"
+                               class="avoir-demande__select"
+                               placeholder="0,00"
+                               value="{{ avoir.montantTva ?? '' }}">
+                    </div>
+                    <div class="avoir-enregistrer__field">
+                        <label class="avoir-enregistrer__label" for="montant_ttc">Montant TTC</label>
+                        <input type="number"
+                               id="montant_ttc"
+                               name="montant_ttc"
+                               step="0.01"
+                               min="0"
+                               class="avoir-demande__select"
+                               placeholder="0,00"
+                               value="{{ avoir.montantTtc ?? '' }}">
+                    </div>
+                </div>
+            </div>
+
+            {# Recap lignes #}
+            {% if avoir.lignes|length > 0 %}
+                <div class="avoir-demande__section">
+                    <h2 class="avoir-demande__section-title">
+                        <i class="fas fa-list"></i> Lignes de la demande ({{ avoir.nombreLignes }})
+                    </h2>
+                    <div class="avoir-demande__table-scroll">
+                        <table class="avoir-demande__table">
+                            <thead>
+                                <tr>
+                                    <th>Designation</th>
+                                    <th class="avoir-demande__right">Qte</th>
+                                    <th class="avoir-demande__right">PU ecart</th>
+                                    <th class="avoir-demande__right">Montant</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ligne in avoir.lignes %}
+                                    <tr>
+                                        <td>{{ ligne.designation }}</td>
+                                        <td class="avoir-demande__right">{{ ligne.quantite|number_format(2, ',', ' ') }}</td>
+                                        <td class="avoir-demande__right">{{ ligne.prixUnitaire|number_format(4, ',', ' ') }} €</td>
+                                        <td class="avoir-demande__right avoir-demande__montant">{{ ligne.montantLigne|number_format(2, ',', ' ') }} €</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3" class="avoir-demande__right avoir-demande__total-label">Total HT demande :</td>
+                                    <td class="avoir-demande__right avoir-demande__total-value">{{ avoir.montantHt ? avoir.montantHt|number_format(2, ',', ' ') ~ ' €' : '—' }}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            {% endif %}
+
+            {# Actions #}
+            <div class="avoir-demande__actions">
+                <a href="{{ path('app_avoir_show', {id: avoir.idAsString}) }}" class="btn btn--secondary">
+                    <i class="fas fa-arrow-left"></i> Retour
+                </a>
+                <button type="submit" class="btn btn--success">
+                    <i class="fas fa-check"></i> Enregistrer la reception
+                </button>
+            </div>
+        </form>
+    </div>
+{% endblock %}

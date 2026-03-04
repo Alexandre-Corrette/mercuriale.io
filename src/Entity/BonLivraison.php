@@ -84,9 +84,14 @@ class BonLivraison
     #[ORM\OrderBy(['ordre' => 'ASC'])]
     private Collection $lignes;
 
+    /** @var Collection<int, AvoirFournisseur> */
+    #[ORM\OneToMany(targetEntity: AvoirFournisseur::class, mappedBy: 'bonLivraison')]
+    private Collection $avoirs;
+
     public function __construct()
     {
         $this->lignes = new ArrayCollection();
+        $this->avoirs = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -288,6 +293,14 @@ class BonLivraison
         }
 
         return $this;
+    }
+
+    /**
+     * @return Collection<int, AvoirFournisseur>
+     */
+    public function getAvoirs(): Collection
+    {
+        return $this->avoirs;
     }
 
     public function calculerTotalHt(): string

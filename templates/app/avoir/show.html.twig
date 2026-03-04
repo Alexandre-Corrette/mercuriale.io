@@ -1,0 +1,263 @@
+{% extends 'admin/hub/layout.html.twig' %}
+
+{% set hub_title = 'Avoirs fournisseur' %}
+{% set hub_breadcrumbs = [
+    { label: 'Bons de livraison', url: path('app_bl_hub') },
+    { label: 'Avoirs fournisseur', url: path('app_avoirs_hub') },
+    { label: 'Liste', url: path('app_avoirs_liste') },
+    { label: avoir.reference ?? 'Avoir #' ~ avoir.idAsString[:8] }
+] %}
+
+{% block title %}{{ avoir.reference ?? 'Avoir' }} — Mercuriale.io{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/avoir.css') }}">
+{% endblock %}
+
+{% block hub_content %}
+<div class="hub-content">
+    {# Header #}
+    <div class="avoir-show-header">
+        <div>
+            <h1 class="hub-title">
+                <i class="fas fa-receipt"></i>
+                {{ avoir.reference ?? 'Avoir #' ~ avoir.idAsString[:8] }}
+            </h1>
+            <p class="avoir-show-header__meta">
+                {{ avoir.fournisseur ? avoir.fournisseur.nom : '' }}
+                — {{ avoir.etablissement.nom }}
+                — Demande le {{ avoir.demandeLe|date('d/m/Y') }}
+            </p>
+        </div>
+        {% include 'components/_status_badge.html.twig' with {
+            label: avoir.statut.label,
+            variant: avoir.statut.color
+        } only %}
+    </div>
+
+    {# Stats row #}
+    <div class="hub-stats">
+        <div class="hub-stat-card">
+            <div class="hub-stat-card__value">{{ avoir.nombreLignes }}</div>
+            <div class="hub-stat-card__label">Lignes</div>
+        </div>
+        <div class="hub-stat-card hub-stat-card--gold">
+            <div class="hub-stat-card__value">{{ avoir.montantHt ? avoir.montantHt|number_format(2, ',', ' ') ~ ' €' : '—' }}</div>
+            <div class="hub-stat-card__label">Montant HT</div>
+        </div>
+        {% if avoir.montantTtc %}
+            <div class="hub-stat-card hub-stat-card--coral">
+                <div class="hub-stat-card__value">{{ avoir.montantTtc|number_format(2, ',', ' ') }} €</div>
+                <div class="hub-stat-card__label">Montant TTC</div>
+            </div>
+        {% endif %}
+    </div>
+
+    {# Info grid #}
+    <div class="avoir-show-info">
+        <div class="avoir-show-info__item">
+            <div class="avoir-show-info__label">Fournisseur</div>
+            <div class="avoir-show-info__value">{{ avoir.fournisseur ? avoir.fournisseur.nom : '—' }}</div>
+        </div>
+        <div class="avoir-show-info__item">
+            <div class="avoir-show-info__label">Etablissement</div>
+            <div class="avoir-show-info__value">{{ avoir.etablissement.nom }}</div>
+        </div>
+        <div class="avoir-show-info__item">
+            <div class="avoir-show-info__label">Reference</div>
+            <div class="avoir-show-info__value">{{ avoir.reference ?? '—' }}</div>
+        </div>
+        <div class="avoir-show-info__item">
+            <div class="avoir-show-info__label">Motif</div>
+            <div class="avoir-show-info__value">
+                {% if avoir.motif %}
+                    {% include 'components/_status_badge.html.twig' with {
+                        label: avoir.motif.label,
+                        variant: avoir.motif.color,
+                        size: 'sm'
+                    } only %}
+                {% else %}
+                    —
+                {% endif %}
+            </div>
+        </div>
+        <div class="avoir-show-info__item">
+            <div class="avoir-show-info__label">BL d'origine</div>
+            <div class="avoir-show-info__value">
+                {% if avoir.bonLivraison %}
+                    <a href="{{ path('app_bl_show', {id: avoir.bonLivraison.id}) }}">
+                        {{ avoir.bonLivraison.numeroBl ?? 'BL #' ~ avoir.bonLivraison.id }}
+                    </a>
+                {% else %}
+                    —
+                {% endif %}
+            </div>
+        </div>
+        <div class="avoir-show-info__item">
+            <div class="avoir-show-info__label">Demande le</div>
+            <div class="avoir-show-info__value">{{ avoir.demandeLe|date('d/m/Y') }}</div>
+        </div>
+        {% if avoir.recuLe %}
+            <div class="avoir-show-info__item">
+                <div class="avoir-show-info__label">Recu le</div>
+                <div class="avoir-show-info__value">{{ avoir.recuLe|date('d/m/Y') }}</div>
+            </div>
+        {% endif %}
+        {% if avoir.imputeLe %}
+            <div class="avoir-show-info__item">
+                <div class="avoir-show-info__label">Impute le</div>
+                <div class="avoir-show-info__value">{{ avoir.imputeLe|date('d/m/Y') }}</div>
+            </div>
+        {% endif %}
+        {% if avoir.montantTva %}
+            <div class="avoir-show-info__item">
+                <div class="avoir-show-info__label">Montant TVA</div>
+                <div class="avoir-show-info__value">{{ avoir.montantTva|number_format(2, ',', ' ') }} €</div>
+            </div>
+        {% endif %}
+        {% if avoir.createdBy %}
+            <div class="avoir-show-info__item">
+                <div class="avoir-show-info__label">Cree par</div>
+                <div class="avoir-show-info__value">{{ avoir.createdBy.prenom ?? '' }} {{ avoir.createdBy.nom ?? avoir.createdBy.email }}</div>
+            </div>
+        {% endif %}
+        {% if avoir.validatedBy %}
+            <div class="avoir-show-info__item">
+                <div class="avoir-show-info__label">Valide par</div>
+                <div class="avoir-show-info__value">{{ avoir.validatedBy.prenom ?? '' }} {{ avoir.validatedBy.nom ?? avoir.validatedBy.email }}</div>
+            </div>
+        {% endif %}
+    </div>
+
+    {# Commentaire #}
+    {% if avoir.commentaire %}
+        <div class="avoir-show-comment">
+            <div class="avoir-show-comment__header">
+                <i class="fas fa-comment"></i> Commentaire
+            </div>
+            <p class="avoir-show-comment__text">{{ avoir.commentaire }}</p>
+        </div>
+    {% endif %}
+
+    {# Lines table #}
+    <div class="avoir-show-table-wrapper">
+        <div class="avoir-show-table-header">
+            <i class="fas fa-list"></i> Lignes de l'avoir ({{ avoir.nombreLignes }})
+        </div>
+        {% if avoir.lignes|length > 0 %}
+            <div class="avoir-show-table-scroll">
+                <table class="avoir-show-table">
+                    <thead>
+                        <tr>
+                            <th>Designation</th>
+                            <th class="avoir-show-table__right">Quantite</th>
+                            <th class="avoir-show-table__right">PU ecart</th>
+                            <th class="avoir-show-table__right">Montant</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ligne in avoir.lignes %}
+                            <tr>
+                                <td>{{ ligne.designation }}</td>
+                                <td class="avoir-show-table__right">{{ ligne.quantite|number_format(2, ',', ' ') }}</td>
+                                <td class="avoir-show-table__right">{{ ligne.prixUnitaire|number_format(4, ',', ' ') }} €</td>
+                                <td class="avoir-show-table__right avoir-show-table__montant">{{ ligne.montantLigne|number_format(2, ',', ' ') }} €</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" class="avoir-show-table__right avoir-show-table__total-label">Total HT :</td>
+                            <td class="avoir-show-table__right avoir-show-table__total-value">{{ avoir.montantHt ? avoir.montantHt|number_format(2, ',', ' ') ~ ' €' : '—' }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        {% else %}
+            <div class="avoir-show-table-empty">
+                Aucune ligne enregistree.
+            </div>
+        {% endif %}
+    </div>
+
+    {# Flash messages #}
+    {% for message in app.flashes('success') %}
+        <div class="avoir-demande__flash avoir-demande__flash--success">
+            <i class="fas fa-check-circle"></i> {{ message }}
+        </div>
+    {% endfor %}
+    {% for message in app.flashes('error') %}
+        <div class="avoir-demande__flash avoir-demande__flash--error">
+            <i class="fas fa-exclamation-circle"></i> {{ message }}
+        </div>
+    {% endfor %}
+
+    {# Actions #}
+    <div class="avoir-show-actions">
+        <a href="{{ path('app_avoirs_liste') }}" class="btn btn--secondary">
+            <i class="fas fa-arrow-left"></i> Retour a la liste
+        </a>
+
+        {% if is_granted('MANAGE', avoir.etablissement) %}
+            {% if avoir.statut.value == 'DEMANDE' %}
+                <a href="{{ path('app_avoir_enregistrer', {id: avoir.idAsString}) }}" class="btn btn--success">
+                    <i class="fas fa-check"></i> Enregistrer la reception
+                </a>
+
+                <button type="button" class="btn btn--danger" onclick="document.getElementById('refuser-form').hidden = !document.getElementById('refuser-form').hidden">
+                    <i class="fas fa-times"></i> Refuser
+                </button>
+
+                <button type="button" class="btn btn--outline" onclick="document.getElementById('annuler-form').hidden = !document.getElementById('annuler-form').hidden">
+                    <i class="fas fa-ban"></i> Annuler
+                </button>
+            {% endif %}
+
+            {% if avoir.statut.value == 'RECU' %}
+                <form action="{{ path('app_avoir_imputer', {id: avoir.idAsString}) }}" method="post" class="avoir-show-actions__form">
+                    <input type="hidden" name="_token" value="{{ csrf_token('avoir_imputer_' ~ avoir.idAsString) }}">
+                    <button type="submit" class="btn btn--success">
+                        <i class="fas fa-check-double"></i> Imputer
+                    </button>
+                </form>
+
+                <button type="button" class="btn btn--outline" onclick="document.getElementById('annuler-form').hidden = !document.getElementById('annuler-form').hidden">
+                    <i class="fas fa-ban"></i> Annuler
+                </button>
+            {% endif %}
+        {% endif %}
+    </div>
+
+    {# Hidden forms — refuser / annuler #}
+    {% if is_granted('MANAGE', avoir.etablissement) %}
+        {% if avoir.statut.value == 'DEMANDE' %}
+            <form id="refuser-form" hidden
+                  action="{{ path('app_avoir_refuser', {id: avoir.idAsString}) }}"
+                  method="post"
+                  class="avoir-show-inline-form">
+                <input type="hidden" name="_token" value="{{ csrf_token('avoir_refuser_' ~ avoir.idAsString) }}">
+                <label class="avoir-show-inline-form__label">Motif du refus</label>
+                <textarea name="commentaire" required rows="2" class="avoir-demande__textarea" placeholder="Raison du refus..."></textarea>
+                <button type="submit" class="btn btn--danger btn--sm">
+                    <i class="fas fa-times"></i> Confirmer le refus
+                </button>
+            </form>
+        {% endif %}
+
+        {% if avoir.statut.value in ['DEMANDE', 'RECU'] %}
+            <form id="annuler-form" hidden
+                  action="{{ path('app_avoir_annuler', {id: avoir.idAsString}) }}"
+                  method="post"
+                  class="avoir-show-inline-form">
+                <input type="hidden" name="_token" value="{{ csrf_token('avoir_annuler_' ~ avoir.idAsString) }}">
+                <label class="avoir-show-inline-form__label">Motif de l'annulation</label>
+                <textarea name="commentaire" required rows="2" class="avoir-demande__textarea" placeholder="Raison de l'annulation..."></textarea>
+                <button type="submit" class="btn btn--outline btn--sm">
+                    <i class="fas fa-ban"></i> Confirmer l'annulation
+                </button>
+            </form>
+        {% endif %}
+    {% endif %}
+</div>
+{% endblock %}

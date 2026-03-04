@@ -143,10 +143,62 @@
         {% endif %}
     </div>
 
-    {# Placeholder V2 — Avoirs #}
-    <div class="fournisseur-show-placeholder" hidden>
-        <i class="fas fa-receipt"></i>
-        <p>Avoirs fournisseur (V2 — MERC-23)</p>
+    {# Avoirs fournisseur #}
+    <div class="fournisseur-show-section">
+        <div class="fournisseur-show-section__header">
+            <i class="fas fa-receipt"></i> Avoirs fournisseur ({{ avoirs|length }})
+            {% if total_avoirs_imputes != '0' %}
+                <span class="fournisseur-show-section__total-badge">
+                    Total impute : {{ total_avoirs_imputes|number_format(2, ',', ' ') }} € HT
+                </span>
+            {% endif %}
+        </div>
+        {% if avoirs is empty %}
+            <div class="fournisseur-show-section__empty">
+                Aucun avoir enregistre pour ce fournisseur.
+            </div>
+        {% else %}
+            <div class="fournisseur-show-section__scroll">
+                <table class="fournisseur-show-section__table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Reference</th>
+                            <th>Motif</th>
+                            <th>Statut</th>
+                            <th class="fournisseur-show-section__right">Montant HT</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for avoir in avoirs %}
+                            <tr class="fournisseur-show-section__row-link" onclick="window.location='{{ path('app_avoir_show', {id: avoir.idAsString}) }}'">
+                                <td>{{ avoir.demandeLe|date('d/m/Y') }}</td>
+                                <td>{{ avoir.reference ?? 'Avoir #' ~ avoir.idAsString[:8] }}</td>
+                                <td>
+                                    {% if avoir.motif %}
+                                        {% include 'components/_status_badge.html.twig' with {
+                                            label: avoir.motif.label,
+                                            variant: avoir.motif.color,
+                                            size: 'sm'
+                                        } only %}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% include 'components/_status_badge.html.twig' with {
+                                        label: avoir.statut.label,
+                                        variant: avoir.statut.color,
+                                        size: 'sm'
+                                    } only %}
+                                </td>
+                                <td class="fournisseur-show-section__right">{{ avoir.montantHt ? avoir.montantHt|number_format(2, ',', ' ') ~ ' €' : '—' }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
     </div>
 
     {# CTA Importer mercuriale #}
