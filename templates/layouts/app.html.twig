@@ -13,10 +13,7 @@
 
 {% block app_header %}
     {% if app.user %}
-        {% include 'components/_header.html.twig' with {
-            restaurant_name: current_restaurant(),
-            current_date: current_date()
-        } %}
+        {% include 'components/_header.html.twig' %}
     {% endif %}
 {% endblock %}
 

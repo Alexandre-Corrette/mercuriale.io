@@ -1,7 +1,6 @@
 /* =============================================
    Header Component — Mercuriale.io
-   Global app header: logo + user + restaurant + date.
-   Replaces .app-header formerly in tokens.css.
+   Global app header: logo + user + restaurant dropdown + date.
    ============================================= */
 
 /* ── Base ── */
@@ -71,6 +70,113 @@
     color: #6b7280;
 }
 
+/* ── Restaurant dropdown ── */
+.m-header__restaurant-dropdown {
+    position: relative;
+}
+
+.m-header__restaurant-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    background: none;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    padding: 0.375rem 0.625rem;
+    cursor: pointer;
+    color: var(--mercuriale-navy);
+    font-size: var(--text-sm);
+    font-family: var(--font-family-base);
+    font-weight: 600;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+    min-height: 44px;
+}
+
+.m-header__restaurant-toggle:hover {
+    background-color: var(--mercuriale-cream);
+    border-color: var(--mercuriale-cream-dark);
+}
+
+.m-header__restaurant-toggle > i:first-child {
+    color: var(--mercuriale-coral);
+    font-size: var(--text-base);
+}
+
+.m-header__restaurant-chevron {
+    font-size: 0.625rem;
+    color: #6b7280;
+    transition: transform 0.2s ease;
+    margin-left: 0.25rem;
+}
+
+.m-header__restaurant-dropdown--open .m-header__restaurant-chevron {
+    transform: rotate(180deg);
+}
+
+.m-header__restaurant-dropdown--open .m-header__restaurant-toggle {
+    background-color: var(--mercuriale-cream);
+    border-color: var(--mercuriale-cream-dark);
+}
+
+/* ── Dropdown menu ── */
+.m-header__restaurant-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    min-width: 220px;
+    background: #fff;
+    border: 1px solid var(--mercuriale-cream-dark);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 0.375rem 0;
+    list-style: none;
+    margin: 0;
+    z-index: calc(var(--z-header) + 10);
+}
+
+.m-header__restaurant-dropdown--open .m-header__restaurant-menu {
+    display: block;
+}
+
+.m-header__restaurant-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1rem;
+    color: var(--mercuriale-navy);
+    text-decoration: none;
+    font-size: var(--text-sm);
+    transition: background-color 0.1s ease;
+    min-height: 44px;
+}
+
+.m-header__restaurant-option:hover {
+    background-color: var(--mercuriale-cream);
+}
+
+.m-header__restaurant-option i:first-child {
+    color: #9ca3af;
+    font-size: 0.875rem;
+    width: 1rem;
+    text-align: center;
+}
+
+.m-header__restaurant-option--active {
+    font-weight: 700;
+    background-color: rgba(240, 117, 96, 0.06);
+}
+
+.m-header__restaurant-option--active i:first-child {
+    color: var(--mercuriale-coral);
+}
+
+.m-header__restaurant-check {
+    margin-left: auto;
+    color: var(--mercuriale-coral);
+    font-size: 0.75rem;
+}
+
 /* ── Responsive ── */
 @media (max-width: 768px) {
     .m-header__inner {
@@ -84,6 +190,10 @@
     .m-header__date {
         display: none;
     }
+
+    .m-header__restaurant-menu {
+        right: -0.5rem;
+    }
 }
 
 @media (max-width: 480px) {
@@ -95,13 +205,24 @@
         gap: var(--space-sm);
     }
 
-    .m-header__user-name,
-    .m-header__restaurant-name {
+    .m-header__user-name {
         display: none;
     }
 
+    .m-header__restaurant-toggle .m-header__restaurant-name {
+        max-width: 100px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
     .m-header__user i,
-    .m-header__restaurant i {
+    .m-header__restaurant-toggle > i:first-child {
         font-size: var(--text-lg);
+    }
+
+    .m-header__restaurant-menu {
+        right: -1rem;
+        min-width: 200px;
     }
 }
