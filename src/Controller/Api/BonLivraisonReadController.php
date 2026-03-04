@@ -7,14 +7,12 @@ namespace App\Controller\Api;
 use App\Entity\BonLivraison;
 use App\Entity\Utilisateur;
 use App\Repository\BonLivraisonRepository;
-use App\Service\Upload\BonLivraisonUploadService;
+use App\Service\BonLivraisonImageService;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -25,7 +23,7 @@ class BonLivraisonReadController extends AbstractController
 {
     public function __construct(
         private readonly BonLivraisonRepository $bonLivraisonRepository,
-        private readonly BonLivraisonUploadService $uploadService,
+        private readonly BonLivraisonImageService $imageService,
         private readonly RateLimiterFactory $blReadLimiter,
         private readonly LoggerInterface $logger,
     ) {
@@ -94,30 +92,8 @@ class BonLivraisonReadController extends AbstractController
             );
         }
 
-        $imagePath = $bonLivraison->getImagePath();
-        if (!$imagePath) {
-            throw $this->createNotFoundException('Image non trouvée.');
-        }
-
-        $fullPath = $this->uploadService->getUploadDirectory() . '/' . $imagePath;
-
-        if (!file_exists($fullPath)) {
-            throw $this->createNotFoundException('Image non trouvée.');
-        }
-
-        $response = new BinaryFileResponse($fullPath);
-
-        // Security headers
-        $response->headers->set('X-Content-Type-Options', 'nosniff');
-        $response->headers->set('Content-Security-Policy', "default-src 'none'");
-        $response->headers->set('X-Frame-Options', 'DENY');
-        // Images are immutable after validation
+        $response = $this->imageService->getImageResponse($bonLivraison);
         $response->headers->set('Cache-Control', 'private, max-age=86400');
-
-        $response->setContentDisposition(
-            ResponseHeaderBag::DISPOSITION_INLINE,
-            'bon-livraison-' . $bonLivraison->getId() . '.jpg'
-        );
 
         return $response;
     }
