@@ -114,12 +114,14 @@
             </form>
         {% endif %}
 
-        <button type="button" class="btn btn--avoir" disabled title="Avoir fournisseur (MERC-23)">
-            <i class="fas fa-file-invoice"></i> Avoir
-        </button>
+        {% if bonLivraison.statut.value == 'ANOMALIE' and is_granted('MANAGE', bonLivraison.etablissement) %}
+            <a href="{{ path('app_avoir_demande', {id: bonLivraison.id}) }}" class="btn btn--avoir">
+                <i class="fas fa-file-invoice"></i> Avoir
+            </a>
+        {% else %}
+            <button type="button" class="btn btn--avoir" disabled title="Disponible pour les BL en anomalie">
+                <i class="fas fa-file-invoice"></i> Avoir
+            </button>
+        {% endif %}
     </div>
-
-    <p class="bl-detail-panel__avoir-note">
-        Avoir : demande fournisseur de la valeur difference prix
-    </p>
 </div>

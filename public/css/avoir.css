@@ -1,0 +1,254 @@
+/* =============================================
+   Avoir Fournisseur — Mercuriale.io
+   ============================================= */
+
+/* ── Demande d'avoir ── */
+
+.avoir-demande {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: var(--space-lg);
+}
+
+.avoir-demande__header {
+    margin-bottom: var(--space-xl);
+}
+
+.avoir-demande__title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--mercuriale-navy);
+    margin: 0 0 var(--space-xs);
+}
+
+.avoir-demande__title i {
+    color: var(--mercuriale-coral);
+    margin-right: var(--space-xs);
+}
+
+.avoir-demande__subtitle {
+    font-size: 0.875rem;
+    color: var(--mercuriale-navy-light);
+    margin: 0;
+}
+
+/* ── Flash messages ── */
+
+.avoir-demande__flash {
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-md);
+    font-size: 0.875rem;
+}
+
+.avoir-demande__flash--error {
+    background: var(--color-danger-bg);
+    color: var(--color-danger);
+    border: 1px solid var(--color-danger-light);
+}
+
+/* ── Sections ── */
+
+.avoir-demande__section {
+    background: #fff;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    padding: var(--space-lg);
+    margin-bottom: var(--space-lg);
+}
+
+.avoir-demande__section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--mercuriale-navy);
+    margin: 0 0 var(--space-md);
+    padding-bottom: var(--space-sm);
+    border-bottom: 2px solid var(--mercuriale-cream);
+}
+
+.avoir-demande__section-title i {
+    color: var(--mercuriale-gold);
+    margin-right: var(--space-xs);
+}
+
+/* ── Info grid ── */
+
+.avoir-demande__info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-md);
+}
+
+.avoir-demande__info-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.avoir-demande__info-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--mercuriale-navy-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.avoir-demande__info-value {
+    font-size: 0.9375rem;
+    color: var(--mercuriale-navy);
+    font-weight: 500;
+}
+
+/* ── Select / Textarea ── */
+
+.avoir-demande__select,
+.avoir-demande__textarea {
+    width: 100%;
+    padding: var(--space-sm) var(--space-md);
+    border: 1px solid var(--mercuriale-cream-dark);
+    border-radius: var(--radius-sm);
+    font-size: 0.9375rem;
+    font-family: inherit;
+    color: var(--mercuriale-navy);
+    background: #fff;
+    transition: border-color 0.2s;
+}
+
+.avoir-demande__select:focus,
+.avoir-demande__textarea:focus {
+    outline: none;
+    border-color: var(--mercuriale-navy-light);
+    box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.1);
+}
+
+.avoir-demande__textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* ── Table ── */
+
+.avoir-demande__table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.avoir-demande__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8125rem;
+}
+
+.avoir-demande__table th {
+    background: var(--mercuriale-cream);
+    color: var(--mercuriale-navy);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.6875rem;
+    padding: var(--space-sm) var(--space-sm);
+    text-align: left;
+    white-space: nowrap;
+}
+
+.avoir-demande__table td {
+    padding: var(--space-sm);
+    border-bottom: 1px solid var(--mercuriale-cream);
+    vertical-align: middle;
+}
+
+.avoir-demande__table tbody tr:hover {
+    background: rgba(30, 58, 95, 0.02);
+}
+
+.avoir-demande__right {
+    text-align: right;
+}
+
+.avoir-demande__check-col {
+    width: 40px;
+    text-align: center;
+}
+
+.avoir-demande__muted {
+    color: var(--mercuriale-navy-light);
+    font-size: 0.75rem;
+}
+
+.avoir-demande__ecart {
+    color: var(--mercuriale-coral);
+    font-weight: 600;
+}
+
+.avoir-demande__montant {
+    font-weight: 600;
+}
+
+/* ── Total ── */
+
+.avoir-demande__total-label {
+    font-weight: 700;
+    color: var(--mercuriale-navy);
+    text-transform: uppercase;
+    font-size: 0.8125rem;
+}
+
+.avoir-demande__total-value {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--mercuriale-coral);
+}
+
+/* ── Empty state ── */
+
+.avoir-demande__empty {
+    text-align: center;
+    color: var(--mercuriale-navy-light);
+    font-size: 0.875rem;
+    padding: var(--space-xl) 0;
+}
+
+/* ── Actions ── */
+
+.avoir-demande__actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-md);
+    padding-top: var(--space-md);
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 768px) {
+    .avoir-demande {
+        padding: var(--space-md);
+    }
+
+    .avoir-demande__info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .avoir-demande__actions {
+        flex-direction: column;
+    }
+
+    .avoir-demande__actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .avoir-demande__title {
+        font-size: 1.25rem;
+    }
+
+    .avoir-demande__section {
+        padding: var(--space-md);
+    }
+
+    .avoir-demande__table {
+        font-size: 0.75rem;
+    }
+}
