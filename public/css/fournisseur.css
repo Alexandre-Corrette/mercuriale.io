@@ -156,11 +156,23 @@
 }
 
 .fournisseur-show-section__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     padding: 1rem 1.5rem;
     border-bottom: 1px solid var(--mercuriale-cream-dark);
     font-weight: 700;
     color: var(--mercuriale-navy);
     font-size: 1rem;
+}
+
+.fournisseur-show-section__total-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--mercuriale-coral);
+    background: rgba(240, 117, 96, 0.1);
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-full);
 }
 
 .fournisseur-show-section__empty {

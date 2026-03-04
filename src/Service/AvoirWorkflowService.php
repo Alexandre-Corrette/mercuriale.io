@@ -73,11 +73,14 @@ class AvoirWorkflowService
             throw new \InvalidArgumentException('Le montant HT doit être supérieur à 0 pour imputer.');
         }
 
-        $avoir->setStatut(StatutAvoir::IMPUTE);
-        $avoir->setValidatedBy($user);
-        $avoir->setImputeLe(new \DateTimeImmutable());
+        $this->entityManager->wrapInTransaction(function () use ($avoir, $user): void {
+            $avoir->setStatut(StatutAvoir::IMPUTE);
+            $avoir->setValidatedBy($user);
+            $avoir->setImputeLe(new \DateTimeImmutable());
 
-        $this->entityManager->flush();
+            // TODO MERC-64 : recalcul food cost période
+            // $this->foodCostService->recalculate($avoir->getEtablissement(), $period);
+        });
 
         $this->logger->info('Avoir imputé', [
             'avoir_id' => $avoir->getIdAsString(),

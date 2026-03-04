@@ -147,6 +147,11 @@
     <div class="fournisseur-show-section">
         <div class="fournisseur-show-section__header">
             <i class="fas fa-receipt"></i> Avoirs fournisseur ({{ avoirs|length }})
+            {% if total_avoirs_imputes != '0' %}
+                <span class="fournisseur-show-section__total-badge">
+                    Total impute : {{ total_avoirs_imputes|number_format(2, ',', ' ') }} € HT
+                </span>
+            {% endif %}
         </div>
         {% if avoirs is empty %}
             <div class="fournisseur-show-section__empty">
