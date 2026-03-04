@@ -12,6 +12,9 @@ use App\Enum\MotifAvoir;
 use App\Enum\StatutAvoir;
 use App\Enum\StatutBonLivraison;
 use App\Enum\TypeAlerte;
+use App\Repository\AvoirFournisseurRepository;
+use App\Service\AvoirWorkflowService;
+use App\Twig\Extension\AppLayoutExtension;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -27,9 +30,204 @@ class AvoirFournisseurController extends AbstractController
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
+        private readonly AvoirFournisseurRepository $avoirRepo,
+        private readonly AvoirWorkflowService $workflowService,
         private readonly RateLimiterFactory $avoirCreateLimiter,
         private readonly LoggerInterface $logger,
     ) {
+    }
+
+    #[Route('', name: 'app_avoirs_hub', methods: ['GET'])]
+    public function hub(): Response
+    {
+        /** @var Utilisateur $user */
+        $user = $this->getUser();
+        $org = $user->getOrganisation();
+
+        return $this->render('app/avoir/hub.html.twig', [
+            'demande_count' => $this->avoirRepo->countByStatutForOrganisation($org, StatutAvoir::DEMANDE),
+            'recu_count' => $this->avoirRepo->countByStatutForOrganisation($org, StatutAvoir::RECU),
+        ]);
+    }
+
+    #[Route('/liste', name: 'app_avoirs_liste', methods: ['GET'])]
+    public function liste(
+        AppLayoutExtension $layoutExtension,
+        Request $request,
+    ): Response {
+        $etablissement = $layoutExtension->getSelectedEtablissement();
+        if (!$etablissement) {
+            throw $this->createAccessDeniedException();
+        }
+        $this->denyAccessUnlessGranted('VIEW', $etablissement);
+
+        $statutFilter = $request->query->getString('statut');
+        $statut = $statutFilter !== '' ? StatutAvoir::tryFrom($statutFilter) : null;
+
+        $avoirs = $this->avoirRepo->findForEtablissementWithDetails($etablissement, $statut);
+
+        return $this->render('app/avoir/liste.html.twig', [
+            'avoirs' => $avoirs,
+            'avoir_count' => count($avoirs),
+            'statut_filter' => $statut,
+            'statuts' => StatutAvoir::cases(),
+        ]);
+    }
+
+    #[Route('/{id}', name: 'app_avoir_show', methods: ['GET'])]
+    public function show(AvoirFournisseur $avoir): Response
+    {
+        if (!$this->isGranted('VIEW', $avoir->getEtablissement())) {
+            throw $this->createAccessDeniedException();
+        }
+
+        return $this->render('app/avoir/show.html.twig', [
+            'avoir' => $avoir,
+        ]);
+    }
+
+    #[Route('/{id}/enregistrer', name: 'app_avoir_enregistrer', methods: ['GET', 'POST'])]
+    public function enregistrer(AvoirFournisseur $avoir, Request $request): Response
+    {
+        if (!$this->isGranted('MANAGE', $avoir->getEtablissement())) {
+            throw $this->createAccessDeniedException();
+        }
+
+        if (!$this->workflowService->canTransition($avoir, StatutAvoir::RECU)) {
+            $this->addFlash('error', 'Cet avoir ne peut pas être enregistré dans son statut actuel.');
+
+            return $this->redirectToRoute('app_avoir_show', ['id' => $avoir->getIdAsString()]);
+        }
+
+        if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('avoir_enregistrer_' . $avoir->getIdAsString(), $request->request->getString('_token'))) {
+                $this->addFlash('error', 'Token CSRF invalide. Veuillez réessayer.');
+
+                return $this->redirectToRoute('app_avoir_enregistrer', ['id' => $avoir->getIdAsString()]);
+            }
+
+            $reference = trim($request->request->getString('reference'));
+            $montantHt = $request->request->getString('montant_ht');
+            $montantTva = $request->request->getString('montant_tva');
+            $montantTtc = $request->request->getString('montant_ttc');
+
+            /** @var Utilisateur $user */
+            $user = $this->getUser();
+
+            try {
+                $this->workflowService->enregistrer(
+                    $avoir,
+                    $reference,
+                    $user,
+                    $montantHt !== '' ? $montantHt : null,
+                    $montantTva !== '' ? $montantTva : null,
+                    $montantTtc !== '' ? $montantTtc : null,
+                );
+            } catch (\InvalidArgumentException $e) {
+                $this->addFlash('error', $e->getMessage());
+
+                return $this->redirectToRoute('app_avoir_enregistrer', ['id' => $avoir->getIdAsString()]);
+            }
+
+            $this->addFlash('success', 'Avoir enregistré avec succès.');
+
+            return $this->redirectToRoute('app_avoir_show', ['id' => $avoir->getIdAsString()]);
+        }
+
+        return $this->render('app/avoir/enregistrer.html.twig', [
+            'avoir' => $avoir,
+        ]);
+    }
+
+    #[Route('/{id}/imputer', name: 'app_avoir_imputer', methods: ['POST'])]
+    public function imputer(AvoirFournisseur $avoir, Request $request): Response
+    {
+        if (!$this->isGranted('MANAGE', $avoir->getEtablissement())) {
+            throw $this->createAccessDeniedException();
+        }
+
+        if (!$this->isCsrfTokenValid('avoir_imputer_' . $avoir->getIdAsString(), $request->request->getString('_token'))) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+
+            return $this->redirectToRoute('app_avoir_show', ['id' => $avoir->getIdAsString()]);
+        }
+
+        /** @var Utilisateur $user */
+        $user = $this->getUser();
+
+        try {
+            $this->workflowService->imputer($avoir, $user);
+        } catch (\LogicException | \InvalidArgumentException $e) {
+            $this->addFlash('error', $e->getMessage());
+
+            return $this->redirectToRoute('app_avoir_show', ['id' => $avoir->getIdAsString()]);
+        }
+
+        $this->addFlash('success', 'Avoir imputé avec succès.');
+
+        return $this->redirectToRoute('app_avoir_show', ['id' => $avoir->getIdAsString()]);
+    }
+
+    #[Route('/{id}/refuser', name: 'app_avoir_refuser', methods: ['POST'])]
+    public function refuser(AvoirFournisseur $avoir, Request $request): Response
+    {
+        if (!$this->isGranted('MANAGE', $avoir->getEtablissement())) {
+            throw $this->createAccessDeniedException();
+        }
+
+        if (!$this->isCsrfTokenValid('avoir_refuser_' . $avoir->getIdAsString(), $request->request->getString('_token'))) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+
+            return $this->redirectToRoute('app_avoir_show', ['id' => $avoir->getIdAsString()]);
+        }
+
+        $commentaire = trim($request->request->getString('commentaire'));
+
+        /** @var Utilisateur $user */
+        $user = $this->getUser();
+
+        try {
+            $this->workflowService->refuser($avoir, $commentaire, $user);
+        } catch (\LogicException | \InvalidArgumentException $e) {
+            $this->addFlash('error', $e->getMessage());
+
+            return $this->redirectToRoute('app_avoir_show', ['id' => $avoir->getIdAsString()]);
+        }
+
+        $this->addFlash('success', 'Avoir marqué comme refusé.');
+
+        return $this->redirectToRoute('app_avoir_show', ['id' => $avoir->getIdAsString()]);
+    }
+
+    #[Route('/{id}/annuler', name: 'app_avoir_annuler', methods: ['POST'])]
+    public function annuler(AvoirFournisseur $avoir, Request $request): Response
+    {
+        if (!$this->isGranted('MANAGE', $avoir->getEtablissement())) {
+            throw $this->createAccessDeniedException();
+        }
+
+        if (!$this->isCsrfTokenValid('avoir_annuler_' . $avoir->getIdAsString(), $request->request->getString('_token'))) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+
+            return $this->redirectToRoute('app_avoir_show', ['id' => $avoir->getIdAsString()]);
+        }
+
+        $commentaire = trim($request->request->getString('commentaire'));
+
+        /** @var Utilisateur $user */
+        $user = $this->getUser();
+
+        try {
+            $this->workflowService->annuler($avoir, $commentaire, $user);
+        } catch (\LogicException | \InvalidArgumentException $e) {
+            $this->addFlash('error', $e->getMessage());
+
+            return $this->redirectToRoute('app_avoir_show', ['id' => $avoir->getIdAsString()]);
+        }
+
+        $this->addFlash('success', 'Avoir annulé.');
+
+        return $this->redirectToRoute('app_avoirs_liste');
     }
 
     #[Route('/demande/{id}', name: 'app_avoir_demande', methods: ['GET', 'POST'])]

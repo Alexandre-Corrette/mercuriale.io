@@ -97,4 +97,28 @@ class AvoirFournisseurRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * @return AvoirFournisseur[]
+     */
+    public function findForEtablissementWithDetails(Etablissement $etablissement, ?StatutAvoir $statut = null): array
+    {
+        $qb = $this->createQueryBuilder('a')
+            ->leftJoin('a.fournisseur', 'f')
+            ->addSelect('f')
+            ->leftJoin('a.bonLivraison', 'bl')
+            ->addSelect('bl')
+            ->leftJoin('a.lignes', 'l')
+            ->addSelect('l')
+            ->where('a.etablissement = :etablissement')
+            ->setParameter('etablissement', $etablissement)
+            ->orderBy('a.demandeLe', 'DESC');
+
+        if ($statut !== null) {
+            $qb->andWhere('a.statut = :statut')
+                ->setParameter('statut', $statut);
+        }
+
+        return $qb->getQuery()->getResult();
+    }
 }
