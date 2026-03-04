@@ -9,13 +9,16 @@
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: var(--space-lg);
-    padding: var(--space-lg) 0;
+    padding: var(--space-lg) 12px;
+    max-width: 620px;
+    margin: 0 auto;
 }
 
 @media (max-width: 768px) {
     .m-tile-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: var(--space-md);
+        padding: var(--space-md) 10px;
     }
 }
 
@@ -28,7 +31,7 @@
     justify-content: center;
     gap: var(--space-md);
     padding: var(--space-xl) var(--space-lg);
-    min-height: 160px;
+    aspect-ratio: 1;
     border-radius: var(--radius-xl);
     text-decoration: none;
     color: #fff;
@@ -37,7 +40,7 @@
     transition: transform var(--transition-normal),
                 box-shadow var(--transition-normal);
     box-shadow: var(--shadow-sm);
-    overflow: hidden;
+    /* No overflow: hidden — badges overflow intentionally */
 }
 
 .m-tile:hover {
@@ -83,11 +86,13 @@
     line-height: 1.3;
 }
 
-/* ── Badge counter (positioned top-left per maquette) ── */
+/* ── Badge counter (top-right, intentional overflow) ── */
 .m-tile .m-badge {
     position: absolute;
-    top: calc(-1 * var(--space-xs));
-    left: calc(-1 * var(--space-xs));
+    top: -8px;
+    right: -8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    z-index: 1;
 }
 
 /* ── "Bientot" disabled label ── */
@@ -176,14 +181,13 @@
 /* ── Responsive ── */
 @media (max-width: 480px) {
     .m-tile {
-        min-height: 130px;
         padding: var(--space-lg) var(--space-md);
         gap: var(--space-sm);
     }
 
     .m-tile__icon-wrap {
-        width: 48px;
-        height: 48px;
+        width: 44px;
+        height: 44px;
     }
 
     .m-tile__icon {

@@ -3,8 +3,6 @@
 
   Params:
     logo_path:       string (optional, default: 'images/logo-mercuriale-rectangulaire.png')
-    restaurant_name: string (optional)
-    current_date:    string (optional) — formatted date e.g. "Lundi 3 mars 2026"
     show_user_info:  bool   (optional, default: true)
 #}
 {% set _logo = logo_path|default('images/logo-mercuriale-rectangulaire.png') %}
@@ -23,17 +21,52 @@
                 <span class="m-header__user-name">{{ app.user.prenom|default('') }} {{ app.user.nom|default('') }}</span>
             </div>
 
-            {% if restaurant_name is defined and restaurant_name %}
-            <div class="m-header__restaurant">
-                <i class="fas fa-store" aria-hidden="true"></i>
-                <span class="m-header__restaurant-name">{{ restaurant_name }}</span>
+            {% set etablissements = user_etablissements() %}
+            {% set selected = selected_etablissement() %}
+            {% if selected %}
+            <div class="m-header__restaurant-dropdown"
+                 data-controller="header-dropdown">
+                {% if etablissements|length > 1 %}
+                    <button type="button"
+                            class="m-header__restaurant-toggle"
+                            aria-expanded="false"
+                            aria-haspopup="true"
+                            data-header-dropdown-target="toggle"
+                            data-action="click->header-dropdown#toggle">
+                        <i class="fas fa-store" aria-hidden="true"></i>
+                        <span class="m-header__restaurant-name">{{ selected.nom }}</span>
+                        <i class="fas fa-chevron-down m-header__restaurant-chevron" aria-hidden="true"></i>
+                    </button>
+                    <ul class="m-header__restaurant-menu"
+                        data-header-dropdown-target="menu"
+                        role="menu">
+                        {% for etab in etablissements %}
+                            <li role="menuitem">
+                                <a href="{{ path('app_etablissement_switch', {id: etab.id}) }}"
+                                   class="m-header__restaurant-option{% if etab.id == selected.id %} m-header__restaurant-option--active{% endif %}">
+                                    <i class="fas fa-store" aria-hidden="true"></i>
+                                    {{ etab.nom }}
+                                    {% if etab.id == selected.id %}
+                                        <i class="fas fa-check m-header__restaurant-check" aria-hidden="true"></i>
+                                    {% endif %}
+                                </a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <div class="m-header__restaurant">
+                        <i class="fas fa-store" aria-hidden="true"></i>
+                        <span class="m-header__restaurant-name">{{ selected.nom }}</span>
+                    </div>
+                {% endif %}
             </div>
             {% endif %}
 
-            {% if current_date is defined and current_date %}
+            {% set _date = current_date() %}
+            {% if _date %}
             <div class="m-header__date">
                 <i class="fas fa-calendar" aria-hidden="true"></i>
-                <span>{{ current_date }}</span>
+                <span>{{ _date }}</span>
             </div>
             {% endif %}
         </div>

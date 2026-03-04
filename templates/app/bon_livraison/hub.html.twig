@@ -31,14 +31,14 @@
         } only %}
 
         {% include 'components/_dashboard_tile.html.twig' with {
-            label: 'Budget', icon: 'fa-coins',
-            color: 'gold', disabled: true
+            label: 'Avoirs fournisseur', icon: 'fa-receipt',
+            url: path('app_avoirs_hub'), color: 'gold'
         } only %}
 
         {# Row 2 #}
         {% include 'components/_dashboard_tile.html.twig' with {
             label: 'Bons de livraison', icon: 'fa-file-invoice-dollar',
-            url: path('app_bl_list'), color: 'navy'
+            url: path('app_bl_liste'), color: 'navy'
         } only %}
 
         {% include 'components/_dashboard_tile.html.twig' with {

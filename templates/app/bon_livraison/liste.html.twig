@@ -1,0 +1,77 @@
+{% extends 'admin/hub/layout.html.twig' %}
+
+{% set hub_title = 'Bons de livraison' %}
+{% set hub_breadcrumbs = [
+    { label: 'Bons de livraison', url: path('app_bl_hub') },
+    { label: 'Liste BL' }
+] %}
+
+{% block title %}Liste bons de livraison — Mercuriale.io{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/bl-liste.css') }}">
+{% endblock %}
+
+{% block hub_content %}
+<div class="hub-content">
+    <h1 class="hub-title"><i class="fas fa-file-invoice-dollar"></i> Bons de livraison</h1>
+
+    {# Stats #}
+    <div class="hub-stats">
+        <div class="hub-stat-card">
+            <div class="hub-stat-card__value">{{ bl_count }}</div>
+            <div class="hub-stat-card__label">bons de livraison valides</div>
+        </div>
+    </div>
+
+    {# Search #}
+    <div class="bl-liste-search">
+        <input type="text"
+               class="bl-liste-search__input"
+               id="bl-search"
+               placeholder="Rechercher un BL (numero, fournisseur...)">
+    </div>
+
+    {# List #}
+    {% if bons_livraison is empty %}
+        <div class="bl-liste-empty">
+            <i class="fas fa-file-invoice-dollar"></i>
+            <p>Aucun bon de livraison pour cet etablissement.</p>
+            <a href="{{ path('app_bl_upload') }}" class="bl-liste-empty__cta">
+                <i class="fas fa-plus-circle"></i> Ajouter un bon
+            </a>
+        </div>
+    {% else %}
+        <div class="bl-liste-rows" id="bl-rows">
+            {% for row in bons_livraison %}
+                {% set bl = row.bl %}
+                <a href="{{ path('app_bl_show', {id: bl.id}) }}"
+                   class="bl-liste-row"
+                   data-search="{{ (bl.numeroBl ?? '')|lower }} {{ bl.fournisseur ? bl.fournisseur.nom|lower : '' }} {{ bl.dateLivraison|date('d/m/Y') }}">
+                    <span class="bl-liste-row__numero">{{ bl.numeroBl ? 'BL ' ~ bl.numeroBl : 'BL #' ~ bl.id }}</span>
+                    <span class="bl-liste-row__date">{{ bl.dateLivraison|date('d/m/Y') }}</span>
+                    <span class="bl-liste-row__fournisseur">{{ bl.fournisseur ? bl.fournisseur.nom : '—' }}</span>
+                </a>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var input = document.getElementById('bl-search');
+    var container = document.getElementById('bl-rows');
+    if (!input || !container) return;
+
+    input.addEventListener('keyup', function () {
+        var query = input.value.toLowerCase().trim();
+        var items = container.querySelectorAll('.bl-liste-row');
+        items.forEach(function (row) {
+            var searchText = row.getAttribute('data-search') || '';
+            row.style.display = searchText.indexOf(query) !== -1 ? '' : 'none';
+        });
+    });
+});
+</script>
+{% endblock %}

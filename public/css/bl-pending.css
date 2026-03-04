@@ -17,9 +17,21 @@
     min-width: 300px;
     max-width: 420px;
     background: #fff;
-    border-right: 1px solid var(--mercuriale-cream-dark);
     display: flex;
     flex-direction: column;
+}
+
+/* ── Dotted separator ── */
+.bl-pending-split__separator {
+    width: 3px;
+    flex-shrink: 0;
+    background-image: repeating-linear-gradient(
+        to bottom,
+        var(--mercuriale-navy) 0px,
+        var(--mercuriale-navy) 8px,
+        transparent 8px,
+        transparent 16px
+    );
 }
 
 .bl-pending-split__list-header {
@@ -274,6 +286,21 @@
     color: #9ca3af;
 }
 
+/* ── Checkbox column ── */
+.bl-detail-panel__check-col {
+    width: 36px;
+    text-align: center;
+    padding-left: 0.5rem;
+    padding-right: 0;
+}
+
+.bl-detail-panel__check-col input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--mercuriale-coral);
+}
+
 /* ── Alert rows ── */
 .bl-detail-row--alert {
     border-left: 3px solid var(--mercuriale-coral);
@@ -305,8 +332,19 @@
 }
 
 .btn--avoir {
-    border-color: #2d6a4f;
-    color: #2d6a4f;
+    background-color: #b5463a;
+    border-color: #b5463a;
+    color: #fff;
+}
+
+.btn--avoir:hover {
+    background-color: #9a3a30;
+    border-color: #9a3a30;
+}
+
+.btn--avoir:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 /* ── Avoir note ── */
@@ -331,8 +369,11 @@
         max-width: 100%;
         min-width: 0;
         max-height: 40vh;
-        border-right: none;
         border-bottom: 2px solid var(--mercuriale-cream-dark);
+    }
+
+    .bl-pending-split__separator {
+        display: none;
     }
 
     .bl-pending-split__detail {
