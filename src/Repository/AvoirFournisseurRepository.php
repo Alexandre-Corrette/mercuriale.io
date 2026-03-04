@@ -121,4 +121,21 @@ class AvoirFournisseurRepository extends ServiceEntityRepository
 
         return $qb->getQuery()->getResult();
     }
+
+    public function sumImputesByFournisseurForOrganisation(Fournisseur $fournisseur, Organisation $organisation): string
+    {
+        $result = $this->createQueryBuilder('a')
+            ->select('COALESCE(SUM(a.montantHt), 0)')
+            ->join('a.etablissement', 'e')
+            ->where('a.fournisseur = :fournisseur')
+            ->andWhere('e.organisation = :organisation')
+            ->andWhere('a.statut = :statut')
+            ->setParameter('fournisseur', $fournisseur)
+            ->setParameter('organisation', $organisation)
+            ->setParameter('statut', StatutAvoir::IMPUTE)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return (string) $result;
+    }
 }

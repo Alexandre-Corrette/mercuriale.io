@@ -67,6 +67,7 @@ class FournisseurController extends AbstractController
             'produits' => $produitRepo->findByFournisseur($fournisseur),
             'bons_livraison' => $blRepo->findRecentByFournisseurForOrganisation($fournisseur, $org),
             'avoirs' => $avoirRepo->findByFournisseurForOrganisation($fournisseur, $org),
+            'total_avoirs_imputes' => $avoirRepo->sumImputesByFournisseurForOrganisation($fournisseur, $org),
         ]);
     }
 }
