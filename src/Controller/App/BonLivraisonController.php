@@ -8,12 +8,10 @@ use App\Entity\BonLivraison;
 use App\Entity\Utilisateur;
 use App\Repository\AlerteControleRepository;
 use App\Repository\BonLivraisonRepository;
-use App\Service\Upload\BonLivraisonUploadService;
+use App\Service\BonLivraisonImageService;
 use App\Twig\Extension\AppLayoutExtension;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -22,7 +20,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class BonLivraisonController extends AbstractController
 {
     public function __construct(
-        private readonly BonLivraisonUploadService $uploadService,
+        private readonly BonLivraisonImageService $imageService,
     ) {
     }
 
@@ -134,28 +132,6 @@ class BonLivraisonController extends AbstractController
             throw $this->createAccessDeniedException();
         }
 
-        $imagePath = $bonLivraison->getImagePath();
-        if (!$imagePath) {
-            throw $this->createNotFoundException('Image non trouvee.');
-        }
-
-        $fullPath = $this->uploadService->getUploadDirectory() . '/' . $imagePath;
-
-        if (!file_exists($fullPath)) {
-            throw $this->createNotFoundException('Image non trouvee.');
-        }
-
-        $response = new BinaryFileResponse($fullPath);
-
-        $response->headers->set('X-Content-Type-Options', 'nosniff');
-        $response->headers->set('Content-Security-Policy', "default-src 'none'");
-        $response->headers->set('X-Frame-Options', 'DENY');
-
-        $response->setContentDisposition(
-            ResponseHeaderBag::DISPOSITION_INLINE,
-            'bon-livraison-' . $bonLivraison->getId() . '.jpg'
-        );
-
-        return $response;
+        return $this->imageService->getImageResponse($bonLivraison);
     }
 }
