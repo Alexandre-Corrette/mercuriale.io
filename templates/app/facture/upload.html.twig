@@ -2,8 +2,8 @@
 
 {% set hub_title = 'Upload facture' %}
 {% set hub_breadcrumbs = [
-    { label: 'Tableau de bord', url: path('admin_dashboard') },
-    { label: 'Factures', url: path('app_factures_liste') },
+    { label: 'Fournisseurs', url: path('app_fournisseurs_hub') },
+    { label: 'Factures', url: path('app_factures_hub') },
     { label: 'Upload' }
 ] %}
 
@@ -53,7 +53,7 @@
             <button type="submit" class="facture-show-actions__btn facture-show-actions__btn--success">
                 <i class="fas fa-upload"></i> Envoyer et lancer l'OCR
             </button>
-            <a href="{{ path('app_factures_liste') }}" class="facture-show-actions__btn facture-show-actions__btn--secondary">
+            <a href="{{ path('app_factures_hub') }}" class="facture-show-actions__btn facture-show-actions__btn--secondary">
                 <i class="fas fa-arrow-left"></i> Retour
             </a>
         </div>

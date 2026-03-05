@@ -26,7 +26,7 @@
 
         {% include 'components/_dashboard_tile.html.twig' with {
             label: 'Factures', icon: 'fa-file-invoice',
-            color: 'gold', disabled: true
+            url: path('app_factures_hub'), color: 'gold'
         } only %}
 
         {% include 'components/_dashboard_tile.html.twig' with {
