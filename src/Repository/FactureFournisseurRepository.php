@@ -28,6 +28,25 @@ class FactureFournisseurRepository extends ServiceEntityRepository
     /**
      * @return FactureFournisseur[]
      */
+    public function findUnmatchedForEtablissement(Etablissement $etablissement): array
+    {
+        return $this->createQueryBuilder('f')
+            ->leftJoin('f.fournisseur', 'fo')
+            ->addSelect('fo')
+            ->where('f.etablissement = :etablissement')
+            ->andWhere('f.statut = :statut')
+            ->andWhere('f.bonLivraison IS NULL')
+            ->andWhere('f.fournisseur IS NOT NULL')
+            ->setParameter('etablissement', $etablissement)
+            ->setParameter('statut', StatutFacture::RECUE)
+            ->orderBy('f.dateEmission', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * @return FactureFournisseur[]
+     */
     public function findForEtablissement(Etablissement $etablissement, ?StatutFacture $statut = null): array
     {
         $qb = $this->createQueryBuilder('f')

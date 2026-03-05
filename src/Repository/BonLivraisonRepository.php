@@ -294,6 +294,35 @@ class BonLivraisonRepository extends ServiceEntityRepository
         ], $rows);
     }
 
+    /**
+     * Find BLs for a given fournisseur and etablissement within a date range.
+     * Used for invoice/BL rapprochement.
+     *
+     * @return BonLivraison[]
+     */
+    public function findByFournisseurAndPeriod(
+        Fournisseur $fournisseur,
+        Etablissement $etablissement,
+        \DateTimeImmutable $from,
+        \DateTimeImmutable $to,
+    ): array {
+        return $this->createQueryBuilder('bl')
+            ->select('bl', 'l')
+            ->leftJoin('bl.lignes', 'l')
+            ->where('bl.fournisseur = :fournisseur')
+            ->andWhere('bl.etablissement = :etablissement')
+            ->andWhere('bl.dateLivraison BETWEEN :from AND :to')
+            ->andWhere('bl.statut IN (:statuts)')
+            ->setParameter('fournisseur', $fournisseur)
+            ->setParameter('etablissement', $etablissement)
+            ->setParameter('from', $from)
+            ->setParameter('to', $to)
+            ->setParameter('statuts', [StatutBonLivraison::VALIDE, StatutBonLivraison::ANOMALIE])
+            ->orderBy('bl.dateLivraison', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
     public function countAnomalieForOrganisation(Organisation $org): int
     {
         return (int) $this->createQueryBuilder('bl')

@@ -11,6 +11,7 @@ use App\Message\FetchPendingInvoicesMessage;
 use App\Repository\FactureFournisseurRepository;
 use App\Repository\FournisseurRepository;
 use App\Service\EInvoicing\InvoiceData;
+use App\Service\EInvoicing\InvoiceMatchingService;
 use App\Service\EInvoicing\PdpClientInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
@@ -24,6 +25,7 @@ class FetchPendingInvoicesHandler
         private readonly EntityManagerInterface $entityManager,
         private readonly FactureFournisseurRepository $factureRepo,
         private readonly FournisseurRepository $fournisseurRepo,
+        private readonly InvoiceMatchingService $matchingService,
         private readonly LoggerInterface $logger,
         private readonly string $projectDir,
     ) {
@@ -66,8 +68,13 @@ class FetchPendingInvoicesHandler
                 continue;
             }
 
-            $this->importInvoice($invoiceData, $etablissement);
+            $facture = $this->importInvoice($invoiceData, $etablissement);
             ++$imported;
+
+            // Attempt automatic rapprochement with BL
+            if ($facture !== null) {
+                $this->matchingService->matchFacture($facture);
+            }
         }
 
         $this->logger->info('[EInvoicing] Import terminé', [
@@ -78,12 +85,13 @@ class FetchPendingInvoicesHandler
         ]);
     }
 
-    private function importInvoice(InvoiceData $invoiceData, Etablissement $etablissement): void
+    private function importInvoice(InvoiceData $invoiceData, Etablissement $etablissement): ?FactureFournisseur
     {
         // Fetch detailed invoice with lines
         $detailed = $this->pdpClient->getInvoiceWithLines($invoiceData->externalId);
 
-        $this->entityManager->wrapInTransaction(function () use ($detailed, $etablissement): void {
+        $importedFacture = null;
+        $this->entityManager->wrapInTransaction(function () use ($detailed, $etablissement, &$importedFacture): void {
             $facture = new FactureFournisseur();
             $facture->setExternalId($detailed->externalId);
             $facture->setNumeroFacture($detailed->invoiceNumber);
@@ -123,6 +131,8 @@ class FetchPendingInvoicesHandler
 
             // Archive original document
             $this->archiveDocument($detailed->externalId, $facture);
+
+            $importedFacture = $facture;
         });
 
         // Acknowledge only after successful import
@@ -134,6 +144,8 @@ class FetchPendingInvoicesHandler
             'fournisseur' => $detailed->supplierName,
             'montant_ht' => $detailed->totalExclTax,
         ]);
+
+        return $importedFacture;
     }
 
     /**

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Entity\Trait\TimestampableTrait;
+use App\Enum\SourceFacture;
 use App\Enum\StatutFacture;
 use App\Repository\FactureFournisseurRepository;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -20,6 +21,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Index(columns: ['fournisseur_id'], name: 'idx_facture_fournisseur')]
 #[ORM\Index(columns: ['etablissement_id'], name: 'idx_facture_etablissement')]
 #[ORM\Index(columns: ['statut'], name: 'idx_facture_statut')]
+#[ORM\Index(columns: ['source'], name: 'idx_facture_source')]
 #[ORM\HasLifecycleCallbacks]
 class FactureFournisseur
 {
@@ -29,17 +31,28 @@ class FactureFournisseur
     #[ORM\Column(type: 'uuid', unique: true)]
     private Uuid $id;
 
-    /** B2Brouter invoice ID — unique, used for deduplication */
-    #[ORM\Column(length: 100, unique: true)]
-    #[Assert\NotBlank(message: 'L\'identifiant externe est obligatoire')]
+    /** B2Brouter invoice ID — unique, used for deduplication (null for OCR uploads) */
+    #[ORM\Column(length: 100, unique: true, nullable: true)]
     private ?string $externalId = null;
 
-    #[ORM\Column(length: 100)]
-    #[Assert\NotBlank(message: 'Le numéro de facture est obligatoire')]
+    #[ORM\Column(length: 20, enumType: SourceFacture::class, options: ['default' => 'B2BROUTER'])]
+    private SourceFacture $source = SourceFacture::B2BROUTER;
+
+    /** Raw JSON response from Claude Vision OCR */
+    #[ORM\Column(type: Types::JSON, nullable: true)]
+    private ?array $ocrRawData = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $ocrProcessedAt = null;
+
+    /** Original filename before UUID rename (display only) */
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $fichierOriginalNom = null;
+
+    #[ORM\Column(length: 100, nullable: true)]
     private ?string $numeroFacture = null;
 
-    #[ORM\Column(type: Types::DATE_IMMUTABLE)]
-    #[Assert\NotNull(message: 'La date d\'émission est obligatoire')]
+    #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
     private ?\DateTimeImmutable $dateEmission = null;
 
     #[ORM\ManyToOne(targetEntity: Fournisseur::class)]
@@ -69,15 +82,13 @@ class FactureFournisseur
     #[ORM\Column(length: 20, enumType: StatutFacture::class, options: ['default' => 'RECUE'])]
     private StatutFacture $statut = StatutFacture::RECUE;
 
-    #[ORM\Column(type: Types::DECIMAL, precision: 12, scale: 2)]
-    #[Assert\NotNull(message: 'Le montant HT est obligatoire')]
+    #[ORM\Column(type: Types::DECIMAL, precision: 12, scale: 2, nullable: true)]
     private ?string $montantHt = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 12, scale: 2, nullable: true)]
     private ?string $montantTva = null;
 
-    #[ORM\Column(type: Types::DECIMAL, precision: 12, scale: 2)]
-    #[Assert\NotNull(message: 'Le montant TTC est obligatoire')]
+    #[ORM\Column(type: Types::DECIMAL, precision: 12, scale: 2, nullable: true)]
     private ?string $montantTtc = null;
 
     #[ORM\Column(length: 3, options: ['default' => 'EUR'])]
@@ -99,9 +110,24 @@ class FactureFournisseur
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $payeeLe = null;
 
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $rapprocheLe = null;
+
+    /** Écart montant HT entre facture et BL (facture - BL) */
+    #[ORM\Column(type: Types::DECIMAL, precision: 12, scale: 2, nullable: true)]
+    private ?string $ecartMontantHt = null;
+
+    /** Confidence score 0-100 for the BL match */
+    #[ORM\Column(nullable: true)]
+    private ?int $scoreRapprochement = null;
+
     #[ORM\ManyToOne(targetEntity: BonLivraison::class)]
     #[ORM\JoinColumn(nullable: true)]
     private ?BonLivraison $bonLivraison = null;
+
+    #[ORM\ManyToOne(targetEntity: Utilisateur::class)]
+    #[ORM\JoinColumn(onDelete: 'SET NULL')]
+    private ?Utilisateur $createdBy = null;
 
     #[ORM\ManyToOne(targetEntity: Utilisateur::class)]
     #[ORM\JoinColumn(onDelete: 'SET NULL')]
@@ -132,9 +158,57 @@ class FactureFournisseur
         return $this->externalId;
     }
 
-    public function setExternalId(string $externalId): static
+    public function setExternalId(?string $externalId): static
     {
         $this->externalId = $externalId;
+
+        return $this;
+    }
+
+    public function getSource(): SourceFacture
+    {
+        return $this->source;
+    }
+
+    public function setSource(SourceFacture $source): static
+    {
+        $this->source = $source;
+
+        return $this;
+    }
+
+    public function getOcrRawData(): ?array
+    {
+        return $this->ocrRawData;
+    }
+
+    public function setOcrRawData(?array $ocrRawData): static
+    {
+        $this->ocrRawData = $ocrRawData;
+
+        return $this;
+    }
+
+    public function getOcrProcessedAt(): ?\DateTimeImmutable
+    {
+        return $this->ocrProcessedAt;
+    }
+
+    public function setOcrProcessedAt(?\DateTimeImmutable $ocrProcessedAt): static
+    {
+        $this->ocrProcessedAt = $ocrProcessedAt;
+
+        return $this;
+    }
+
+    public function getFichierOriginalNom(): ?string
+    {
+        return $this->fichierOriginalNom;
+    }
+
+    public function setFichierOriginalNom(?string $fichierOriginalNom): static
+    {
+        $this->fichierOriginalNom = $fichierOriginalNom;
 
         return $this;
     }
@@ -144,7 +218,7 @@ class FactureFournisseur
         return $this->numeroFacture;
     }
 
-    public function setNumeroFacture(string $numeroFacture): static
+    public function setNumeroFacture(?string $numeroFacture): static
     {
         $this->numeroFacture = $numeroFacture;
 
@@ -156,7 +230,7 @@ class FactureFournisseur
         return $this->dateEmission;
     }
 
-    public function setDateEmission(\DateTimeImmutable $dateEmission): static
+    public function setDateEmission(?\DateTimeImmutable $dateEmission): static
     {
         $this->dateEmission = $dateEmission;
 
@@ -264,7 +338,7 @@ class FactureFournisseur
         return $this->montantHt;
     }
 
-    public function setMontantHt(string $montantHt): static
+    public function setMontantHt(?string $montantHt): static
     {
         $this->montantHt = $montantHt;
 
@@ -288,7 +362,7 @@ class FactureFournisseur
         return $this->montantTtc;
     }
 
-    public function setMontantTtc(string $montantTtc): static
+    public function setMontantTtc(?string $montantTtc): static
     {
         $this->montantTtc = $montantTtc;
 
@@ -367,6 +441,42 @@ class FactureFournisseur
         return $this;
     }
 
+    public function getRapprocheLe(): ?\DateTimeImmutable
+    {
+        return $this->rapprocheLe;
+    }
+
+    public function setRapprocheLe(?\DateTimeImmutable $rapprocheLe): static
+    {
+        $this->rapprocheLe = $rapprocheLe;
+
+        return $this;
+    }
+
+    public function getEcartMontantHt(): ?string
+    {
+        return $this->ecartMontantHt;
+    }
+
+    public function setEcartMontantHt(?string $ecartMontantHt): static
+    {
+        $this->ecartMontantHt = $ecartMontantHt;
+
+        return $this;
+    }
+
+    public function getScoreRapprochement(): ?int
+    {
+        return $this->scoreRapprochement;
+    }
+
+    public function setScoreRapprochement(?int $scoreRapprochement): static
+    {
+        $this->scoreRapprochement = $scoreRapprochement;
+
+        return $this;
+    }
+
     public function getBonLivraison(): ?BonLivraison
     {
         return $this->bonLivraison;
@@ -375,6 +485,18 @@ class FactureFournisseur
     public function setBonLivraison(?BonLivraison $bonLivraison): static
     {
         $this->bonLivraison = $bonLivraison;
+
+        return $this;
+    }
+
+    public function getCreatedBy(): ?Utilisateur
+    {
+        return $this->createdBy;
+    }
+
+    public function setCreatedBy(?Utilisateur $createdBy): static
+    {
+        $this->createdBy = $createdBy;
 
         return $this;
     }
