@@ -6,10 +6,9 @@ namespace App\Service\Ocr;
 
 use App\DTO\ExtractionResult;
 use App\Entity\BonLivraison;
-use App\Entity\Fournisseur;
 use App\Entity\LigneBonLivraison;
-use App\Entity\ProduitFournisseur;
 use App\Entity\Unite;
+use App\Enum\MatchConfidence;
 use App\Repository\FournisseurRepository;
 use App\Repository\ProduitFournisseurRepository;
 use App\Repository\UniteRepository;
@@ -82,6 +81,7 @@ class BonLivraisonExtractorService
         private readonly ProduitFournisseurRepository $produitFournisseurRepository,
         private readonly FournisseurRepository $fournisseurRepository,
         private readonly UniteRepository $uniteRepository,
+        private readonly OcrMatchingService $ocrMatchingService,
         private readonly LoggerInterface $logger,
         private readonly string $projectDir,
     ) {
@@ -437,7 +437,7 @@ PROMPT;
      * - totalLigne         ← total_ht_ligne du JSON (montant HT final, avec MJ/DECOL inclus)
      * - unite              ← resolveUnite(unite_facturation) — c'est l'unité de FACTURATION qui compte pour la mercuriale
      *
-     * @param string[] $produitsNonMatches
+     * @param array[] $produitsNonMatches
      *
      * @return LigneBonLivraison[]
      */
@@ -501,16 +501,23 @@ PROMPT;
             // TVA
             $ligne->setCodeTva($ligneData['tva_code'] ?? null);
 
-            // Matching produit fournisseur
+            // Matching produit fournisseur via service mutualisé
             $produitFournisseur = null;
-            if ($fournisseur !== null && !empty($ligneData['code_produit'])) {
-                $produitFournisseur = $this->matchProduitFournisseur(
-                    (string) $ligneData['code_produit'],
-                    $fournisseur
+            if ($fournisseur !== null) {
+                $matchResult = $this->ocrMatchingService->matchLigne(
+                    !empty($ligneData['code_produit']) ? (string) $ligneData['code_produit'] : null,
+                    $ligneData['designation'] ?? null,
+                    $fournisseur,
                 );
 
-                if ($produitFournisseur === null) {
-                    $produitsNonMatches[] = $ligneData['code_produit'];
+                $produitFournisseur = $matchResult->produitFournisseur;
+
+                if (!$matchResult->isMatched()) {
+                    $produitsNonMatches[] = [
+                        'code' => $ligneData['code_produit'] ?? null,
+                        'designation' => $ligneData['designation'] ?? null,
+                        'confidence' => $matchResult->confidence->value,
+                    ];
                 }
             }
             $ligne->setProduitFournisseur($produitFournisseur);
@@ -522,18 +529,6 @@ PROMPT;
         }
 
         return $lignes;
-    }
-
-    /**
-     * Tente de matcher un code produit avec la base de données.
-     */
-    private function matchProduitFournisseur(string $codeProduit, Fournisseur $fournisseur): ?ProduitFournisseur
-    {
-        return $this->produitFournisseurRepository->findOneBy([
-            'fournisseur' => $fournisseur,
-            'codeFournisseur' => $codeProduit,
-            'actif' => true,
-        ]);
     }
 
     /**
