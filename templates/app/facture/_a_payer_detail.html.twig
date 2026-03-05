@@ -1,0 +1,151 @@
+{# Fragment template loaded via AJAX in the to-pay invoices split layout #}
+
+{% for type, messages in app.flashes %}
+    {% for message in messages %}
+        <div class="facture-flash facture-flash--{{ type }}">
+            <i class="fas {{ type == 'success' ? 'fa-check-circle' : 'fa-exclamation-circle' }}"></i>
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endfor %}
+
+{# Overdue banner #}
+{% if facture.isOverdue %}
+<div class="facture-detail-panel__alert facture-detail-panel__alert--danger">
+    <i class="fas fa-exclamation-triangle"></i>
+    <strong>Facture en retard !</strong> Echeance depassee de {{ facture.daysUntilDue|abs }} jour{{ facture.daysUntilDue|abs > 1 ? 's' : '' }}.
+</div>
+{% elseif facture.daysUntilDue is not null and facture.daysUntilDue <= 3 and facture.daysUntilDue >= 0 %}
+<div class="facture-detail-panel__alert facture-detail-panel__alert--warning">
+    <i class="fas fa-clock"></i>
+    <strong>Echeance proche !</strong> {{ facture.daysUntilDue }} jour{{ facture.daysUntilDue > 1 ? 's' : '' }} restant{{ facture.daysUntilDue > 1 ? 's' : '' }}.
+</div>
+{% endif %}
+
+<div class="facture-detail-panel__header">
+    <h3 class="facture-detail-panel__title">
+        <i class="fas fa-file-invoice"></i>
+        {{ facture.numeroFacture ?? facture.fichierOriginalNom ?? 'Facture' }}
+    </h3>
+    <div class="facture-detail-panel__badges">
+        {% include 'components/_status_badge.html.twig' with {
+            label: facture.statut.label,
+            variant: facture.statut.color,
+            size: 'sm'
+        } only %}
+    </div>
+    <div class="facture-detail-panel__meta">
+        {{ facture.fournisseur ? facture.fournisseur.nom : (facture.fournisseurNom ?? 'Fournisseur inconnu') }}
+        {% if facture.dateEmission %} — Emission {{ facture.dateEmission|date('d/m/Y') }}{% endif %}
+    </div>
+</div>
+
+{# Stats row #}
+<div class="facture-detail-panel__stats">
+    <div class="facture-detail-panel__stat">
+        <span class="facture-detail-panel__stat-value">{{ facture.montantTtc ? facture.montantTtc|number_format(2, ',', ' ') ~ ' €' : '—' }}</span>
+        <span class="facture-detail-panel__stat-label">TTC</span>
+    </div>
+    <div class="facture-detail-panel__stat">
+        <span class="facture-detail-panel__stat-value">{{ facture.dateEcheance ? facture.dateEcheance|date('d/m/Y') : '—' }}</span>
+        <span class="facture-detail-panel__stat-label">Echeance</span>
+    </div>
+    <div class="facture-detail-panel__stat">
+        <span class="facture-detail-panel__stat-value">{{ facture.accepteeLe ? facture.accepteeLe|date('d/m/Y') : '—' }}</span>
+        <span class="facture-detail-panel__stat-label">Acceptee</span>
+    </div>
+    <div class="facture-detail-panel__stat">
+        <span class="facture-detail-panel__stat-value">{{ facture.lignes|length }}</span>
+        <span class="facture-detail-panel__stat-label">Lignes</span>
+    </div>
+</div>
+
+{# Lines table #}
+<div class="facture-detail-panel__section">
+    <div class="facture-detail-panel__section-header">
+        <i class="fas fa-list"></i> Lignes ({{ facture.lignes|length }})
+    </div>
+    {% if facture.lignes is not empty %}
+    <div class="facture-detail-panel__table-scroll">
+        <table class="facture-detail-panel__table">
+            <thead>
+                <tr>
+                    <th>Designation</th>
+                    <th class="facture-detail-panel__right">Qte</th>
+                    <th class="facture-detail-panel__right">PU</th>
+                    <th class="facture-detail-panel__right">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ligne in facture.lignes %}
+                <tr>
+                    <td>{{ ligne.designation }}</td>
+                    <td class="facture-detail-panel__right">{{ ligne.quantite }}</td>
+                    <td class="facture-detail-panel__right">{{ ligne.prixUnitaire|number_format(4, ',', ' ') }}</td>
+                    <td class="facture-detail-panel__right">{{ ligne.montantLigne|number_format(2, ',', ' ') }} €</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3" class="facture-detail-panel__right"><strong>Total TTC</strong></td>
+                    <td class="facture-detail-panel__right"><strong>{{ facture.montantTtc ? facture.montantTtc|number_format(2, ',', ' ') ~ ' €' : '—' }}</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    {% else %}
+    <div class="facture-detail-panel__empty">Aucune ligne</div>
+    {% endif %}
+</div>
+
+{# Actions #}
+{% if can_payer or can_contester %}
+<div class="facture-detail-panel__actions">
+    {% if can_payer %}
+    <button type="button" class="btn btn--success" onclick="document.getElementById('payer-form-{{ facture.idAsString[:8] }}').classList.toggle('facture-show-refus--hidden')">
+        <i class="fas fa-coins"></i> Marquer payee
+    </button>
+    {% endif %}
+
+    {% if can_contester %}
+    <button type="button" class="btn btn--avoir" onclick="document.getElementById('contester-form-{{ facture.idAsString[:8] }}').classList.toggle('facture-show-refus--hidden')">
+        <i class="fas fa-exclamation-triangle"></i> Contester
+    </button>
+    {% endif %}
+</div>
+
+{% if can_payer %}
+<div id="payer-form-{{ facture.idAsString[:8] }}" class="facture-detail-panel__inline-form facture-show-refus--hidden">
+    <form method="post" action="{{ path('app_facture_payer', {id: facture.idAsString}) }}">
+        <input type="hidden" name="_token" value="{{ csrf_token('facture_payer_' ~ facture.idAsString) }}">
+        <label class="facture-detail-panel__form-label">Reference de paiement (optionnel)</label>
+        <input type="text" name="reference_paiement" class="facture-detail-panel__input" placeholder="Ex: VIR-2026-03-001" maxlength="50">
+        <div class="facture-detail-panel__form-actions">
+            <button type="submit" class="btn btn--success btn--sm">Confirmer le paiement</button>
+            <button type="button" class="btn btn--secondary btn--sm" onclick="this.closest('.facture-detail-panel__inline-form').classList.add('facture-show-refus--hidden')">Annuler</button>
+        </div>
+    </form>
+</div>
+{% endif %}
+
+{% if can_contester %}
+<div id="contester-form-{{ facture.idAsString[:8] }}" class="facture-detail-panel__inline-form facture-show-refus--hidden">
+    <form method="post" action="{{ path('app_facture_contester', {id: facture.idAsString}) }}">
+        <input type="hidden" name="_token" value="{{ csrf_token('facture_contester_' ~ facture.idAsString) }}">
+        <label class="facture-detail-panel__form-label">Motif de la contestation</label>
+        <textarea name="motif" class="facture-detail-panel__textarea" required placeholder="Indiquez le motif..."></textarea>
+        <div class="facture-detail-panel__form-actions">
+            <button type="submit" class="btn btn--avoir btn--sm">Confirmer</button>
+            <button type="button" class="btn btn--secondary btn--sm" onclick="this.closest('.facture-detail-panel__inline-form').classList.add('facture-show-refus--hidden')">Annuler</button>
+        </div>
+    </form>
+</div>
+{% endif %}
+{% endif %}
+
+<div class="facture-detail-panel__fullview">
+    <a href="{{ path('app_facture_show', {id: facture.idAsString}) }}" class="btn btn--secondary btn--sm">
+        <i class="fas fa-expand"></i> Vue complete
+    </a>
+</div>

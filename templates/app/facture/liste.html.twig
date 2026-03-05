@@ -2,8 +2,9 @@
 
 {% set hub_title = 'Factures fournisseur' %}
 {% set hub_breadcrumbs = [
-    { label: 'Tableau de bord', url: path('admin_dashboard') },
-    { label: 'Factures fournisseur' }
+    { label: 'Fournisseurs', url: path('app_fournisseurs_hub') },
+    { label: 'Factures', url: path('app_factures_hub') },
+    { label: 'Toutes les factures' }
 ] %}
 
 {% block title %}Factures fournisseur — Mercuriale.io{% endblock %}
@@ -30,7 +31,7 @@
            class="facture-filters__pill {{ statut_filter is null ? 'facture-filters__pill--active' : '' }}">
             Toutes
         </a>
-        {% for statut in ['BROUILLON', 'RECUE', 'ACCEPTEE', 'REFUSEE', 'PAYEE', 'RAPPROCHEE'] %}
+        {% for statut in ['BROUILLON', 'RECUE', 'ACCEPTEE', 'REFUSEE', 'PAYEE', 'RAPPROCHEE', 'CONTESTEE'] %}
             <a href="{{ path('app_factures_liste', {statut: statut}) }}"
                class="facture-filters__pill {{ statut_filter == statut ? 'facture-filters__pill--active' : '' }}">
                 {{ statut }}

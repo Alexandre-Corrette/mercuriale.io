@@ -1,0 +1,109 @@
+{% extends 'admin/hub/layout.html.twig' %}
+
+{% set hub_title = 'Taxes TVA' %}
+{% set hub_breadcrumbs = [
+    { label: 'Fournisseurs', url: path('app_fournisseurs_hub') },
+    { label: 'Factures', url: path('app_factures_hub') },
+    { label: 'Taxes TVA' }
+] %}
+
+{% block title %}TVA deductible — Mercuriale.io{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/facture.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/facture-split.css') }}">
+{% endblock %}
+
+{% block hub_content %}
+<div class="hub-content">
+    <h1 class="hub-title"><i class="fas fa-calculator"></i> TVA deductible — {{ data.period_label }}</h1>
+
+    {# Period selector #}
+    <div class="tax-selector">
+        <form method="get" action="{{ path('app_taxes_tva') }}" class="tax-selector__form">
+            <div class="tax-selector__group">
+                <label class="tax-selector__label">Periodicite</label>
+                <select name="periodicity" class="tax-selector__select" onchange="this.form.submit()">
+                    <option value="monthly" {{ periodicity == 'monthly' ? 'selected' : '' }}>Mensuel</option>
+                    <option value="quarterly" {{ periodicity == 'quarterly' ? 'selected' : '' }}>Trimestriel</option>
+                </select>
+            </div>
+            <div class="tax-selector__group">
+                <label class="tax-selector__label">Annee</label>
+                <select name="year" class="tax-selector__select" onchange="this.form.submit()">
+                    {% for y in [year - 1, year, year + 1] %}
+                        <option value="{{ y }}" {{ y == year ? 'selected' : '' }}>{{ y }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="tax-selector__group">
+                <label class="tax-selector__label">{{ periodicity == 'quarterly' ? 'Trimestre' : 'Mois' }}</label>
+                <select name="month" class="tax-selector__select" onchange="this.form.submit()">
+                    {% if periodicity == 'quarterly' %}
+                        {% for q in 1..4 %}
+                            <option value="{{ (q - 1) * 3 + 1 }}" {{ month >= (q - 1) * 3 + 1 and month <= q * 3 ? 'selected' : '' }}>T{{ q }}</option>
+                        {% endfor %}
+                    {% else %}
+                        {% for m in 1..12 %}
+                            <option value="{{ m }}" {{ m == month ? 'selected' : '' }}>{{ m < 10 ? '0' : '' }}{{ m }}</option>
+                        {% endfor %}
+                    {% endif %}
+                </select>
+            </div>
+        </form>
+    </div>
+
+    {# TVA summary stats #}
+    <div class="facture-detail-panel__stats">
+        <div class="facture-detail-panel__stat">
+            <span class="facture-detail-panel__stat-value">{{ data.totalHt|number_format(2, ',', ' ') }} €</span>
+            <span class="facture-detail-panel__stat-label">Total HT</span>
+        </div>
+        <div class="facture-detail-panel__stat">
+            <span class="facture-detail-panel__stat-value">{{ data.totalTva|number_format(2, ',', ' ') }} €</span>
+            <span class="facture-detail-panel__stat-label">TVA deductible</span>
+        </div>
+    </div>
+
+    {# VAT breakdown table #}
+    <div class="facture-detail-panel__section">
+        <div class="facture-detail-panel__section-header">
+            <i class="fas fa-percentage"></i> Ventilation par taux
+        </div>
+        {% if data.lines is not empty %}
+        <div class="facture-detail-panel__table-scroll">
+            <table class="facture-detail-panel__table">
+                <thead>
+                    <tr>
+                        <th>Taux TVA</th>
+                        <th class="facture-detail-panel__right">Base HT</th>
+                        <th class="facture-detail-panel__right">TVA deductible</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for line in data.lines %}
+                    <tr>
+                        <td>{{ line.taux }}%</td>
+                        <td class="facture-detail-panel__right">{{ line.montantHt|number_format(2, ',', ' ') }} €</td>
+                        <td class="facture-detail-panel__right">{{ line.montantTva|number_format(2, ',', ' ') }} €</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td><strong>Total</strong></td>
+                        <td class="facture-detail-panel__right"><strong>{{ data.totalHt|number_format(2, ',', ' ') }} €</strong></td>
+                        <td class="facture-detail-panel__right"><strong>{{ data.totalTva|number_format(2, ',', ' ') }} €</strong></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        {% else %}
+        <div class="facture-detail-panel__empty">
+            Aucune facture validee pour cette periode.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

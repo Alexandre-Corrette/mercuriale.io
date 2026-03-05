@@ -2,8 +2,8 @@
 
 {% set hub_title = 'Facture ' ~ (facture.numeroFacture ?? facture.fichierOriginalNom ?? 'en cours') %}
 {% set hub_breadcrumbs = [
-    { label: 'Tableau de bord', url: path('admin_dashboard') },
-    { label: 'Factures', url: path('app_factures_liste') },
+    { label: 'Fournisseurs', url: path('app_fournisseurs_hub') },
+    { label: 'Factures', url: path('app_factures_hub') },
     { label: facture.numeroFacture ?? 'En cours' }
 ] %}
 
@@ -254,7 +254,7 @@
     </div>
 
     {# Actions #}
-    {% if can_accepter or can_refuser or can_payer %}
+    {% if can_accepter or can_refuser or can_payer or can_contester %}
     <div class="facture-show-actions">
         {% if can_accepter %}
             <form method="post" action="{{ path('app_facture_accepter', {id: facture.idAsString}) }}">
@@ -266,24 +266,62 @@
         {% endif %}
 
         {% if can_payer %}
-            <form method="post" action="{{ path('app_facture_payer', {id: facture.idAsString}) }}">
-                <input type="hidden" name="_token" value="{{ csrf_token('facture_payer_' ~ facture.idAsString) }}">
-                <button type="submit" class="facture-show-actions__btn facture-show-actions__btn--gold">
-                    <i class="fas fa-coins"></i> Marquer payee
-                </button>
-            </form>
+            <button type="button" class="facture-show-actions__btn facture-show-actions__btn--gold" onclick="document.getElementById('payer-form').classList.toggle('facture-show-refus--hidden')">
+                <i class="fas fa-coins"></i> Marquer payee
+            </button>
+        {% endif %}
+
+        {% if can_contester %}
+            <button type="button" class="facture-show-actions__btn facture-show-actions__btn--orange" onclick="document.getElementById('contester-form').classList.toggle('facture-show-refus--hidden')">
+                <i class="fas fa-exclamation-triangle"></i> Contester
+            </button>
         {% endif %}
 
         {% if can_refuser %}
-            <button type="button" class="facture-show-actions__btn facture-show-actions__btn--danger" onclick="document.getElementById('refus-form').style.display='block'">
+            <button type="button" class="facture-show-actions__btn facture-show-actions__btn--danger" onclick="document.getElementById('refus-form').classList.toggle('facture-show-refus--hidden')">
                 <i class="fas fa-times"></i> Refuser
             </button>
         {% endif %}
     </div>
 
-    {# Inline refus form #}
+    {% if can_payer %}
+    <div id="payer-form" class="facture-show-refus facture-show-refus--hidden">
+        <form method="post" action="{{ path('app_facture_payer', {id: facture.idAsString}) }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('facture_payer_' ~ facture.idAsString) }}">
+            <label for="reference_paiement" class="facture-show-refus__label">Reference de paiement (optionnel)</label>
+            <input type="text" name="reference_paiement" id="reference_paiement" class="facture-show-refus__input" placeholder="Ex: VIR-2026-03-001" maxlength="50">
+            <div class="facture-show-refus__actions">
+                <button type="submit" class="facture-show-actions__btn facture-show-actions__btn--gold">
+                    Confirmer le paiement
+                </button>
+                <button type="button" class="facture-show-actions__btn facture-show-actions__btn--secondary" onclick="document.getElementById('payer-form').classList.add('facture-show-refus--hidden')">
+                    Annuler
+                </button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+
+    {% if can_contester %}
+    <div id="contester-form" class="facture-show-refus facture-show-refus--hidden">
+        <form method="post" action="{{ path('app_facture_contester', {id: facture.idAsString}) }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('facture_contester_' ~ facture.idAsString) }}">
+            <label for="motif_contestation" class="facture-show-refus__label">Motif de la contestation</label>
+            <textarea name="motif" id="motif_contestation" class="facture-show-refus__textarea" required placeholder="Indiquez le motif de la contestation..."></textarea>
+            <div class="facture-show-refus__actions">
+                <button type="submit" class="facture-show-actions__btn facture-show-actions__btn--orange">
+                    Confirmer la contestation
+                </button>
+                <button type="button" class="facture-show-actions__btn facture-show-actions__btn--secondary" onclick="document.getElementById('contester-form').classList.add('facture-show-refus--hidden')">
+                    Annuler
+                </button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+
     {% if can_refuser %}
-    <div id="refus-form" class="facture-show-refus" style="display:none">
+    <div id="refus-form" class="facture-show-refus facture-show-refus--hidden">
         <form method="post" action="{{ path('app_facture_refuser', {id: facture.idAsString}) }}">
             <input type="hidden" name="_token" value="{{ csrf_token('facture_refuser_' ~ facture.idAsString) }}">
             <label for="motif" class="facture-show-refus__label">Motif du refus</label>
@@ -292,13 +330,40 @@
                 <button type="submit" class="facture-show-actions__btn facture-show-actions__btn--danger">
                     Confirmer le refus
                 </button>
-                <button type="button" class="facture-show-actions__btn facture-show-actions__btn--secondary" onclick="document.getElementById('refus-form').style.display='none'">
+                <button type="button" class="facture-show-actions__btn facture-show-actions__btn--secondary" onclick="document.getElementById('refus-form').classList.add('facture-show-refus--hidden')">
                     Annuler
                 </button>
             </div>
         </form>
     </div>
     {% endif %}
+    {% endif %}
+
+    {# Transition timeline #}
+    {% if transitions is defined and transitions is not empty %}
+    <div class="facture-show-section">
+        <div class="facture-show-section__header">
+            <i class="fas fa-history"></i> Historique des transitions
+        </div>
+        <div class="facture-timeline">
+            {% for transition in transitions %}
+            <div class="facture-timeline__item">
+                <div class="facture-timeline__dot facture-timeline__dot--{{ transition.toStatut.color }}"></div>
+                <div class="facture-timeline__content">
+                    <div class="facture-timeline__label">
+                        {{ transition.fromStatut.label }} <i class="fas fa-arrow-right"></i> {{ transition.toStatut.label }}
+                    </div>
+                    <div class="facture-timeline__meta">
+                        {{ transition.user.email }} — {{ transition.createdAt|date('d/m/Y H:i') }}
+                    </div>
+                    {% if transition.motif %}
+                    <div class="facture-timeline__motif">{{ transition.motif }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
     {% endif %}
 </div>
 {% endblock %}

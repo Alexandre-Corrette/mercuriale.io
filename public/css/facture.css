@@ -486,6 +486,40 @@
     margin-top: 1.5rem;
 }
 
+/* ── Orange button (contestation) ── */
+.facture-show-actions__btn--orange {
+    background-color: #ea580c;
+    border-color: #ea580c;
+    color: #fff;
+}
+
+.facture-show-actions__btn--orange:hover {
+    background-color: #c2410c;
+    border-color: #c2410c;
+}
+
+/* ── Hidden state ── */
+.facture-show-refus--hidden {
+    display: none !important;
+}
+
+/* ── Input field in refus/payer forms ── */
+.facture-show-refus__input {
+    width: 100%;
+    border: 1px solid #d1d5db;
+    border-radius: var(--radius-md);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    font-family: inherit;
+    margin-bottom: 0.75rem;
+}
+
+.facture-show-refus__input:focus {
+    outline: none;
+    border-color: var(--mercuriale-navy);
+    box-shadow: 0 0 0 2px rgba(26, 43, 72, 0.15);
+}
+
 /* ── Responsive ── */
 @media (max-width: 768px) {
     .facture-show-info {
