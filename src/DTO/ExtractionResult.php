@@ -12,7 +12,7 @@ final readonly class ExtractionResult
      * @param LigneBonLivraison[] $lignes              Lignes extraites et mappées
      * @param string[]            $warnings            Messages d'avertissement
      * @param string              $confiance           Niveau de confiance (haute|moyenne|basse)
-     * @param string[]            $produitsNonMatches  Codes produits non trouvés en base
+     * @param array<array{code: ?string, designation: ?string, confidence: string}> $produitsNonMatches Produits non trouvés en mercuriale
      * @param float               $tempsExtraction     Durée en secondes
      * @param array               $donneesBrutes       Données brutes de l'extraction
      */

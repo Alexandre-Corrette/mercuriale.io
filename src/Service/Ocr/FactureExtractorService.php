@@ -8,7 +8,6 @@ use App\Entity\FactureFournisseur;
 use App\Entity\LigneFactureFournisseur;
 use App\Enum\StatutFacture;
 use App\Repository\FournisseurRepository;
-use App\Repository\ProduitFournisseurRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -18,7 +17,7 @@ class FactureExtractorService
         private readonly AnthropicClient $anthropicClient,
         private readonly EntityManagerInterface $entityManager,
         private readonly FournisseurRepository $fournisseurRepository,
-        private readonly ProduitFournisseurRepository $produitFournisseurRepository,
+        private readonly OcrMatchingService $ocrMatchingService,
         private readonly LoggerInterface $logger,
         private readonly string $projectDir,
     ) {
@@ -419,14 +418,14 @@ PROMPT;
             );
             $ligne->setUnite($ligneData['unite'] ?? null);
 
-            // Try matching product
-            if ($fournisseur !== null && !empty($ligneData['code_article'])) {
-                $produit = $this->produitFournisseurRepository->findOneBy([
-                    'fournisseur' => $fournisseur,
-                    'codeFournisseur' => $ligneData['code_article'],
-                    'actif' => true,
-                ]);
-                $ligne->setProduit($produit);
+            // Matching produit via service mutualisé
+            if ($fournisseur !== null) {
+                $matchResult = $this->ocrMatchingService->matchLigne(
+                    !empty($ligneData['code_article']) ? (string) $ligneData['code_article'] : null,
+                    $ligneData['designation'] ?? null,
+                    $fournisseur,
+                );
+                $ligne->setProduit($matchResult->produitFournisseur);
             }
 
             $facture->addLigne($ligne);

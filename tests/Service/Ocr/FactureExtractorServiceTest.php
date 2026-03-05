@@ -11,9 +11,9 @@ use App\Entity\Organisation;
 use App\Enum\SourceFacture;
 use App\Enum\StatutFacture;
 use App\Repository\FournisseurRepository;
-use App\Repository\ProduitFournisseurRepository;
 use App\Service\Ocr\AnthropicClient;
 use App\Service\Ocr\FactureExtractorService;
+use App\Service\Ocr\OcrMatchingService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -24,7 +24,7 @@ class FactureExtractorServiceTest extends TestCase
     private MockObject&AnthropicClient $anthropicClient;
     private MockObject&EntityManagerInterface $entityManager;
     private MockObject&FournisseurRepository $fournisseurRepository;
-    private MockObject&ProduitFournisseurRepository $produitFournisseurRepository;
+    private MockObject&OcrMatchingService $ocrMatchingService;
     private MockObject&LoggerInterface $logger;
     private FactureExtractorService $service;
     private string $testDir;
@@ -34,7 +34,7 @@ class FactureExtractorServiceTest extends TestCase
         $this->anthropicClient = $this->createMock(AnthropicClient::class);
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
         $this->fournisseurRepository = $this->createMock(FournisseurRepository::class);
-        $this->produitFournisseurRepository = $this->createMock(ProduitFournisseurRepository::class);
+        $this->ocrMatchingService = $this->createMock(OcrMatchingService::class);
         $this->logger = $this->createMock(LoggerInterface::class);
         $this->testDir = sys_get_temp_dir() . '/mercuriale_ocr_test_' . uniqid();
 
@@ -44,7 +44,7 @@ class FactureExtractorServiceTest extends TestCase
             $this->anthropicClient,
             $this->entityManager,
             $this->fournisseurRepository,
-            $this->produitFournisseurRepository,
+            $this->ocrMatchingService,
             $this->logger,
             $this->testDir,
         );
