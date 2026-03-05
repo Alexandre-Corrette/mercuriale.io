@@ -6,6 +6,7 @@ namespace App\Enum;
 
 enum StatutFacture: string
 {
+    case BROUILLON = 'BROUILLON';
     case RECUE = 'RECUE';
     case ACCEPTEE = 'ACCEPTEE';
     case REFUSEE = 'REFUSEE';
@@ -15,6 +16,7 @@ enum StatutFacture: string
     public function label(): string
     {
         return match ($this) {
+            self::BROUILLON => 'Brouillon',
             self::RECUE => 'Reçue',
             self::ACCEPTEE => 'Acceptée',
             self::REFUSEE => 'Refusée',
@@ -26,6 +28,7 @@ enum StatutFacture: string
     public function color(): string
     {
         return match ($this) {
+            self::BROUILLON => 'secondary',
             self::RECUE => 'info',
             self::ACCEPTEE => 'success',
             self::REFUSEE => 'danger',

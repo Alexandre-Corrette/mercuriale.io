@@ -15,7 +15,14 @@
 
 {% block hub_content %}
 <div class="hub-content">
-    <h1 class="hub-title"><i class="fas fa-file-invoice"></i> Factures fournisseur</h1>
+    <div class="facture-header-bar">
+        <h1 class="hub-title"><i class="fas fa-file-invoice"></i> Factures fournisseur</h1>
+        {% if is_granted('ROLE_GERANT') %}
+            <a href="{{ path('app_facture_upload') }}" class="facture-show-actions__btn facture-show-actions__btn--success">
+                <i class="fas fa-upload"></i> Upload facture
+            </a>
+        {% endif %}
+    </div>
 
     {# Filters #}
     <div class="facture-filters">
@@ -23,7 +30,7 @@
            class="facture-filters__pill {{ statut_filter is null ? 'facture-filters__pill--active' : '' }}">
             Toutes
         </a>
-        {% for statut in ['RECUE', 'ACCEPTEE', 'REFUSEE', 'PAYEE', 'RAPPROCHEE'] %}
+        {% for statut in ['BROUILLON', 'RECUE', 'ACCEPTEE', 'REFUSEE', 'PAYEE', 'RAPPROCHEE'] %}
             <a href="{{ path('app_factures_liste', {statut: statut}) }}"
                class="facture-filters__pill {{ statut_filter == statut ? 'facture-filters__pill--active' : '' }}">
                 {{ statut }}
@@ -47,15 +54,24 @@
             {% for facture in factures %}
                 <a href="{{ path('app_facture_show', {id: facture.idAsString}) }}"
                    class="facture-list__row"
-                   data-search="{{ facture.numeroFacture }} {{ facture.fournisseurNom }} {{ facture.fournisseur ? facture.fournisseur.nom : '' }}">
+                   data-search="{{ facture.numeroFacture ?? '' }} {{ facture.fournisseurNom ?? '' }} {{ facture.fournisseur ? facture.fournisseur.nom : '' }} {{ facture.fichierOriginalNom ?? '' }}">
                     <div class="facture-list__main">
-                        <div class="facture-list__numero">{{ facture.numeroFacture }}</div>
+                        <div class="facture-list__numero">
+                            {{ facture.numeroFacture ?? facture.fichierOriginalNom ?? 'OCR en cours...' }}
+                        </div>
                         <div class="facture-list__fournisseur">
                             {{ facture.fournisseur ? facture.fournisseur.nom : (facture.fournisseurNom ?? '—') }}
                         </div>
                     </div>
                     <div class="facture-list__meta">
-                        <div class="facture-list__date">{{ facture.dateEmission|date('d/m/Y') }}</div>
+                        <div class="facture-list__date">
+                            {{ facture.dateEmission ? facture.dateEmission|date('d/m/Y') : '—' }}
+                        </div>
+                        {% include 'components/_status_badge.html.twig' with {
+                            label: facture.source.label,
+                            variant: facture.source.color,
+                            size: 'sm'
+                        } only %}
                         {% include 'components/_status_badge.html.twig' with {
                             label: facture.statut.label,
                             variant: facture.statut.color,
@@ -63,7 +79,11 @@
                         } only %}
                     </div>
                     <div class="facture-list__montant">
-                        {{ facture.montantHt|number_format(2, ',', ' ') }} € HT
+                        {% if facture.montantHt %}
+                            {{ facture.montantHt|number_format(2, ',', ' ') }} € HT
+                        {% else %}
+                            —
+                        {% endif %}
                     </div>
                 </a>
             {% endfor %}
