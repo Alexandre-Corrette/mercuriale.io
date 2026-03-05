@@ -16,9 +16,33 @@
 
         {% if _show_user and app.user %}
         <div class="m-header__right">
-            <div class="m-header__user">
-                <i class="fas fa-user-circle" aria-hidden="true"></i>
-                <span class="m-header__user-name">{{ app.user.prenom|default('') }} {{ app.user.nom|default('') }}</span>
+            <div class="m-header__user-dropdown"
+                 data-controller="header-dropdown"
+                 data-header-dropdown-class-value="m-header__user-dropdown--open">
+                <button type="button"
+                        class="m-header__user-toggle"
+                        aria-expanded="false"
+                        aria-haspopup="true"
+                        data-header-dropdown-target="toggle"
+                        data-action="click->header-dropdown#toggle">
+                    <i class="fas fa-user-circle" aria-hidden="true"></i>
+                    <span class="m-header__user-name">{{ app.user.prenom|default('') }} {{ app.user.nom|default('') }}</span>
+                    <i class="fas fa-chevron-down m-header__user-chevron" aria-hidden="true"></i>
+                </button>
+                <div class="m-header__user-menu" data-header-dropdown-target="menu" role="menu">
+                    <a href="{{ path('app_profil_hub') }}" class="m-header__user-option" role="menuitem">
+                        <i class="fas fa-id-card" aria-hidden="true"></i>
+                        Mon profil
+                    </a>
+                    <div class="m-header__user-separator"></div>
+                    <form method="post" action="{{ path('app_logout') }}">
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token('logout') }}">
+                        <button type="submit" class="m-header__user-option m-header__user-option--danger" role="menuitem">
+                            <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+                            Se déconnecter
+                        </button>
+                    </form>
+                </div>
             </div>
 
             {% set etablissements = user_etablissements() %}
