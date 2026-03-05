@@ -26,6 +26,7 @@ final readonly class InvoiceData
         public string $totalInclTax,
         public ?string $currency = 'EUR',
         public ?string $status = null,
+        public ?\DateTimeImmutable $dueDate = null,
         public array $lines = [],
     ) {
     }

@@ -12,6 +12,7 @@ enum StatutFacture: string
     case REFUSEE = 'REFUSEE';
     case PAYEE = 'PAYEE';
     case RAPPROCHEE = 'RAPPROCHEE';
+    case CONTESTEE = 'CONTESTEE';
 
     public function label(): string
     {
@@ -22,6 +23,7 @@ enum StatutFacture: string
             self::REFUSEE => 'Refusée',
             self::PAYEE => 'Payée',
             self::RAPPROCHEE => 'Rapprochée',
+            self::CONTESTEE => 'Contestée',
         };
     }
 
@@ -34,6 +36,7 @@ enum StatutFacture: string
             self::REFUSEE => 'danger',
             self::PAYEE => 'gold',
             self::RAPPROCHEE => 'secondary',
+            self::CONTESTEE => 'orange',
         };
     }
 }

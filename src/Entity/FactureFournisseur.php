@@ -113,6 +113,21 @@ class FactureFournisseur
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $rapprocheLe = null;
 
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $contesteeLe = null;
+
+    #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $dateEcheance = null;
+
+    #[ORM\Column(length: 50, nullable: true)]
+    private ?string $referencePaiement = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $lastReminderSentAt = null;
+
+    #[ORM\Column(length: 30, nullable: true, unique: true)]
+    private ?string $internalReference = null;
+
     /** Écart montant HT entre facture et BL (facture - BL) */
     #[ORM\Column(type: Types::DECIMAL, precision: 12, scale: 2, nullable: true)]
     private ?string $ecartMontantHt = null;
@@ -451,6 +466,87 @@ class FactureFournisseur
         $this->rapprocheLe = $rapprocheLe;
 
         return $this;
+    }
+
+    public function getContesteeLe(): ?\DateTimeImmutable
+    {
+        return $this->contesteeLe;
+    }
+
+    public function setContesteeLe(?\DateTimeImmutable $contesteeLe): static
+    {
+        $this->contesteeLe = $contesteeLe;
+
+        return $this;
+    }
+
+    public function getDateEcheance(): ?\DateTimeImmutable
+    {
+        return $this->dateEcheance;
+    }
+
+    public function setDateEcheance(?\DateTimeImmutable $dateEcheance): static
+    {
+        $this->dateEcheance = $dateEcheance;
+
+        return $this;
+    }
+
+    public function getReferencePaiement(): ?string
+    {
+        return $this->referencePaiement;
+    }
+
+    public function setReferencePaiement(?string $referencePaiement): static
+    {
+        $this->referencePaiement = $referencePaiement;
+
+        return $this;
+    }
+
+    public function getLastReminderSentAt(): ?\DateTimeImmutable
+    {
+        return $this->lastReminderSentAt;
+    }
+
+    public function setLastReminderSentAt(?\DateTimeImmutable $lastReminderSentAt): static
+    {
+        $this->lastReminderSentAt = $lastReminderSentAt;
+
+        return $this;
+    }
+
+    public function getInternalReference(): ?string
+    {
+        return $this->internalReference;
+    }
+
+    public function setInternalReference(?string $internalReference): static
+    {
+        $this->internalReference = $internalReference;
+
+        return $this;
+    }
+
+    public function isOverdue(): bool
+    {
+        if ($this->dateEcheance === null) {
+            return false;
+        }
+
+        return $this->statut === StatutFacture::ACCEPTEE
+            && $this->dateEcheance < new \DateTimeImmutable('today');
+    }
+
+    public function getDaysUntilDue(): ?int
+    {
+        if ($this->dateEcheance === null) {
+            return null;
+        }
+
+        $today = new \DateTimeImmutable('today');
+
+        return (int) $today->diff($this->dateEcheance)->format('%r%a');
     }
 
     public function getEcartMontantHt(): ?string
