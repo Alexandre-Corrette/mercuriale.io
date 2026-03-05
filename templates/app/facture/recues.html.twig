@@ -1,0 +1,112 @@
+{% extends 'admin/hub/layout.html.twig' %}
+
+{% set hub_title = 'Factures recues' %}
+{% set hub_breadcrumbs = [
+    { label: 'Fournisseurs', url: path('app_fournisseurs_hub') },
+    { label: 'Factures', url: path('app_factures_hub') },
+    { label: 'Recues' }
+] %}
+
+{% block title %}Factures recues — Mercuriale.io{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/facture.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/facture-split.css') }}">
+{% endblock %}
+
+{% block hub_content %}
+{% if factures is empty %}
+    <div class="hub-content">
+        <h1 class="hub-title"><i class="fas fa-inbox"></i> Factures recues</h1>
+        {% include 'components/_empty_state.html.twig' with {
+            icon: 'fa-check-circle',
+            title: 'Aucune facture en attente',
+            description: 'Toutes les factures ont ete traitees.',
+            action_label: 'Upload facture',
+            action_url: path('app_facture_upload'),
+            action_icon: 'fa-upload'
+        } only %}
+    </div>
+{% else %}
+    <div class="facture-split">
+        <div class="facture-split__list">
+            <div class="facture-split__list-header">
+                <h2 class="facture-split__list-title">
+                    <i class="fas fa-inbox"></i> Factures recues
+                </h2>
+                <span class="facture-split__count">{{ factures|length }}</span>
+            </div>
+            <div class="facture-split__list-scroll">
+                {% for facture in factures %}
+                    <div class="facture-split-item{% if selected and facture.id == selected.id %} facture-split-item--active{% endif %}"
+                         data-facture-id="{{ facture.idAsString }}"
+                         data-url="{{ path('app_facture_recue_detail', {id: facture.idAsString}) }}">
+                        <div class="facture-split-item__number">
+                            {{ facture.numeroFacture ?? facture.fichierOriginalNom ?? 'OCR en cours...' }}
+                        </div>
+                        <div class="facture-split-item__meta">
+                            <span class="facture-split-item__date">{{ facture.dateEmission ? facture.dateEmission|date('d/m/Y') : '—' }}</span>
+                            <span class="facture-split-item__fournisseur">{{ facture.fournisseur ? facture.fournisseur.nom : (facture.fournisseurNom ?? '—') }}</span>
+                        </div>
+                        <div class="facture-split-item__montant">
+                            {% if facture.montantTtc %}
+                                {{ facture.montantTtc|number_format(2, ',', ' ') }} € TTC
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="facture-split__separator" aria-hidden="true"></div>
+
+        <div class="facture-split__detail" id="facture-detail">
+            {% if selected %}
+                {% include 'app/facture/_recue_detail.html.twig' with {
+                    facture: selected,
+                    can_accepter: true,
+                    can_refuser: true
+                } %}
+            {% else %}
+                <div class="facture-split__placeholder">
+                    <i class="fas fa-hand-pointer"></i>
+                    <p>Selectionnez une facture</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var items = document.querySelectorAll('.facture-split-item');
+    var detailContainer = document.getElementById('facture-detail');
+    if (!items.length || !detailContainer) return;
+
+    items.forEach(function (item) {
+        item.addEventListener('click', function () {
+            var url = item.getAttribute('data-url');
+            if (!url) return;
+
+            items.forEach(function (i) { i.classList.remove('facture-split-item--active'); });
+            item.classList.add('facture-split-item--active');
+
+            detailContainer.innerHTML = '<div class="facture-split__loading"><i class="fas fa-spinner fa-spin"></i></div>';
+
+            fetch(url, { credentials: 'same-origin' })
+                .then(function (response) {
+                    if (!response.ok) throw new Error('Erreur ' + response.status);
+                    return response.text();
+                })
+                .then(function (html) {
+                    detailContainer.innerHTML = html;
+                })
+                .catch(function () {
+                    detailContainer.innerHTML = '<div class="facture-split__error"><i class="fas fa-exclamation-triangle"></i> Erreur de chargement</div>';
+                });
+        });
+    });
+});
+</script>
+{% endblock %}

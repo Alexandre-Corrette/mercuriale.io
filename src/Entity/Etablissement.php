@@ -59,6 +59,15 @@ class Etablissement
     #[ORM\Column(options: ['default' => true])]
     private bool $actif = true;
 
+    #[ORM\Column(length: 100, nullable: true)]
+    private ?string $pdpAccountId = null;
+
+    #[ORM\Column(options: ['default' => false])]
+    private bool $eInvoicingEnabled = false;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $eInvoicingEnabledAt = null;
+
     /** @var Collection<int, UtilisateurEtablissement> */
     #[ORM\OneToMany(targetEntity: UtilisateurEtablissement::class, mappedBy: 'etablissement', orphanRemoval: true)]
     private Collection $utilisateurEtablissements;
@@ -218,6 +227,42 @@ class Etablissement
         if ($this->fournisseurs->removeElement($fournisseur)) {
             $fournisseur->removeEtablissement($this);
         }
+
+        return $this;
+    }
+
+    public function getPdpAccountId(): ?string
+    {
+        return $this->pdpAccountId;
+    }
+
+    public function setPdpAccountId(?string $pdpAccountId): static
+    {
+        $this->pdpAccountId = $pdpAccountId;
+
+        return $this;
+    }
+
+    public function isEInvoicingEnabled(): bool
+    {
+        return $this->eInvoicingEnabled;
+    }
+
+    public function setEInvoicingEnabled(bool $eInvoicingEnabled): static
+    {
+        $this->eInvoicingEnabled = $eInvoicingEnabled;
+
+        return $this;
+    }
+
+    public function getEInvoicingEnabledAt(): ?\DateTimeImmutable
+    {
+        return $this->eInvoicingEnabledAt;
+    }
+
+    public function setEInvoicingEnabledAt(?\DateTimeImmutable $eInvoicingEnabledAt): static
+    {
+        $this->eInvoicingEnabledAt = $eInvoicingEnabledAt;
 
         return $this;
     }

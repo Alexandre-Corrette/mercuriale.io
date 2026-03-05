@@ -1,0 +1,155 @@
+{# Fragment template loaded via AJAX in the received invoices split layout #}
+
+{% for type, messages in app.flashes %}
+    {% for message in messages %}
+        <div class="facture-flash facture-flash--{{ type }}">
+            <i class="fas {{ type == 'success' ? 'fa-check-circle' : 'fa-exclamation-circle' }}"></i>
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endfor %}
+
+<div class="facture-detail-panel__header">
+    <h3 class="facture-detail-panel__title">
+        <i class="fas fa-file-invoice"></i>
+        {{ facture.numeroFacture ?? facture.fichierOriginalNom ?? 'Facture en cours' }}
+    </h3>
+    <div class="facture-detail-panel__badges">
+        {% include 'components/_status_badge.html.twig' with {
+            label: facture.statut.label,
+            variant: facture.statut.color,
+            size: 'sm'
+        } only %}
+        {% include 'components/_status_badge.html.twig' with {
+            label: facture.source.label,
+            variant: facture.source.color,
+            size: 'sm'
+        } only %}
+    </div>
+    <div class="facture-detail-panel__meta">
+        {{ facture.fournisseur ? facture.fournisseur.nom : (facture.fournisseurNom ?? 'Fournisseur inconnu') }}
+        {% if facture.dateEmission %} — {{ facture.dateEmission|date('d/m/Y') }}{% endif %}
+    </div>
+</div>
+
+{# Stats row #}
+<div class="facture-detail-panel__stats">
+    <div class="facture-detail-panel__stat">
+        <span class="facture-detail-panel__stat-value">{{ facture.montantHt ? facture.montantHt|number_format(2, ',', ' ') ~ ' €' : '—' }}</span>
+        <span class="facture-detail-panel__stat-label">HT</span>
+    </div>
+    <div class="facture-detail-panel__stat">
+        <span class="facture-detail-panel__stat-value">{{ facture.montantTva ? facture.montantTva|number_format(2, ',', ' ') ~ ' €' : '—' }}</span>
+        <span class="facture-detail-panel__stat-label">TVA</span>
+    </div>
+    <div class="facture-detail-panel__stat">
+        <span class="facture-detail-panel__stat-value">{{ facture.montantTtc ? facture.montantTtc|number_format(2, ',', ' ') ~ ' €' : '—' }}</span>
+        <span class="facture-detail-panel__stat-label">TTC</span>
+    </div>
+    <div class="facture-detail-panel__stat">
+        <span class="facture-detail-panel__stat-value">{{ facture.lignes|length }}</span>
+        <span class="facture-detail-panel__stat-label">Lignes</span>
+    </div>
+</div>
+
+{# Rapprochement BL #}
+{% if facture.bonLivraison %}
+<div class="facture-detail-panel__rapprochement">
+    <i class="fas fa-link"></i>
+    BL {{ facture.bonLivraison.numeroBl ?? '#' ~ facture.bonLivraison.id }}
+    {% if facture.scoreRapprochement %} — Score {{ facture.scoreRapprochement }}%{% endif %}
+    {% if facture.ecartMontantHt and facture.ecartMontantHt != '0.00' %} — Ecart {{ facture.ecartMontantHt|number_format(2, ',', ' ') }} €{% endif %}
+</div>
+{% endif %}
+
+{# Lines table #}
+<div class="facture-detail-panel__section">
+    <div class="facture-detail-panel__section-header">
+        <i class="fas fa-list"></i> Lignes ({{ facture.lignes|length }})
+    </div>
+    {% if facture.lignes is not empty %}
+    <div class="facture-detail-panel__table-scroll">
+        <table class="facture-detail-panel__table">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Designation</th>
+                    <th class="facture-detail-panel__right">Qte</th>
+                    <th class="facture-detail-panel__right">PU</th>
+                    <th class="facture-detail-panel__right">TVA</th>
+                    <th class="facture-detail-panel__right">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ligne in facture.lignes %}
+                <tr>
+                    <td class="facture-detail-cell--code">{{ ligne.codeArticle ?? '—' }}</td>
+                    <td>{{ ligne.designation }}</td>
+                    <td class="facture-detail-panel__right">{{ ligne.quantite }}</td>
+                    <td class="facture-detail-panel__right">{{ ligne.prixUnitaire|number_format(4, ',', ' ') }}</td>
+                    <td class="facture-detail-panel__right">{{ ligne.tauxTva ? ligne.tauxTva ~ '%' : '—' }}</td>
+                    <td class="facture-detail-panel__right">{{ ligne.montantLigne|number_format(2, ',', ' ') }} €</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="5" class="facture-detail-panel__right"><strong>Total HT</strong></td>
+                    <td class="facture-detail-panel__right"><strong>{{ facture.montantHt ? facture.montantHt|number_format(2, ',', ' ') ~ ' €' : '—' }}</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    {% else %}
+    <div class="facture-detail-panel__empty">Aucune ligne</div>
+    {% endif %}
+</div>
+
+{# Document link #}
+{% if facture.documentOriginalPath %}
+<div class="facture-detail-panel__document">
+    <a href="{{ path('app_facture_document', {id: facture.idAsString}) }}" target="_blank" class="facture-detail-panel__document-link">
+        <i class="fas fa-file-pdf"></i> {{ facture.fichierOriginalNom ?? 'Voir le document' }}
+    </a>
+</div>
+{% endif %}
+
+{# Actions #}
+{% if can_accepter or can_refuser %}
+<div class="facture-detail-panel__actions">
+    {% if can_accepter %}
+    <form method="post" action="{{ path('app_facture_accepter', {id: facture.idAsString}) }}" class="facture-detail-panel__form">
+        <input type="hidden" name="_token" value="{{ csrf_token('facture_accepter_' ~ facture.idAsString) }}">
+        <button type="submit" class="btn btn--success">
+            <i class="fas fa-check"></i> Accepter
+        </button>
+    </form>
+    {% endif %}
+
+    {% if can_refuser %}
+    <button type="button" class="btn btn--danger" onclick="document.getElementById('refus-form-{{ facture.idAsString[:8] }}').classList.toggle('facture-show-refus--hidden')">
+        <i class="fas fa-times"></i> Refuser
+    </button>
+    {% endif %}
+</div>
+
+{% if can_refuser %}
+<div id="refus-form-{{ facture.idAsString[:8] }}" class="facture-detail-panel__inline-form facture-show-refus--hidden">
+    <form method="post" action="{{ path('app_facture_refuser', {id: facture.idAsString}) }}">
+        <input type="hidden" name="_token" value="{{ csrf_token('facture_refuser_' ~ facture.idAsString) }}">
+        <label class="facture-detail-panel__form-label">Motif du refus</label>
+        <textarea name="motif" class="facture-detail-panel__textarea" required placeholder="Indiquez le motif du refus..."></textarea>
+        <div class="facture-detail-panel__form-actions">
+            <button type="submit" class="btn btn--danger btn--sm">Confirmer le refus</button>
+            <button type="button" class="btn btn--secondary btn--sm" onclick="this.closest('.facture-detail-panel__inline-form').classList.add('facture-show-refus--hidden')">Annuler</button>
+        </div>
+    </form>
+</div>
+{% endif %}
+{% endif %}
+
+<div class="facture-detail-panel__fullview">
+    <a href="{{ path('app_facture_show', {id: facture.idAsString}) }}" class="btn btn--secondary btn--sm">
+        <i class="fas fa-expand"></i> Vue complete
+    </a>
+</div>

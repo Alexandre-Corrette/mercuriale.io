@@ -1,0 +1,572 @@
+/* =============================================
+   Factures Fournisseur — MERC-10
+   ============================================= */
+
+/* ── Filters ── */
+.facture-filters {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+
+.facture-filters__pill {
+    padding: 0.375rem 0.875rem;
+    border-radius: var(--radius-full);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-decoration: none;
+    color: #6b7280;
+    background: #f3f4f6;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.facture-filters__pill:hover {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.facture-filters__pill--active {
+    background: var(--mercuriale-navy);
+    color: #fff;
+}
+
+/* ── Search ── */
+.facture-search {
+    margin-bottom: 1.5rem;
+}
+
+.facture-search__input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: var(--radius-lg);
+    font-size: 0.9375rem;
+    font-family: var(--font-family-base);
+    background: #fff;
+    transition: border-color var(--transition-fast);
+}
+
+.facture-search__input:focus {
+    outline: none;
+    border-color: var(--mercuriale-navy);
+    box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.1);
+}
+
+/* ── List ── */
+.facture-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.facture-list__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    background: #fff;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 1rem 1.25rem;
+    text-decoration: none;
+    color: inherit;
+    transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+}
+
+.facture-list__row:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+}
+
+.facture-list__main {
+    flex: 1;
+    min-width: 0;
+}
+
+.facture-list__numero {
+    font-weight: 700;
+    color: var(--mercuriale-navy);
+    font-size: 0.9375rem;
+}
+
+.facture-list__fournisseur {
+    font-size: 0.8125rem;
+    color: #6b7280;
+    margin-top: 0.125rem;
+}
+
+.facture-list__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.facture-list__date {
+    font-size: 0.8125rem;
+    color: #9ca3af;
+}
+
+.facture-list__montant {
+    font-weight: 700;
+    font-size: 0.9375rem;
+    color: #374151;
+    white-space: nowrap;
+}
+
+/* ── Empty state ── */
+.facture-empty {
+    background: #fff;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 3rem;
+    text-align: center;
+    color: #9ca3af;
+}
+
+.facture-empty i {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+    display: block;
+}
+
+/* ── Flash ── */
+.facture-flash {
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-lg);
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.facture-flash--success {
+    background: #ecfdf5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+
+.facture-flash--error {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+/* ── Show header ── */
+.facture-show-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.facture-show-header__meta {
+    color: #6b7280;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+/* ── Show info grid ── */
+.facture-show-info {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    background: #fff;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.facture-show-info__item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.facture-show-info__label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b7280;
+}
+
+.facture-show-info__value {
+    font-size: 0.9375rem;
+    color: #1f2937;
+    font-weight: 500;
+}
+
+.facture-show-info__value--bold {
+    font-weight: 700;
+    color: var(--mercuriale-navy);
+}
+
+.facture-show-info__value a {
+    color: var(--mercuriale-navy);
+    text-decoration: none;
+}
+
+.facture-show-info__value a:hover {
+    text-decoration: underline;
+}
+
+/* ── Comment / Motif refus ── */
+.facture-show-comment {
+    background: #fff;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 1rem 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.facture-show-comment--danger {
+    border-left: 4px solid #ef4444;
+}
+
+.facture-show-comment--rapprochement {
+    border-left: 4px solid #6b7280;
+}
+
+.facture-show-comment__label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #ef4444;
+    margin-bottom: 0.375rem;
+}
+
+.facture-show-comment__label--info {
+    color: #6b7280;
+}
+
+.facture-show-comment__text {
+    font-size: 0.9375rem;
+    color: #374151;
+    white-space: pre-wrap;
+}
+
+/* ── Section (lines table) ── */
+.facture-show-section {
+    background: #fff;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+.facture-show-section__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--mercuriale-cream-dark);
+    font-weight: 700;
+    color: var(--mercuriale-navy);
+    font-size: 1rem;
+}
+
+.facture-show-section__empty {
+    padding: 2rem 1.5rem;
+    text-align: center;
+    color: #9ca3af;
+    font-size: 0.875rem;
+}
+
+.facture-show-section__scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.facture-show-section__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.facture-show-section__table th {
+    text-align: left;
+    padding: 0.625rem 1rem;
+    background: #f9fafb;
+    color: #6b7280;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid #e5e7eb;
+    white-space: nowrap;
+}
+
+.facture-show-section__table td {
+    padding: 0.625rem 1rem;
+    border-bottom: 1px solid #f3f4f6;
+    color: #374151;
+}
+
+.facture-show-section__table tr:last-child td {
+    border-bottom: none;
+}
+
+.facture-show-section__table tfoot td {
+    padding: 0.75rem 1rem;
+    background: #f9fafb;
+    border-top: 2px solid #e5e7eb;
+}
+
+.facture-show-section__right {
+    text-align: right;
+}
+
+/* ── Actions ── */
+.facture-show-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+}
+
+.facture-show-actions__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    border: none;
+    border-radius: var(--radius-lg);
+    font-size: 0.875rem;
+    font-weight: 600;
+    font-family: var(--font-family-base);
+    cursor: pointer;
+    transition: background-color var(--transition-fast), transform var(--transition-fast);
+    text-decoration: none;
+    color: #fff;
+}
+
+.facture-show-actions__btn:hover {
+    transform: translateY(-1px);
+}
+
+.facture-show-actions__btn--success {
+    background: #10b981;
+}
+
+.facture-show-actions__btn--success:hover {
+    background: #059669;
+}
+
+.facture-show-actions__btn--danger {
+    background: #ef4444;
+}
+
+.facture-show-actions__btn--danger:hover {
+    background: #dc2626;
+}
+
+.facture-show-actions__btn--gold {
+    background: #f59e0b;
+}
+
+.facture-show-actions__btn--gold:hover {
+    background: #d97706;
+}
+
+.facture-show-actions__btn--secondary {
+    background: #6b7280;
+}
+
+.facture-show-actions__btn--secondary:hover {
+    background: #4b5563;
+}
+
+/* ── Refus form ── */
+.facture-show-refus {
+    background: #fff;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-left: 4px solid #ef4444;
+}
+
+.facture-show-refus__label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.facture-show-refus__textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: var(--radius-lg);
+    font-size: 0.875rem;
+    font-family: var(--font-family-base);
+    resize: vertical;
+    margin-bottom: 0.75rem;
+}
+
+.facture-show-refus__textarea:focus {
+    outline: none;
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.facture-show-refus__actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* ── Header bar (title + upload button) ── */
+.facture-header-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+/* ── Flash info variant ── */
+.facture-flash--info {
+    background: #eff6ff;
+    color: #1e40af;
+    border: 1px solid #bfdbfe;
+}
+
+/* ── Show header badges ── */
+.facture-show-header__badges {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+/* ── Upload form ── */
+.facture-upload__intro {
+    font-size: 0.9375rem;
+    color: #6b7280;
+    margin-bottom: 1.5rem;
+}
+
+.facture-upload__form-card {
+    background: #fff;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 1.5rem;
+    max-width: 600px;
+}
+
+.facture-upload__field {
+    margin-bottom: 1.25rem;
+}
+
+.facture-upload__label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.375rem;
+}
+
+.facture-upload__help {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    margin-top: 0.25rem;
+}
+
+.facture-upload__actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-top: 1.5rem;
+}
+
+/* ── Orange button (contestation) ── */
+.facture-show-actions__btn--orange {
+    background-color: #ea580c;
+    border-color: #ea580c;
+    color: #fff;
+}
+
+.facture-show-actions__btn--orange:hover {
+    background-color: #c2410c;
+    border-color: #c2410c;
+}
+
+/* ── Hidden state ── */
+.facture-show-refus--hidden {
+    display: none !important;
+}
+
+/* ── Input field in refus/payer forms ── */
+.facture-show-refus__input {
+    width: 100%;
+    border: 1px solid #d1d5db;
+    border-radius: var(--radius-md);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    font-family: inherit;
+    margin-bottom: 0.75rem;
+}
+
+.facture-show-refus__input:focus {
+    outline: none;
+    border-color: var(--mercuriale-navy);
+    box-shadow: 0 0 0 2px rgba(26, 43, 72, 0.15);
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .facture-show-info {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .facture-list__row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .facture-list__meta {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .facture-header-bar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .facture-show-header {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .facture-show-section__table {
+        font-size: 0.8125rem;
+    }
+
+    .facture-show-section__table th,
+    .facture-show-section__table td {
+        padding: 0.5rem 0.625rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .facture-show-info {
+        grid-template-columns: 1fr;
+    }
+
+    .facture-show-actions {
+        flex-direction: column;
+    }
+
+    .facture-show-actions__btn {
+        justify-content: center;
+    }
+}
