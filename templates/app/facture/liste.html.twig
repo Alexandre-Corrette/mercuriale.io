@@ -1,0 +1,108 @@
+{% extends 'admin/hub/layout.html.twig' %}
+
+{% set hub_title = 'Factures fournisseur' %}
+{% set hub_breadcrumbs = [
+    { label: 'Fournisseurs', url: path('app_fournisseurs_hub') },
+    { label: 'Factures', url: path('app_factures_hub') },
+    { label: 'Toutes les factures' }
+] %}
+
+{% block title %}Factures fournisseur — Mercuriale.io{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/facture.css') }}">
+{% endblock %}
+
+{% block hub_content %}
+<div class="hub-content">
+    <div class="facture-header-bar">
+        <h1 class="hub-title"><i class="fas fa-file-invoice"></i> Factures fournisseur</h1>
+        {% if is_granted('ROLE_GERANT') %}
+            <a href="{{ path('app_facture_upload') }}" class="facture-show-actions__btn facture-show-actions__btn--success">
+                <i class="fas fa-upload"></i> Upload facture
+            </a>
+        {% endif %}
+    </div>
+
+    {# Filters #}
+    <div class="facture-filters">
+        <a href="{{ path('app_factures_liste') }}"
+           class="facture-filters__pill {{ statut_filter is null ? 'facture-filters__pill--active' : '' }}">
+            Toutes
+        </a>
+        {% for statut in ['BROUILLON', 'RECUE', 'ACCEPTEE', 'REFUSEE', 'PAYEE', 'RAPPROCHEE', 'CONTESTEE'] %}
+            <a href="{{ path('app_factures_liste', {statut: statut}) }}"
+               class="facture-filters__pill {{ statut_filter == statut ? 'facture-filters__pill--active' : '' }}">
+                {{ statut }}
+            </a>
+        {% endfor %}
+    </div>
+
+    {# Search #}
+    <div class="facture-search">
+        <input type="text" class="facture-search__input" placeholder="Rechercher une facture..." id="facture-search">
+    </div>
+
+    {# List #}
+    {% if factures is empty %}
+        <div class="facture-empty">
+            <i class="fas fa-file-invoice"></i>
+            <p>Aucune facture fournisseur.</p>
+        </div>
+    {% else %}
+        <div class="facture-list">
+            {% for facture in factures %}
+                <a href="{{ path('app_facture_show', {id: facture.idAsString}) }}"
+                   class="facture-list__row"
+                   data-search="{{ facture.numeroFacture ?? '' }} {{ facture.fournisseurNom ?? '' }} {{ facture.fournisseur ? facture.fournisseur.nom : '' }} {{ facture.fichierOriginalNom ?? '' }}">
+                    <div class="facture-list__main">
+                        <div class="facture-list__numero">
+                            {{ facture.numeroFacture ?? facture.fichierOriginalNom ?? 'OCR en cours...' }}
+                        </div>
+                        <div class="facture-list__fournisseur">
+                            {{ facture.fournisseur ? facture.fournisseur.nom : (facture.fournisseurNom ?? '—') }}
+                        </div>
+                    </div>
+                    <div class="facture-list__meta">
+                        <div class="facture-list__date">
+                            {{ facture.dateEmission ? facture.dateEmission|date('d/m/Y') : '—' }}
+                        </div>
+                        {% include 'components/_status_badge.html.twig' with {
+                            label: facture.source.label,
+                            variant: facture.source.color,
+                            size: 'sm'
+                        } only %}
+                        {% include 'components/_status_badge.html.twig' with {
+                            label: facture.statut.label,
+                            variant: facture.statut.color,
+                            size: 'sm'
+                        } only %}
+                    </div>
+                    <div class="facture-list__montant">
+                        {% if facture.montantHt %}
+                            {{ facture.montantHt|number_format(2, ',', ' ') }} € HT
+                        {% else %}
+                            —
+                        {% endif %}
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const search = document.getElementById('facture-search');
+    if (!search) return;
+    search.addEventListener('input', function() {
+        const q = this.value.toLowerCase();
+        document.querySelectorAll('.facture-list__row').forEach(function(row) {
+            const text = (row.getAttribute('data-search') || '').toLowerCase();
+            row.style.display = text.includes(q) ? '' : 'none';
+        });
+    });
+});
+</script>
+{% endblock %}

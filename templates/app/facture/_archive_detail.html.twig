@@ -1,0 +1,155 @@
+{# Fragment template loaded via AJAX in the archive split layout — read-only #}
+
+<div class="facture-detail-panel__header">
+    <h3 class="facture-detail-panel__title">
+        <i class="fas fa-file-invoice"></i>
+        {{ facture.numeroFacture ?? facture.fichierOriginalNom ?? 'Facture' }}
+    </h3>
+    <div class="facture-detail-panel__badges">
+        {% include 'components/_status_badge.html.twig' with {
+            label: facture.statut.label,
+            variant: facture.statut.color,
+            size: 'sm'
+        } only %}
+        {% include 'components/_status_badge.html.twig' with {
+            label: facture.source.label,
+            variant: facture.source.color,
+            size: 'sm'
+        } only %}
+    </div>
+    <div class="facture-detail-panel__meta">
+        {{ facture.fournisseur ? facture.fournisseur.nom : (facture.fournisseurNom ?? 'Fournisseur inconnu') }}
+        {% if facture.dateEmission %} — {{ facture.dateEmission|date('d/m/Y') }}{% endif %}
+    </div>
+</div>
+
+{# Stats row #}
+<div class="facture-detail-panel__stats">
+    <div class="facture-detail-panel__stat">
+        <span class="facture-detail-panel__stat-value">{{ facture.montantHt ? facture.montantHt|number_format(2, ',', ' ') ~ ' €' : '—' }}</span>
+        <span class="facture-detail-panel__stat-label">HT</span>
+    </div>
+    <div class="facture-detail-panel__stat">
+        <span class="facture-detail-panel__stat-value">{{ facture.montantTva ? facture.montantTva|number_format(2, ',', ' ') ~ ' €' : '—' }}</span>
+        <span class="facture-detail-panel__stat-label">TVA</span>
+    </div>
+    <div class="facture-detail-panel__stat">
+        <span class="facture-detail-panel__stat-value">{{ facture.montantTtc ? facture.montantTtc|number_format(2, ',', ' ') ~ ' €' : '—' }}</span>
+        <span class="facture-detail-panel__stat-label">TTC</span>
+    </div>
+</div>
+
+{# Archive-specific info #}
+<div class="facture-detail-panel__info-grid">
+    {% if facture.payeeLe %}
+    <div class="facture-detail-panel__info-item">
+        <span class="facture-detail-panel__info-label">Payee le</span>
+        <span class="facture-detail-panel__info-value">{{ facture.payeeLe|date('d/m/Y H:i') }}</span>
+    </div>
+    {% endif %}
+    {% if facture.referencePaiement %}
+    <div class="facture-detail-panel__info-item">
+        <span class="facture-detail-panel__info-label">Ref. paiement</span>
+        <span class="facture-detail-panel__info-value">{{ facture.referencePaiement }}</span>
+    </div>
+    {% endif %}
+    {% if facture.motifRefus %}
+    <div class="facture-detail-panel__info-item facture-detail-panel__info-item--danger">
+        <span class="facture-detail-panel__info-label">Motif refus</span>
+        <span class="facture-detail-panel__info-value">{{ facture.motifRefus }}</span>
+    </div>
+    {% endif %}
+    {% if facture.contesteeLe %}
+    <div class="facture-detail-panel__info-item facture-detail-panel__info-item--warning">
+        <span class="facture-detail-panel__info-label">Contestee le</span>
+        <span class="facture-detail-panel__info-value">{{ facture.contesteeLe|date('d/m/Y H:i') }}</span>
+    </div>
+    {% endif %}
+    {% if facture.validatedBy %}
+    <div class="facture-detail-panel__info-item">
+        <span class="facture-detail-panel__info-label">Traitee par</span>
+        <span class="facture-detail-panel__info-value">{{ facture.validatedBy.email }}</span>
+    </div>
+    {% endif %}
+    {% if facture.internalReference %}
+    <div class="facture-detail-panel__info-item">
+        <span class="facture-detail-panel__info-label">Ref. interne</span>
+        <span class="facture-detail-panel__info-value facture-detail-cell--code">{{ facture.internalReference }}</span>
+    </div>
+    {% endif %}
+</div>
+
+{# Lines table #}
+<div class="facture-detail-panel__section">
+    <div class="facture-detail-panel__section-header">
+        <i class="fas fa-list"></i> Lignes ({{ facture.lignes|length }})
+    </div>
+    {% if facture.lignes is not empty %}
+    <div class="facture-detail-panel__table-scroll">
+        <table class="facture-detail-panel__table">
+            <thead>
+                <tr>
+                    <th>Designation</th>
+                    <th class="facture-detail-panel__right">Qte</th>
+                    <th class="facture-detail-panel__right">PU</th>
+                    <th class="facture-detail-panel__right">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ligne in facture.lignes %}
+                <tr>
+                    <td>{{ ligne.designation }}</td>
+                    <td class="facture-detail-panel__right">{{ ligne.quantite }}</td>
+                    <td class="facture-detail-panel__right">{{ ligne.prixUnitaire|number_format(4, ',', ' ') }}</td>
+                    <td class="facture-detail-panel__right">{{ ligne.montantLigne|number_format(2, ',', ' ') }} €</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="facture-detail-panel__empty">Aucune ligne</div>
+    {% endif %}
+</div>
+
+{# Transition timeline #}
+{% if transitions is not empty %}
+<div class="facture-detail-panel__section">
+    <div class="facture-detail-panel__section-header">
+        <i class="fas fa-history"></i> Historique
+    </div>
+    <div class="facture-timeline">
+        {% for transition in transitions %}
+        <div class="facture-timeline__item">
+            <div class="facture-timeline__dot facture-timeline__dot--{{ transition.toStatut.color }}"></div>
+            <div class="facture-timeline__content">
+                <div class="facture-timeline__label">
+                    {{ transition.fromStatut.label }} <i class="fas fa-arrow-right"></i> {{ transition.toStatut.label }}
+                </div>
+                <div class="facture-timeline__meta">
+                    {{ transition.user.email }} — {{ transition.createdAt|date('d/m/Y H:i') }}
+                </div>
+                {% if transition.motif %}
+                <div class="facture-timeline__motif">{{ transition.motif }}</div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{# Document link #}
+{% if facture.documentOriginalPath %}
+<div class="facture-detail-panel__document">
+    <a href="{{ path('app_facture_document', {id: facture.idAsString}) }}" target="_blank" class="facture-detail-panel__document-link">
+        <i class="fas fa-file-pdf"></i> {{ facture.fichierOriginalNom ?? 'Voir le document' }}
+    </a>
+</div>
+{% endif %}
+
+<div class="facture-detail-panel__fullview">
+    <a href="{{ path('app_facture_show', {id: facture.idAsString}) }}" class="btn btn--secondary btn--sm">
+        <i class="fas fa-expand"></i> Vue complete
+    </a>
+</div>

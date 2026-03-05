@@ -49,7 +49,7 @@ class FournisseurController extends AbstractController
         ]);
     }
 
-    #[Route('/{id}', name: 'app_fournisseur_show', methods: ['GET'])]
+    #[Route('/{id}', name: 'app_fournisseur_show', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function show(
         Fournisseur $fournisseur,
         ProduitFournisseurRepository $produitRepo,

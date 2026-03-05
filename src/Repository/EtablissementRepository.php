@@ -38,6 +38,22 @@ class EtablissementRepository extends ServiceEntityRepository
     }
 
     /**
+     * @return Etablissement[]
+     */
+    public function findEInvoicingEnabled(): array
+    {
+        return $this->createQueryBuilder('e')
+            ->where('e.eInvoicingEnabled = :enabled')
+            ->andWhere('e.pdpAccountId IS NOT NULL')
+            ->andWhere('e.actif = :actif')
+            ->setParameter('enabled', true)
+            ->setParameter('actif', true)
+            ->orderBy('e.nom', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
      * Retourne un QueryBuilder filtré par les accès de l'utilisateur.
      * Un ROLE_ADMIN voit tous les établissements de son organisation.
      * Les autres utilisateurs voient seulement ceux auxquels ils ont accès via UtilisateurEtablissement.

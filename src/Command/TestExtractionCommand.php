@@ -55,7 +55,11 @@ class TestExtractionCommand extends Command
         }
 
         if ($result->produitsNonMatches) {
-            $io->note('Produits non matchés: ' . implode(', ', $result->produitsNonMatches));
+            $labels = array_map(
+                fn (array $p) => ($p['code'] ?? '?') . ' — ' . ($p['designation'] ?? '?') . ' [' . $p['confidence'] . ']',
+                $result->produitsNonMatches,
+            );
+            $io->note('Produits non matchés: ' . implode(', ', $labels));
         }
 
         if ($result->donneesBrutes) {

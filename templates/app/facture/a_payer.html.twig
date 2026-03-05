@@ -1,0 +1,129 @@
+{% extends 'admin/hub/layout.html.twig' %}
+
+{% set hub_title = 'Factures a payer' %}
+{% set hub_breadcrumbs = [
+    { label: 'Fournisseurs', url: path('app_fournisseurs_hub') },
+    { label: 'Factures', url: path('app_factures_hub') },
+    { label: 'A payer' }
+] %}
+
+{% block title %}Factures a payer — Mercuriale.io{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/facture.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/facture-split.css') }}">
+{% endblock %}
+
+{% block hub_content %}
+{% if overdue_count > 0 %}
+<div class="facture-hub-alert facture-hub-alert--danger">
+    <i class="fas fa-exclamation-triangle"></i>
+    <strong>{{ overdue_count }} facture{{ overdue_count > 1 ? 's' : '' }} en retard de paiement !</strong>
+</div>
+{% endif %}
+
+{% if factures is empty %}
+    <div class="hub-content">
+        <h1 class="hub-title"><i class="fas fa-coins"></i> Factures a payer</h1>
+        {% include 'components/_empty_state.html.twig' with {
+            icon: 'fa-check-circle',
+            title: 'Aucune facture a payer',
+            description: 'Toutes les factures acceptees ont ete reglees.',
+            action_label: 'Retour',
+            action_url: path('app_factures_hub'),
+            action_icon: 'fa-arrow-left'
+        } only %}
+    </div>
+{% else %}
+    <div class="facture-split">
+        <div class="facture-split__list">
+            <div class="facture-split__list-header">
+                <h2 class="facture-split__list-title">
+                    <i class="fas fa-coins"></i> A payer
+                </h2>
+                <span class="facture-split__count">{{ factures|length }}</span>
+            </div>
+            <div class="facture-split__list-scroll">
+                {% for facture in factures %}
+                    {% set urgency = '' %}
+                    {% if facture.isOverdue %}
+                        {% set urgency = 'facture-split-item--overdue' %}
+                    {% elseif facture.daysUntilDue is not null and facture.daysUntilDue <= 3 %}
+                        {% set urgency = 'facture-split-item--urgent' %}
+                    {% endif %}
+                    <div class="facture-split-item {{ urgency }}{% if selected and facture.id == selected.id %} facture-split-item--active{% endif %}"
+                         data-facture-id="{{ facture.idAsString }}"
+                         data-url="{{ path('app_facture_a_payer_detail', {id: facture.idAsString}) }}">
+                        <div class="facture-split-item__number">
+                            {{ facture.numeroFacture ?? facture.fichierOriginalNom ?? 'Facture' }}
+                        </div>
+                        <div class="facture-split-item__meta">
+                            <span class="facture-split-item__fournisseur">{{ facture.fournisseur ? facture.fournisseur.nom : (facture.fournisseurNom ?? '—') }}</span>
+                            {% if facture.dateEcheance %}
+                                <span class="facture-split-item__echeance facture-split-item__echeance--{{ facture.isOverdue ? 'danger' : (facture.daysUntilDue <= 3 ? 'warning' : 'ok') }}">
+                                    <i class="fas fa-calendar-alt"></i> {{ facture.dateEcheance|date('d/m/Y') }}
+                                </span>
+                            {% endif %}
+                        </div>
+                        <div class="facture-split-item__montant">
+                            {% if facture.montantTtc %}
+                                {{ facture.montantTtc|number_format(2, ',', ' ') }} € TTC
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="facture-split__separator" aria-hidden="true"></div>
+
+        <div class="facture-split__detail" id="facture-detail">
+            {% if selected %}
+                {% include 'app/facture/_a_payer_detail.html.twig' with {
+                    facture: selected,
+                    can_payer: true,
+                    can_contester: true
+                } %}
+            {% else %}
+                <div class="facture-split__placeholder">
+                    <i class="fas fa-hand-pointer"></i>
+                    <p>Selectionnez une facture</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var items = document.querySelectorAll('.facture-split-item');
+    var detailContainer = document.getElementById('facture-detail');
+    if (!items.length || !detailContainer) return;
+
+    items.forEach(function (item) {
+        item.addEventListener('click', function () {
+            var url = item.getAttribute('data-url');
+            if (!url) return;
+
+            items.forEach(function (i) { i.classList.remove('facture-split-item--active'); });
+            item.classList.add('facture-split-item--active');
+
+            detailContainer.innerHTML = '<div class="facture-split__loading"><i class="fas fa-spinner fa-spin"></i></div>';
+
+            fetch(url, { credentials: 'same-origin' })
+                .then(function (response) {
+                    if (!response.ok) throw new Error('Erreur ' + response.status);
+                    return response.text();
+                })
+                .then(function (html) {
+                    detailContainer.innerHTML = html;
+                })
+                .catch(function () {
+                    detailContainer.innerHTML = '<div class="facture-split__error"><i class="fas fa-exclamation-triangle"></i> Erreur de chargement</div>';
+                });
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -4,16 +4,19 @@ declare(strict_types=1);
 
 namespace App\Tests\Service\Ocr;
 
+use App\DTO\MatchResult;
 use App\Entity\BonLivraison;
 use App\Entity\Etablissement;
 use App\Entity\Fournisseur;
 use App\Entity\ProduitFournisseur;
 use App\Entity\Unite;
+use App\Enum\MatchConfidence;
 use App\Repository\FournisseurRepository;
 use App\Repository\ProduitFournisseurRepository;
 use App\Repository\UniteRepository;
 use App\Service\Ocr\AnthropicClient;
 use App\Service\Ocr\BonLivraisonExtractorService;
+use App\Service\Ocr\OcrMatchingService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -26,6 +29,7 @@ class BonLivraisonExtractorServiceTest extends TestCase
     private MockObject&ProduitFournisseurRepository $produitFournisseurRepository;
     private MockObject&FournisseurRepository $fournisseurRepository;
     private MockObject&UniteRepository $uniteRepository;
+    private MockObject&OcrMatchingService $ocrMatchingService;
     private MockObject&LoggerInterface $logger;
     private BonLivraisonExtractorService $service;
 
@@ -36,6 +40,7 @@ class BonLivraisonExtractorServiceTest extends TestCase
         $this->produitFournisseurRepository = $this->createMock(ProduitFournisseurRepository::class);
         $this->fournisseurRepository = $this->createMock(FournisseurRepository::class);
         $this->uniteRepository = $this->createMock(UniteRepository::class);
+        $this->ocrMatchingService = $this->createMock(OcrMatchingService::class);
         $this->logger = $this->createMock(LoggerInterface::class);
 
         $this->service = new BonLivraisonExtractorService(
@@ -44,6 +49,7 @@ class BonLivraisonExtractorServiceTest extends TestCase
             $this->produitFournisseurRepository,
             $this->fournisseurRepository,
             $this->uniteRepository,
+            $this->ocrMatchingService,
             $this->logger,
             '/tmp/test-project',
         );
@@ -79,6 +85,11 @@ class BonLivraisonExtractorServiceTest extends TestCase
                 'content' => json_encode($mockResponse),
                 'usage' => ['input_tokens' => 1000, 'output_tokens' => 500],
             ]);
+
+        // Mock OcrMatchingService — retourne NONE par défaut
+        $this->ocrMatchingService
+            ->method('matchLigne')
+            ->willReturn(new MatchResult(null, MatchConfidence::NONE, 'none'));
 
         // Mock de l'unité pièce
         $unite = $this->createMock(Unite::class);
@@ -124,18 +135,17 @@ class BonLivraisonExtractorServiceTest extends TestCase
                 'usage' => ['input_tokens' => 1000, 'output_tokens' => 500],
             ]);
 
-        // Mock du produit fournisseur existant
+        // Mock OcrMatchingService : match exact sur FF-000047, NONE sur les autres
         $produitFournisseur = $this->createMock(ProduitFournisseur::class);
 
-        $this->produitFournisseurRepository
-            ->method('findOneBy')
-            ->willReturnCallback(function ($criteria) use ($produitFournisseur) {
-                // Matcher seulement le premier produit
-                if ($criteria['codeFournisseur'] === 'FF-000047') {
-                    return $produitFournisseur;
+        $this->ocrMatchingService
+            ->method('matchLigne')
+            ->willReturnCallback(function (?string $code, ?string $designation) use ($produitFournisseur) {
+                if ($code === 'FF-000047') {
+                    return new MatchResult($produitFournisseur, MatchConfidence::EXACT, 'code_article', 100.0);
                 }
 
-                return null;
+                return new MatchResult(null, MatchConfidence::NONE, 'none');
             });
 
         $unite = $this->createMock(Unite::class);
@@ -153,8 +163,18 @@ class BonLivraisonExtractorServiceTest extends TestCase
         $this->assertTrue($result->success);
         // Deux produits non matchés (FF-000141 et FF-000234)
         $this->assertCount(2, $result->produitsNonMatches);
-        $this->assertContains('FF-000141', $result->produitsNonMatches);
-        $this->assertContains('FF-000234', $result->produitsNonMatches);
+
+        $nonMatchedCodes = array_column($result->produitsNonMatches, 'code');
+        $this->assertContains('FF-000141', $nonMatchedCodes);
+        $this->assertContains('FF-000234', $nonMatchedCodes);
+
+        // Vérifier la structure des entrées non matchées
+        foreach ($result->produitsNonMatches as $nonMatch) {
+            $this->assertArrayHasKey('code', $nonMatch);
+            $this->assertArrayHasKey('designation', $nonMatch);
+            $this->assertArrayHasKey('confidence', $nonMatch);
+            $this->assertSame('NONE', $nonMatch['confidence']);
+        }
 
         unlink($tempFile);
     }
@@ -199,6 +219,11 @@ class BonLivraisonExtractorServiceTest extends TestCase
                 'content' => "```json\n" . json_encode($mockResponse) . "\n```",
                 'usage' => ['input_tokens' => 1000, 'output_tokens' => 500],
             ]);
+
+        // Mock OcrMatchingService — retourne NONE par défaut
+        $this->ocrMatchingService
+            ->method('matchLigne')
+            ->willReturn(new MatchResult(null, MatchConfidence::NONE, 'none'));
 
         $unite = $this->createMock(Unite::class);
         $unite->method('getCode')->willReturn('p');

@@ -7,8 +7,6 @@ framework:
     csrf_protection:
         stateless_token_ids:
             - submit
-            - authenticate
-            - logout
             - mercuriale_import_upload
             - mercuriale_column_mapping
             - bl_upload

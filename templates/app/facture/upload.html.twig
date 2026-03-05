@@ -1,0 +1,64 @@
+{% extends 'admin/hub/layout.html.twig' %}
+
+{% set hub_title = 'Upload facture' %}
+{% set hub_breadcrumbs = [
+    { label: 'Fournisseurs', url: path('app_fournisseurs_hub') },
+    { label: 'Factures', url: path('app_factures_hub') },
+    { label: 'Upload' }
+] %}
+
+{% block title %}Upload facture — Mercuriale.io{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/facture.css') }}">
+{% endblock %}
+
+{% block hub_content %}
+<div class="hub-content">
+    {# Flash messages #}
+    {% for type, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="facture-flash facture-flash--{{ type }}">
+                <i class="fas {{ type == 'success' ? 'fa-check-circle' : 'fa-exclamation-circle' }}"></i>
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    <h1 class="hub-title"><i class="fas fa-upload"></i> Upload facture fournisseur</h1>
+
+    <p class="facture-upload__intro">
+        Uploadez une facture fournisseur (image ou PDF). L'extraction automatique par OCR sera lancée en arrière-plan.
+    </p>
+
+    <div class="facture-upload__form-card">
+        {{ form_start(form, {'attr': {'class': 'facture-upload__form', 'enctype': 'multipart/form-data'}}) }}
+
+        <div class="facture-upload__field">
+            {{ form_label(form.fournisseur, null, {'label_attr': {'class': 'facture-upload__label'}}) }}
+            {{ form_widget(form.fournisseur) }}
+            <div class="facture-upload__help">Si vous ne sélectionnez pas de fournisseur, l'OCR tentera de l'identifier automatiquement.</div>
+            {{ form_errors(form.fournisseur) }}
+        </div>
+
+        <div class="facture-upload__field">
+            {{ form_label(form.fichier, null, {'label_attr': {'class': 'facture-upload__label'}}) }}
+            {{ form_widget(form.fichier) }}
+            <div class="facture-upload__help">Formats acceptés : JPEG, PNG, HEIC, PDF. Taille max : 20 Mo.</div>
+            {{ form_errors(form.fichier) }}
+        </div>
+
+        <div class="facture-upload__actions">
+            <button type="submit" class="facture-show-actions__btn facture-show-actions__btn--success">
+                <i class="fas fa-upload"></i> Envoyer et lancer l'OCR
+            </button>
+            <a href="{{ path('app_factures_hub') }}" class="facture-show-actions__btn facture-show-actions__btn--secondary">
+                <i class="fas fa-arrow-left"></i> Retour
+            </a>
+        </div>
+
+        {{ form_end(form) }}
+    </div>
+</div>
+{% endblock %}
