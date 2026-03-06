@@ -134,6 +134,12 @@
         {% endif %}
 
         {% if bonLivraison.statut.value == 'ANOMALIE' and is_granted('MANAGE', bonLivraison.etablissement) %}
+            <form action="{{ path('app_bl_valider_force', {id: bonLivraison.id}) }}" method="post" class="bl-detail-panel__form">
+                <input type="hidden" name="_token" value="{{ csrf_token('valider_force_bl_' ~ bonLivraison.id) }}">
+                <button type="submit" class="btn btn--success">
+                    <i class="fas fa-check"></i> Valider
+                </button>
+            </form>
             <a href="{{ path('app_avoir_demande', {id: bonLivraison.id}) }}"
                id="btn-avoir-demande"
                class="btn btn--avoir"

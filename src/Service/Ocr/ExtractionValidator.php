@@ -53,9 +53,9 @@ class ExtractionValidator
             }
         }
 
-        // Numero BL TerreAzur = 10 digits
+        // Numero BL must be alphanumeric and reasonable length
         if (isset($doc['numero'])) {
-            if (!preg_match('/^\d{10,11}$/', $doc['numero'])) {
+            if (!preg_match('/^[\w\-\/]{3,30}$/', $doc['numero'])) {
                 $errors[] = 'numero_bl_format_invalide:' . $doc['numero'];
             }
         }
@@ -80,8 +80,8 @@ class ExtractionValidator
         $nullCount = 0;
 
         foreach ($result['lignes'] ?? [] as $i => $ligne) {
-            // Rang TerreAzur = multiples of 10
-            if (isset($ligne['rang']) && $ligne['rang'] % 10 !== 0) {
+            // Rang should be a positive integer if present
+            if (isset($ligne['rang']) && ($ligne['rang'] <= 0 || $ligne['rang'] > 9999)) {
                 $errors[] = 'rang_invalide:' . $ligne['rang'];
             }
 
