@@ -84,3 +84,9 @@ services:
     App\Service\Ocr\FactureExtractorService:
         arguments:
             $projectDir: '%kernel.project_dir%'
+
+    App\Service\SirenApiService:
+        arguments:
+            $apiUrl: '%env(SIREN_API_URL)%'
+            $clientId: '%env(SIREN_API_CLIENT_ID)%'
+            $apiSecret: '%env(SIREN_API_SECRET)%'
