@@ -80,12 +80,12 @@
                 </h2>
 
                 {% if lignesEnAlerte|length > 0 %}
-                    <div class="avoir-demande__table-scroll">
+                    <div class="avoir-demande__table-scroll" data-controller="checkbox-total">
                         <table class="avoir-demande__table">
                             <thead>
                                 <tr>
                                     <th class="avoir-demande__check-col">
-                                        <input type="checkbox" id="select-all" checked>
+                                        <input type="checkbox" data-checkbox-total-target="selectAll" data-action="change->checkbox-total#toggleAll" checked>
                                     </th>
                                     <th>Designation</th>
                                     <th class="avoir-demande__right">Qte</th>
@@ -103,7 +103,8 @@
                                             <input type="checkbox"
                                                    name="lignes[]"
                                                    value="{{ data.ligne.id }}"
-                                                   class="ligne-checkbox"
+                                                   data-checkbox-total-target="checkbox"
+                                                   data-action="change->checkbox-total#update"
                                                    {{ isChecked ? 'checked' : '' }}>
                                         </td>
                                         <td>{{ data.ligne.designationBl }}</td>
@@ -133,7 +134,7 @@
                             <tfoot>
                                 <tr>
                                     <td colspan="6" class="avoir-demande__right avoir-demande__total-label">Total HT demande :</td>
-                                    <td class="avoir-demande__right avoir-demande__total-value" id="total-ht">0,00 &euro;</td>
+                                    <td class="avoir-demande__right avoir-demande__total-value" data-checkbox-total-target="total">0,00 &euro;</td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -169,40 +170,4 @@
         </form>
     </div>
 
-    <script>
-        document.addEventListener('turbo:load', function() {
-            const checkboxes = document.querySelectorAll('.ligne-checkbox');
-            const selectAll = document.getElementById('select-all');
-            const totalEl = document.getElementById('total-ht');
-
-            function updateTotal() {
-                let total = 0;
-                checkboxes.forEach(function(cb) {
-                    if (cb.checked) {
-                        const row = cb.closest('tr');
-                        total += parseFloat(row.dataset.montant) || 0;
-                    }
-                });
-                totalEl.innerHTML = total.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' &euro;';
-            }
-
-            if (selectAll) {
-                selectAll.addEventListener('change', function() {
-                    checkboxes.forEach(function(cb) { cb.checked = selectAll.checked; });
-                    updateTotal();
-                });
-            }
-
-            checkboxes.forEach(function(cb) {
-                cb.addEventListener('change', function() {
-                    if (selectAll) {
-                        selectAll.checked = Array.from(checkboxes).every(function(c) { return c.checked; });
-                    }
-                    updateTotal();
-                });
-            });
-
-            updateTotal();
-        });
-    </script>
 {% endblock %}

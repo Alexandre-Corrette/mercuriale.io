@@ -26,76 +26,61 @@
         </div>
     </div>
 
-    {# Filters #}
-    <div class="avoir-liste-filters">
-        <input type="text"
-               class="avoir-liste-filters__search"
-               id="avoir-search"
-               placeholder="Rechercher (reference, fournisseur...)">
+    {# Filters + List #}
+    <div data-controller="search-filter">
+        <div class="avoir-liste-filters">
+            <input type="text"
+                   class="avoir-liste-filters__search"
+                   data-search-filter-target="input"
+                   data-action="input->search-filter#filter"
+                   placeholder="Rechercher (reference, fournisseur...)">
 
-        <div class="avoir-liste-filters__statuts">
-            <a href="{{ path('app_avoirs_liste') }}"
-               class="avoir-liste-filters__btn {{ statut_filter is null ? 'avoir-liste-filters__btn--active' : '' }}">Tous</a>
-            {% for s in statuts %}
-                <a href="{{ path('app_avoirs_liste', {statut: s.value}) }}"
-                   class="avoir-liste-filters__btn {{ statut_filter == s ? 'avoir-liste-filters__btn--active' : '' }}">{{ s.label }}</a>
-            {% endfor %}
+            <div class="avoir-liste-filters__statuts">
+                <a href="{{ path('app_avoirs_liste') }}"
+                   class="avoir-liste-filters__btn {{ statut_filter is null ? 'avoir-liste-filters__btn--active' : '' }}">Tous</a>
+                {% for s in statuts %}
+                    <a href="{{ path('app_avoirs_liste', {statut: s.value}) }}"
+                       class="avoir-liste-filters__btn {{ statut_filter == s ? 'avoir-liste-filters__btn--active' : '' }}">{{ s.label }}</a>
+                {% endfor %}
+            </div>
         </div>
-    </div>
 
-    {# List #}
-    {% if avoirs is empty %}
-        <div class="avoir-liste-empty">
-            <i class="fas fa-receipt"></i>
-            <p>Aucun avoir{{ statut_filter ? ' en statut "' ~ statut_filter.label ~ '"' : '' }} pour cet etablissement.</p>
-            <a href="{{ path('app_bl_pending') }}" class="avoir-liste-empty__cta">
-                <i class="fas fa-clipboard-check"></i> Voir les BL en attente
-            </a>
-        </div>
-    {% else %}
-        <div class="avoir-liste-rows" id="avoir-rows">
-            {% for avoir in avoirs %}
-                <a href="{{ path('app_avoir_show', {id: avoir.idAsString}) }}"
-                   class="avoir-liste-row"
-                   data-search="{{ (avoir.reference ?? '')|lower }} {{ avoir.fournisseur ? avoir.fournisseur.nom|lower : '' }} {{ avoir.motif ? avoir.motif.label|lower : '' }}">
-                    <div class="avoir-liste-row__main">
-                        <span class="avoir-liste-row__ref">{{ avoir.reference ?? 'Avoir #' ~ avoir.idAsString[:8] }}</span>
-                        <span class="avoir-liste-row__fournisseur">{{ avoir.fournisseur ? avoir.fournisseur.nom : '—' }}</span>
-                    </div>
-                    <div class="avoir-liste-row__details">
-                        <span class="avoir-liste-row__date">{{ avoir.demandeLe|date('d/m/Y') }}</span>
-                        {% include 'components/_status_badge.html.twig' with {
-                            label: avoir.motif ? avoir.motif.label : '—',
-                            variant: avoir.motif ? avoir.motif.color : 'secondary',
-                            size: 'sm'
-                        } only %}
-                        {% include 'components/_status_badge.html.twig' with {
-                            label: avoir.statut.label,
-                            variant: avoir.statut.color,
-                            size: 'sm'
-                        } only %}
-                        <span class="avoir-liste-row__montant">{{ avoir.montantHt ? avoir.montantHt|number_format(2, ',', ' ') ~ ' € HT' : '—' }}</span>
-                    </div>
+        {% if avoirs is empty %}
+            <div class="avoir-liste-empty">
+                <i class="fas fa-receipt"></i>
+                <p>Aucun avoir{{ statut_filter ? ' en statut "' ~ statut_filter.label ~ '"' : '' }} pour cet etablissement.</p>
+                <a href="{{ path('app_bl_pending') }}" class="avoir-liste-empty__cta">
+                    <i class="fas fa-clipboard-check"></i> Voir les BL en attente
                 </a>
-            {% endfor %}
-        </div>
-    {% endif %}
-</div>
-
-<script>
-document.addEventListener('turbo:load', function () {
-    var input = document.getElementById('avoir-search');
-    var container = document.getElementById('avoir-rows');
-    if (!input || !container) return;
-
-    input.addEventListener('keyup', function () {
-        var query = input.value.toLowerCase().trim();
-        var items = container.querySelectorAll('.avoir-liste-row');
-        items.forEach(function (row) {
-            var searchText = row.getAttribute('data-search') || '';
-            row.style.display = searchText.indexOf(query) !== -1 ? '' : 'none';
-        });
-    });
-});
-</script>
+            </div>
+        {% else %}
+            <div class="avoir-liste-rows" data-search-filter-target="list">
+                {% for avoir in avoirs %}
+                    <a href="{{ path('app_avoir_show', {id: avoir.idAsString}) }}"
+                       class="avoir-liste-row"
+                       data-search-filter-target="item"
+                       data-search="{{ (avoir.reference ?? '')|lower }} {{ avoir.fournisseur ? avoir.fournisseur.nom|lower : '' }} {{ avoir.motif ? avoir.motif.label|lower : '' }}">
+                        <div class="avoir-liste-row__main">
+                            <span class="avoir-liste-row__ref">{{ avoir.reference ?? 'Avoir #' ~ avoir.idAsString[:8] }}</span>
+                            <span class="avoir-liste-row__fournisseur">{{ avoir.fournisseur ? avoir.fournisseur.nom : '—' }}</span>
+                        </div>
+                        <div class="avoir-liste-row__details">
+                            <span class="avoir-liste-row__date">{{ avoir.demandeLe|date('d/m/Y') }}</span>
+                            {% include 'components/_status_badge.html.twig' with {
+                                label: avoir.motif ? avoir.motif.label : '—',
+                                variant: avoir.motif ? avoir.motif.color : 'secondary',
+                                size: 'sm'
+                            } only %}
+                            {% include 'components/_status_badge.html.twig' with {
+                                label: avoir.statut.label,
+                                variant: avoir.statut.color,
+                                size: 'sm'
+                            } only %}
+                            <span class="avoir-liste-row__montant">{{ avoir.montantHt ? avoir.montantHt|number_format(2, ',', ' ') ~ ' € HT' : '—' }}</span>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
 {% endblock %}
