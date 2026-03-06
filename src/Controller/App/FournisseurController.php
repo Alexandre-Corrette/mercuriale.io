@@ -5,14 +5,18 @@ declare(strict_types=1);
 namespace App\Controller\App;
 
 use App\Entity\ContactFournisseur;
+use App\Entity\EmailContactFournisseur;
 use App\Entity\Fournisseur;
 use App\Entity\OrganisationFournisseur;
 use App\Entity\Utilisateur;
+use App\Enum\StatutEmail;
 use App\Form\ContactFournisseurType;
+use App\Form\EmailContactType;
 use App\Form\FournisseurCreateType;
 use App\Repository\AvoirFournisseurRepository;
 use App\Repository\BonLivraisonRepository;
 use App\Repository\ContactFournisseurRepository;
+use App\Repository\EmailContactFournisseurRepository;
 use App\Repository\FournisseurRepository;
 use App\Repository\ProduitFournisseurRepository;
 use App\Security\Voter\FournisseurVoter;
@@ -22,6 +26,8 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Email;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -45,6 +51,7 @@ class FournisseurController extends AbstractController
 
         return $this->render('app/fournisseur/hub.html.twig', [
             'fournisseur_count' => $this->fournisseurRepo->countActiveForOrganisation($org),
+            'contact_count' => $this->contactRepo->countForOrganisation($org),
         ]);
     }
 
@@ -100,6 +107,88 @@ class FournisseurController extends AbstractController
         }
 
         return $this->json($result);
+    }
+
+    #[Route('/contacts', name: 'app_fournisseurs_contacts', methods: ['GET'])]
+    public function contacts(): Response
+    {
+        /** @var Utilisateur $user */
+        $user = $this->getUser();
+        $org = $user->getOrganisation();
+
+        $emailForm = $this->createForm(EmailContactType::class, null, [
+            'action' => $this->generateUrl('app_fournisseurs_contacts_send'),
+        ]);
+
+        return $this->render('app/fournisseur/contacts.html.twig', [
+            'grouped_contacts' => $this->contactRepo->findGroupedByFournisseurForOrganisation($org),
+            'email_form' => $emailForm,
+        ]);
+    }
+
+    #[Route('/contacts/send', name: 'app_fournisseurs_contacts_send', methods: ['POST'])]
+    #[IsGranted('ROLE_MANAGER')]
+    public function contactSendEmail(
+        Request $request,
+        MailerInterface $mailer,
+        EmailContactFournisseurRepository $emailRepo,
+    ): Response {
+        /** @var Utilisateur $user */
+        $user = $this->getUser();
+
+        // Rate limiting: 20 emails/hour
+        if ($emailRepo->countSentLastHourByUser($user) >= 20) {
+            $this->addFlash('error', 'Limite atteinte : 20 emails par heure maximum.');
+
+            return $this->redirectToRoute('app_fournisseurs_contacts');
+        }
+
+        $form = $this->createForm(EmailContactType::class);
+        $form->handleRequest($request);
+
+        if (!$form->isSubmitted() || !$form->isValid()) {
+            $this->addFlash('error', 'Formulaire invalide.');
+
+            return $this->redirectToRoute('app_fournisseurs_contacts');
+        }
+
+        $data = $form->getData();
+        $contact = $this->contactRepo->find($data['contactId']);
+
+        if ($contact === null || $contact->getEmail() === null) {
+            $this->addFlash('error', 'Contact introuvable ou sans email.');
+
+            return $this->redirectToRoute('app_fournisseurs_contacts');
+        }
+
+        // IDOR check: verify contact belongs to user's organisation
+        $this->denyAccessUnlessGranted(FournisseurVoter::VIEW, $contact->getFournisseur());
+
+        $emailRecord = new EmailContactFournisseur();
+        $emailRecord->setContact($contact);
+        $emailRecord->setSentBy($user);
+        $emailRecord->setSubject($data['subject']);
+        $emailRecord->setBody($data['body']);
+
+        try {
+            $email = (new Email())
+                ->to($contact->getEmail())
+                ->replyTo($user->getEmail())
+                ->subject($data['subject'])
+                ->text($data['body']);
+
+            $mailer->send($email);
+            $emailRecord->setStatus(StatutEmail::SENT);
+            $this->addFlash('success', sprintf('Email envoyé à %s.', $contact->getNomComplet()));
+        } catch (\Throwable) {
+            $emailRecord->setStatus(StatutEmail::FAILED);
+            $this->addFlash('error', 'Échec de l\'envoi de l\'email.');
+        }
+
+        $this->entityManager->persist($emailRecord);
+        $this->entityManager->flush();
+
+        return $this->redirectToRoute('app_fournisseurs_contacts');
     }
 
     #[Route('/liste', name: 'app_fournisseurs_liste', methods: ['GET'])]
