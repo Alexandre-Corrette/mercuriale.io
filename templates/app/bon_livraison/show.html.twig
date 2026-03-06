@@ -134,13 +134,19 @@
             </form>
         {% endif %}
 
-        <button type="button" class="btn btn--danger" disabled title="Disponible en V2 (MERC-23)">
-            <i class="fas fa-file-invoice"></i> Avoir
-        </button>
-
-        <button type="button" class="btn btn--outline" disabled title="Disponible en V2 (MERC-23)">
-            <i class="fas fa-paper-plane"></i> Demande avoir fournisseur
-        </button>
+        {% if bonLivraison.avoirs is not empty %}
+            {% for avoir in bonLivraison.avoirs %}
+                <a href="{{ path('app_avoir_show', {id: avoir.idAsString}) }}" class="btn btn--outline">
+                    <i class="fas fa-receipt"></i>
+                    Avoir {{ avoir.reference ?? '#' ~ avoir.idAsString[:8] }}
+                    — {{ avoir.demandeLe|date('d/m/Y') }}
+                </a>
+            {% endfor %}
+        {% elseif bonLivraison.statut.value == 'ANOMALIE' and is_granted('MANAGE', bonLivraison.etablissement) %}
+            <a href="{{ path('app_avoir_demande', {id: bonLivraison.id}) }}" class="btn btn--danger">
+                <i class="fas fa-paper-plane"></i> Demander un avoir
+            </a>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
