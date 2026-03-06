@@ -66,3 +66,12 @@ tests/fixtures/images/bl/*.png
 
 # OCR batch reports
 ocr_batch_report_*.json
+
+# Docs (screenshots, maquettes, local notes)
+/docs/
+
+# IDE
+.idea/
+
+# OS
+.DS_Store
