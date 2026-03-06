@@ -24,6 +24,7 @@
             <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
             <link rel="stylesheet" href="{{ asset('css/push-notification.css') }}">
             <link rel="stylesheet" href="{{ asset('css/install-prompt.css') }}">
+            <link rel="stylesheet" href="{{ asset('css/verification.css') }}">
         {% endblock %}
 
         {% block javascripts %}
@@ -56,6 +57,18 @@
                 </header>
                 {% endif %}
             {% endblock %}
+
+            {% if app.user and app.user.organisation and not app.user.organisation.verified and app.user.organisation.trialActive %}
+                <div class="trial-banner">
+                    <div class="trial-banner__inner">
+                        <i class="fas fa-clock trial-banner__icon"></i>
+                        <span class="trial-banner__text">
+                            Periode d'essai — Il vous reste <strong>{{ app.user.organisation.trialDaysRemaining }}</strong> jour{{ app.user.organisation.trialDaysRemaining > 1 ? 's' : '' }}.
+                        </span>
+                        <a href="{{ path('app_verification') }}" class="trial-banner__cta">Verifier mon identite</a>
+                    </div>
+                </div>
+            {% endif %}
 
             {% block body %}{% endblock %}
         </div>
