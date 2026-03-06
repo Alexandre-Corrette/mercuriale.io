@@ -1,0 +1,163 @@
+{% extends 'admin/hub/layout.html.twig' %}
+
+{% set hub_title = 'Contacts fournisseurs' %}
+{% set hub_breadcrumbs = [
+    { label: 'Fournisseurs', url: path('app_fournisseurs_hub') },
+    { label: 'Contacts' }
+] %}
+
+{% block title %}Contacts fournisseurs — Mercuriale.io{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/contact-fournisseur.css') }}">
+{% endblock %}
+
+{% block hub_content %}
+<div class="hub-content">
+    <div class="contacts-page__header">
+        <h1 class="contacts-page__title">
+            <i class="fas fa-address-book"></i> Contacts fournisseurs
+        </h1>
+    </div>
+
+    {% for message in app.flashes('success') %}
+        <div class="fournisseur-create__flash fournisseur-create__flash--success">
+            <i class="fas fa-check-circle"></i> {{ message }}
+        </div>
+    {% endfor %}
+
+    {% for message in app.flashes('error') %}
+        <div class="fournisseur-create__flash fournisseur-create__flash--error">
+            <i class="fas fa-exclamation-circle"></i> {{ message }}
+        </div>
+    {% endfor %}
+
+    {% if grouped_contacts is empty %}
+        <div class="contacts-section__empty">
+            <i class="fas fa-exclamation-triangle"></i>
+            Aucun contact renseigne. Ajoutez des contacts depuis la fiche de chaque fournisseur.
+        </div>
+    {% else %}
+        {% for group in grouped_contacts %}
+            <div class="contacts-page__group">
+                <div class="contacts-page__group-header" onclick="this.parentElement.classList.toggle('is-collapsed')">
+                    <h2 class="contacts-page__group-title">
+                        <i class="fas fa-handshake"></i>
+                        {{ group.fournisseur.nom }}
+                        <span class="contacts-page__group-count">({{ group.contacts|length }})</span>
+                    </h2>
+                    <i class="fas fa-chevron-down contacts-page__group-chevron"></i>
+                </div>
+
+                <div class="contacts-page__group-body">
+                    <div class="contacts-grid">
+                        {% for contact in group.contacts %}
+                            <div class="contact-card{{ contact.principal ? ' contact-card--primary' : '' }}">
+                                <div class="contact-card__header">
+                                    <div>
+                                        <h3 class="contact-card__name">{{ contact.nomComplet }}</h3>
+                                        {% if contact.role %}
+                                            <p class="contact-card__role">{{ contact.role }}</p>
+                                        {% endif %}
+                                    </div>
+                                    {% if contact.principal %}
+                                        <span class="contact-card__badge-primary">
+                                            <i class="fas fa-star"></i> Principal
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                <div class="contact-card__info">
+                                    {% if contact.email %}
+                                        <div class="contact-card__info-row">
+                                            <i class="fas fa-envelope"></i>
+                                            <a href="mailto:{{ contact.email }}">{{ contact.email }}</a>
+                                        </div>
+                                    {% endif %}
+                                    {% if contact.telephone %}
+                                        <div class="contact-card__info-row">
+                                            <i class="fas fa-phone"></i>
+                                            <a href="tel:{{ contact.telephone }}">{{ contact.telephone }}</a>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                {% if contact.note %}
+                                    <div class="contact-card__note">{{ contact.note }}</div>
+                                {% endif %}
+                                <div class="contact-card__actions">
+                                    {% if contact.email %}
+                                        <a href="tel:{{ contact.telephone|default('') }}" class="contact-card__action contact-card__action--edit">
+                                            <i class="fas fa-phone"></i> Appeler
+                                        </a>
+                                        {% if is_granted('ROLE_MANAGER') %}
+                                            <button type="button" class="contact-card__action contact-card__action--email"
+                                                    onclick="openEmailModal('{{ contact.idAsString }}', '{{ contact.email|e('js') }}', '{{ contact.nomComplet|e('js') }}')">
+                                                <i class="fas fa-paper-plane"></i> Email
+                                            </button>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>
+
+{# Email modal #}
+{% if is_granted('ROLE_MANAGER') %}
+<div id="email-modal" class="email-modal" style="display:none">
+    <div class="email-modal__backdrop" onclick="closeEmailModal()"></div>
+    <div class="email-modal__content">
+        <div class="email-modal__header">
+            <h3 class="email-modal__title"><i class="fas fa-paper-plane"></i> Envoyer un email</h3>
+            <button type="button" class="email-modal__close" onclick="closeEmailModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        {{ form_start(email_form, {attr: {class: 'email-modal__form', id: 'email-form'}}) }}
+            <div class="email-modal__recipient" id="email-recipient"></div>
+            {{ form_widget(email_form.contactId, {id: 'email-contact-id'}) }}
+            <div class="contact-form-inline__field">
+                {{ form_label(email_form.subject, null, {label_attr: {class: 'contact-form-inline__label'}}) }}
+                {{ form_widget(email_form.subject, {attr: {class: 'contact-form-inline__input', placeholder: 'Objet du message'}}) }}
+                {{ form_errors(email_form.subject) }}
+            </div>
+            <div class="contact-form-inline__field">
+                {{ form_label(email_form.body, null, {label_attr: {class: 'contact-form-inline__label'}}) }}
+                {{ form_widget(email_form.body, {attr: {class: 'contact-form-inline__input', placeholder: 'Votre message...', rows: 6}}) }}
+                {{ form_errors(email_form.body) }}
+            </div>
+            {{ form_rest(email_form) }}
+            <div class="contact-form-inline__actions">
+                <button type="submit" class="contact-form-inline__btn contact-form-inline__btn--save">
+                    <i class="fas fa-paper-plane"></i> Envoyer
+                </button>
+                <button type="button" class="contact-form-inline__btn contact-form-inline__btn--cancel" onclick="closeEmailModal()">
+                    Annuler
+                </button>
+            </div>
+        {{ form_end(email_form) }}
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    {% if is_granted('ROLE_MANAGER') %}
+    <script>
+        function openEmailModal(contactId, email, name) {
+            document.getElementById('email-contact-id').value = contactId;
+            document.getElementById('email-recipient').textContent = 'À : ' + name + ' <' + email + '>';
+            document.getElementById('email-modal').style.display = 'flex';
+        }
+        function closeEmailModal() {
+            document.getElementById('email-modal').style.display = 'none';
+            document.getElementById('email-form').reset();
+        }
+    </script>
+    {% endif %}
+{% endblock %}

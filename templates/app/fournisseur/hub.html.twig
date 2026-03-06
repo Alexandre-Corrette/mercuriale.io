@@ -48,7 +48,8 @@
 
         {% include 'components/_dashboard_tile.html.twig' with {
             label: 'Contacts', icon: 'fa-address-book',
-            color: 'cyan', disabled: true
+            url: path('app_fournisseurs_contacts'), color: 'cyan',
+            badge_count: contact_count
         } only %}
     </div>
 </div>
