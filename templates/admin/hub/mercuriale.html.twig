@@ -1,5 +1,10 @@
 {% extends 'admin/hub/layout.html.twig' %}
 
+{% set hub_title = 'Mercuriale' %}
+{% set hub_breadcrumbs = [
+    { label: 'Mercuriale' }
+] %}
+
 {% block hub_content %}
 <div class="hub-content" data-controller="mercuriale-hub" data-mercuriale-hub-search-url-value="{{ path('admin_hub_mercuriale_search') }}">
     <h1 class="hub-title"><i class="fas fa-tags"></i> Mercuriale</h1>

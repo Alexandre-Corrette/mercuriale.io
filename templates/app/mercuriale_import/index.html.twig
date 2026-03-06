@@ -2,7 +2,7 @@
 
 {% set hub_title = 'Mercuriale' %}
 {% set hub_breadcrumbs = [
-    { label: 'Mercuriale', url: path('admin_hub_mercuriale') },
+    { label: 'Mercuriale', url: path('app_produits_liste') },
     { label: 'Importer' }
 ] %}
 
@@ -19,8 +19,8 @@
 
     {# Card #}
     <div class="hub-section">
-        <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
-            <div class="p-6 md:p-8">
+        <div class="mi-card">
+            <div class="mi-card__body">
                 {{ form_start(form, {'attr': {
                     'id': 'upload-form',
                     'novalidate': 'novalidate',
@@ -36,12 +36,12 @@
 
                     {# Global form errors #}
                     {% if form.vars.errors|length > 0 %}
-                        <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl">
-                            <div class="flex items-center gap-2 text-red-800 font-semibold mb-2">
+                        <div class="mi-error-box">
+                            <div class="mi-error-box__title">
                                 <i class="fas fa-exclamation-circle"></i>
                                 Erreurs de validation
                             </div>
-                            <ul class="list-disc list-inside text-red-700 text-sm">
+                            <ul class="mi-error-box__list">
                                 {% for error in form.vars.errors %}
                                     <li>{{ error.message }}</li>
                                 {% endfor %}
@@ -50,56 +50,54 @@
                     {% endif %}
 
                     {# Fournisseur select #}
-                    <div class="mb-6">
-                        <label class="block font-semibold text-gray-700 mb-2">
-                            <i class="fas fa-truck mr-2"></i>Fournisseur
+                    <div class="mi-form-group">
+                        <label class="mi-form-group__label">
+                            <i class="fas fa-truck"></i> Fournisseur
                         </label>
-                        {{ form_widget(form.fournisseur, {'attr': {
-                            'class': 'w-full px-4 py-3 text-base border-2 border-gray-200 rounded-xl bg-white focus:outline-none focus:border-coral focus:ring-4 focus:ring-coral/10 transition-all'
-                        }}) }}
+                        {{ form_widget(form.fournisseur, {'attr': {'class': 'mi-form-field'}}) }}
                         {{ form_errors(form.fournisseur) }}
                     </div>
 
                     {# Etablissements checkboxes #}
-                    <div class="mb-6">
-                        <label class="block font-semibold text-gray-700 mb-2">
-                            <i class="fas fa-building mr-2"></i>Établissements (optionnel)
+                    <div class="mi-form-group">
+                        <label class="mi-form-group__label">
+                            <i class="fas fa-building"></i> Etablissements (optionnel)
                         </label>
                         <div class="mercuriale-import-checkboxes">
                             {{ form_widget(form.etablissements) }}
                         </div>
-                        <p class="mt-2 text-sm text-gray-500">
-                            <i class="fas fa-info-circle mr-1"></i>
-                            Cochez les établissements concernés. Laissez vide pour appliquer les prix à tous (prix groupe).
+                        <p class="mi-form-group__hint">
+                            <i class="fas fa-info-circle"></i>
+                            Cochez les etablissements concernes. Laissez vide pour appliquer les prix a tous (prix groupe).
                         </p>
                         {{ form_errors(form.etablissements) }}
                     </div>
 
                     {# File input #}
-                    <div class="mb-6">
-                        <label class="block font-semibold text-gray-700 mb-2">
-                            <i class="fas fa-file-excel mr-2"></i>Fichier mercuriale
+                    <div class="mi-form-group">
+                        <label class="mi-form-group__label">
+                            <i class="fas fa-file-excel"></i> Fichier mercuriale
                         </label>
 
-                        <div data-file-upload-target="dropZone" class="border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center cursor-pointer bg-gray-50 transition-all duration-300 hover:border-coral hover:bg-coral/10">
-                            <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-navy to-navy-light rounded-full flex items-center justify-center">
-                                <i class="fas fa-cloud-upload-alt text-2xl text-white"></i>
+                        <div data-file-upload-target="dropZone" class="mi-dropzone">
+                            <div class="mi-dropzone__icon">
+                                <i class="fas fa-cloud-upload-alt"></i>
                             </div>
-                            <h3 class="text-lg font-semibold text-gray-900 mb-2">Glissez votre fichier ici</h3>
-                            <p class="text-gray-500 mb-4">ou cliquez pour parcourir</p>
-                            <div class="px-4 py-2 bg-cream-dark rounded-lg text-sm text-gray-500 inline-block">
-                                <i class="fas fa-info-circle mr-1 text-gold"></i>
+                            <h3 class="mi-dropzone__title">Glissez votre fichier ici</h3>
+                            <p class="mi-dropzone__subtitle">ou cliquez pour parcourir</p>
+                            <div class="mi-dropzone__hint">
+                                <i class="fas fa-info-circle"></i>
                                 CSV ou XLSX - Maximum 10 Mo - 5000 lignes max
                             </div>
                         </div>
 
-                        <div data-file-upload-target="preview" class="hidden mt-4 p-4 bg-gray-50 rounded-xl">
-                            <div class="flex items-center gap-4">
-                                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                                    <i class="fas fa-file-excel text-xl text-green-600"></i>
+                        <div data-file-upload-target="preview" class="mi-file-preview">
+                            <div class="mi-file-preview__row">
+                                <div class="mi-file-preview__icon">
+                                    <i class="fas fa-file-excel"></i>
                                 </div>
-                                <div class="flex-1 min-w-0" data-file-upload-target="filesList"></div>
-                                <button type="button" data-action="file-upload#clearAll" class="w-8 h-8 flex items-center justify-center bg-white rounded-lg text-gray-500 hover:bg-red-100 hover:text-red-600 transition-all">
+                                <div class="mi-file-preview__info" data-file-upload-target="filesList"></div>
+                                <button type="button" data-action="file-upload#clearAll" class="mi-file-preview__remove">
                                     <i class="fas fa-times"></i>
                                 </button>
                             </div>
@@ -124,36 +122,34 @@
     {% if pendingImports is not empty %}
     <div class="hub-section">
         <div class="hub-section__header">
-            <h2 class="hub-section__title"><i class="fas fa-clock mr-2"></i>Imports en cours</h2>
+            <h2 class="hub-section__title"><i class="fas fa-clock"></i> Imports en cours</h2>
         </div>
-        <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
-            <div class="p-6">
-                <div class="space-y-3">
-                    {% for import in pendingImports %}
-                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                        <div>
-                            <div class="font-semibold text-gray-900">{{ import.originalFilename }}</div>
-                            <div class="text-sm text-gray-500">
-                                {{ import.fournisseur.nom }} - {{ import.totalRows }} lignes
-                                <span class="hub-badge hub-badge--{{ import.status.color }}">
-                                    {{ import.status.label }}
-                                </span>
-                            </div>
-                        </div>
-                        <div class="hub-ctas">
-                            <a href="{{ path('app_mercuriale_import_mapping', {importId: import.idAsString}) }}" class="hub-cta hub-cta--primary">
-                                <i class="fas fa-arrow-right"></i> Continuer
-                            </a>
-                            <form action="{{ path('app_mercuriale_import_cancel', {importId: import.idAsString}) }}" method="post" class="inline">
-                                <input type="hidden" name="_token" value="{{ csrf_token('cancel_import_' ~ import.idAsString) }}">
-                                <button type="submit" class="hub-cta hub-cta--outline" onclick="return confirm('Annuler cet import ?')">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </form>
+        <div class="mi-card">
+            <div class="mi-card__body">
+                {% for import in pendingImports %}
+                <div class="mi-pending-item">
+                    <div>
+                        <div class="mi-pending-item__name">{{ import.originalFilename }}</div>
+                        <div class="mi-pending-item__meta">
+                            {{ import.fournisseur.nom }} - {{ import.totalRows }} lignes
+                            <span class="hub-badge hub-badge--{{ import.status.color }}">
+                                {{ import.status.label }}
+                            </span>
                         </div>
                     </div>
-                    {% endfor %}
+                    <div class="hub-ctas">
+                        <a href="{{ path('app_mercuriale_import_mapping', {importId: import.idAsString}) }}" class="hub-cta hub-cta--primary">
+                            <i class="fas fa-arrow-right"></i> Continuer
+                        </a>
+                        <form action="{{ path('app_mercuriale_import_cancel', {importId: import.idAsString}) }}" method="post" class="inline">
+                            <input type="hidden" name="_token" value="{{ csrf_token('cancel_import_' ~ import.idAsString) }}">
+                            <button type="submit" class="hub-cta hub-cta--outline" onclick="return confirm('Annuler cet import ?')">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </form>
+                    </div>
                 </div>
+                {% endfor %}
             </div>
         </div>
     </div>

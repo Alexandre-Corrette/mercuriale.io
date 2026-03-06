@@ -2,61 +2,37 @@
 
 {% set hub_title = 'Mercuriale' %}
 {% set hub_breadcrumbs = [
-    { label: 'Mercuriale', url: path('admin_hub_mercuriale') },
-    { label: 'Résultat' }
+    { label: 'Mercuriale', url: path('app_produits_liste') },
+    { label: 'Resultat' }
 ] %}
 
 {% block title %}Import Termine - Mercuriale.io{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/mercuriale-import.css') }}">
+{% endblock %}
 
 {% block hub_content %}
 <div class="hub-content hub-content--narrow">
     <h1 class="hub-title"><i class="fas fa-flag-checkered"></i> Import termine</h1>
 
-    {# Progress steps #}
-    <div class="flex items-center justify-center gap-4 mb-8">
-        <div class="flex items-center gap-2 text-green-600">
-            <div class="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center">
-                <i class="fas fa-check"></i>
-            </div>
-            <span class="font-medium">Upload</span>
-        </div>
-        <div class="w-16 h-0.5 bg-green-600"></div>
-        <div class="flex items-center gap-2 text-green-600">
-            <div class="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center">
-                <i class="fas fa-check"></i>
-            </div>
-            <span class="font-medium">Mapping</span>
-        </div>
-        <div class="w-16 h-0.5 bg-green-600"></div>
-        <div class="flex items-center gap-2 text-green-600">
-            <div class="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center">
-                <i class="fas fa-check"></i>
-            </div>
-            <span class="font-medium">Preview</span>
-        </div>
-        <div class="w-16 h-0.5 bg-green-600"></div>
-        <div class="flex items-center gap-2 text-green-600">
-            <div class="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center">
-                <i class="fas fa-check"></i>
-            </div>
-            <span class="font-medium">Import</span>
-        </div>
-    </div>
+    {% include 'components/_import_progress.html.twig' with { current_step: 4 } only %}
 
     {# Result card #}
-    <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+    <div class="mi-card">
         {% if result and result.isSuccess %}
             {# Success #}
-            <div class="p-8 text-center bg-gradient-to-br from-green-500 to-green-600 text-white">
-                <div class="w-20 h-20 mx-auto mb-4 bg-white/20 rounded-full flex items-center justify-center">
-                    <i class="fas fa-check-circle text-4xl"></i>
+            <div class="mi-result-banner mi-result-banner--success">
+                <div class="mi-result-banner__icon">
+                    <i class="fas fa-check-circle"></i>
                 </div>
-                <h2 class="text-2xl font-bold mb-2">Import reussi !</h2>
-                <p class="text-green-100">{{ result.summary }}</p>
+                <h2 class="mi-result-banner__title">Import reussi !</h2>
+                <p class="mi-result-banner__subtitle">{{ result.summary }}</p>
             </div>
 
             {# Stats #}
-            <div class="p-6">
+            <div class="mi-card__body">
                 <div class="hub-stats">
                     <div class="hub-stat-card">
                         <div class="hub-stat-card__value">{{ result.totalProcessed }}</div>
@@ -85,22 +61,22 @@
                 </div>
 
                 {% if result.executionTime > 0 %}
-                    <div class="text-center text-sm text-gray-500 mb-6">
-                        <i class="fas fa-clock mr-1"></i>
+                    <div class="mi-execution-time">
+                        <i class="fas fa-clock"></i>
                         Temps d'execution : {{ result.executionTime|number_format(2) }} secondes
                     </div>
                 {% endif %}
 
                 {# Import details #}
                 <div class="hub-import-info hub-import-info--stacked">
-                    <h3 class="font-semibold text-gray-700 mb-2">Details de l'import</h3>
-                    <div class="text-sm text-gray-600 space-y-1">
+                    <h3 class="mi-form-group__label">Details de l'import</h3>
+                    <div class="mi-text-secondary">
                         <div><strong>Fichier :</strong> {{ import.originalFilename }}</div>
                         <div><strong>Fournisseur :</strong> {{ import.fournisseur.nom }}</div>
                         {% if import.etablissements|length > 0 %}
-                            <div><strong>Établissements :</strong> {{ import.etablissements|map(e => e.nom)|join(', ') }}</div>
+                            <div><strong>Etablissements :</strong> {{ import.etablissements|map(e => e.nom)|join(', ') }}</div>
                         {% else %}
-                            <div><strong>Scope :</strong> Prix groupe (tous établissements)</div>
+                            <div><strong>Scope :</strong> Prix groupe (tous etablissements)</div>
                         {% endif %}
                         <div><strong>Date :</strong> {{ import.createdAt|date('d/m/Y H:i') }}</div>
                     </div>
@@ -108,15 +84,15 @@
             </div>
         {% elseif result and result.isPartialSuccess %}
             {# Partial success #}
-            <div class="p-8 text-center bg-gradient-to-br from-amber-500 to-amber-600 text-white">
-                <div class="w-20 h-20 mx-auto mb-4 bg-white/20 rounded-full flex items-center justify-center">
-                    <i class="fas fa-exclamation-triangle text-4xl"></i>
+            <div class="mi-result-banner mi-result-banner--partial">
+                <div class="mi-result-banner__icon">
+                    <i class="fas fa-exclamation-triangle"></i>
                 </div>
-                <h2 class="text-2xl font-bold mb-2">Import partiel</h2>
-                <p class="text-amber-100">{{ result.summary }}</p>
+                <h2 class="mi-result-banner__title">Import partiel</h2>
+                <p class="mi-result-banner__subtitle">{{ result.summary }}</p>
             </div>
 
-            <div class="p-6">
+            <div class="mi-card__body">
                 <div class="hub-stats">
                     <div class="hub-stat-card">
                         <div class="hub-stat-card__value">{{ result.totalProcessed }}</div>
@@ -136,8 +112,8 @@
                     <div class="hub-alert-banner">
                         <i class="fas fa-times-circle"></i>
                         <div>
-                            <div class="font-semibold mb-1">Erreurs rencontrees</div>
-                            <ul class="text-sm space-y-1">
+                            <div class="mi-form-group__label">Erreurs rencontrees</div>
+                            <ul class="mi-error-box__list">
                                 {% for error in result.errors|slice(0, 10) %}
                                     <li>Ligne {{ error.row }} : {{ error.message }}</li>
                                 {% endfor %}
@@ -151,21 +127,21 @@
             </div>
         {% else %}
             {# Failure #}
-            <div class="p-8 text-center bg-gradient-to-br from-red-500 to-red-600 text-white">
-                <div class="w-20 h-20 mx-auto mb-4 bg-white/20 rounded-full flex items-center justify-center">
-                    <i class="fas fa-times-circle text-4xl"></i>
+            <div class="mi-result-banner mi-result-banner--failure">
+                <div class="mi-result-banner__icon">
+                    <i class="fas fa-times-circle"></i>
                 </div>
-                <h2 class="text-2xl font-bold mb-2">Import echoue</h2>
-                <p class="text-red-100">Une erreur est survenue lors de l'import</p>
+                <h2 class="mi-result-banner__title">Import echoue</h2>
+                <p class="mi-result-banner__subtitle">Une erreur est survenue lors de l'import</p>
             </div>
 
-            <div class="p-6">
+            <div class="mi-card__body">
                 {% if result and result.errors|length > 0 %}
                     <div class="hub-alert-banner">
                         <i class="fas fa-times-circle"></i>
                         <div>
-                            <div class="font-semibold mb-1">Erreurs</div>
-                            <ul class="text-sm space-y-1">
+                            <div class="mi-form-group__label">Erreurs</div>
+                            <ul class="mi-error-box__list">
                                 {% for error in result.errors %}
                                     <li>{{ error.message }}</li>
                                 {% endfor %}
@@ -177,13 +153,13 @@
         {% endif %}
 
         {# Actions #}
-        <div class="p-6 bg-gray-50 border-t border-gray-100">
+        <div class="mi-result-footer">
             <div class="hub-ctas hub-ctas--center">
                 <a href="{{ path('app_mercuriale_import') }}" class="hub-cta hub-cta--primary">
                     <i class="fas fa-plus"></i> Nouvel import
                 </a>
-                <a href="{{ path('admin') }}" class="hub-cta hub-cta--outline">
-                    <i class="fas fa-home"></i> Tableau de bord
+                <a href="{{ path('app_produits_liste') }}" class="hub-cta hub-cta--outline">
+                    <i class="fas fa-tags"></i> Mercuriale
                 </a>
             </div>
         </div>
