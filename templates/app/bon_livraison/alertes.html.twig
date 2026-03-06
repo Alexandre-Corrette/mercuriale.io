@@ -36,7 +36,7 @@
             {% for alerte in alertes %}
                 {% set ligne = alerte.ligneBl %}
                 {% set bl = ligne.bonLivraison %}
-                <a href="{{ path('app_bl_show', {id: bl.id}) }}" class="bl-alertes-row">
+                <a href="{{ path('app_bl_pending') }}" class="bl-alertes-row">
                     <div class="bl-alertes-row__type">
                         {% include 'components/_status_badge.html.twig' with {
                             label: alerte.typeAlerte.label,
