@@ -45,6 +45,12 @@
 
 **Note** : MERC-95 est indépendant, peut être fait en parallèle de 92→93→94.
 
+### Bugs à corriger
+
+- [ ] **Logo** non affiché sur preprod — à investiguer
+- [ ] Charger les **fixtures** en preprod pour avoir des données de test
+- [ ] Script deploy : corriger détection migrations (`grep 'not migrated'` ne matche pas)
+
 ---
 
 ## Fait aujourd'hui (05/03) — Module Factures Fournisseurs
