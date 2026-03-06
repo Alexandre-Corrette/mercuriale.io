@@ -1,0 +1,69 @@
+{% extends 'admin/hub/layout.html.twig' %}
+
+{% set hub_title = 'Bons de livraison' %}
+{% set hub_breadcrumbs = [
+    { label: 'Bons de livraison', url: path('app_bl_hub') },
+    { label: 'Alertes' }
+] %}
+
+{% block title %}Alertes — Mercuriale.io{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/bl-liste.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/bl-alertes.css') }}">
+{% endblock %}
+
+{% block hub_content %}
+<div class="hub-content">
+    <h1 class="hub-title"><i class="fas fa-triangle-exclamation"></i> Alertes</h1>
+
+    {# Stats #}
+    <div class="hub-stats">
+        <div class="hub-stat-card hub-stat-card--coral">
+            <div class="hub-stat-card__value">{{ alertes|length }}</div>
+            <div class="hub-stat-card__label">alertes non traitees</div>
+        </div>
+    </div>
+
+    {% if alertes is empty %}
+        <div class="bl-liste-empty">
+            <i class="fas fa-check-circle"></i>
+            <p>Aucune alerte en cours. Tous les ecarts ont ete traites.</p>
+        </div>
+    {% else %}
+        <div class="bl-alertes-list">
+            {% for alerte in alertes %}
+                {% set ligne = alerte.ligneBl %}
+                {% set bl = ligne.bonLivraison %}
+                <a href="{{ path('app_bl_show', {id: bl.id}) }}" class="bl-alertes-row">
+                    <div class="bl-alertes-row__type">
+                        {% include 'components/_status_badge.html.twig' with {
+                            label: alerte.typeAlerte.label,
+                            variant: 'danger',
+                            size: 'sm'
+                        } only %}
+                    </div>
+                    <div class="bl-alertes-row__product">{{ ligne.designationBl }}</div>
+                    <div class="bl-alertes-row__bl">
+                        {{ bl.numeroBl ? 'BL ' ~ bl.numeroBl : 'BL #' ~ bl.id }}
+                        {% if bl.fournisseur %}
+                            — {{ bl.fournisseur.nom }}
+                        {% endif %}
+                    </div>
+                    <div class="bl-alertes-row__ecart">
+                        {% if alerte.ecartPct %}
+                            {% include 'components/_variance_indicator.html.twig' with {
+                                value: alerte.ecartPctAsFloat,
+                                threshold: 5.0,
+                                size: 'sm'
+                            } only %}
+                        {% endif %}
+                    </div>
+                    <div class="bl-alertes-row__date">{{ alerte.createdAt|date('d/m/Y') }}</div>
+                </a>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

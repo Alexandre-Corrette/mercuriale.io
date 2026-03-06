@@ -59,6 +59,24 @@ class BonLivraisonController extends AbstractController
         ]);
     }
 
+    #[Route('/alertes', name: 'app_bl_alertes', methods: ['GET'])]
+    public function alertes(
+        AlerteControleRepository $alerteRepo,
+        AppLayoutExtension $layoutExtension,
+    ): Response {
+        $etablissement = $layoutExtension->getSelectedEtablissement();
+        if (!$etablissement) {
+            throw $this->createAccessDeniedException();
+        }
+        $this->denyAccessUnlessGranted('VIEW', $etablissement);
+
+        $alertes = $alerteRepo->findNonTraiteesForEtablissement($etablissement);
+
+        return $this->render('app/bon_livraison/alertes.html.twig', [
+            'alertes' => $alertes,
+        ]);
+    }
+
     #[Route('/en-attente', name: 'app_bl_pending', methods: ['GET'])]
     public function pending(
         BonLivraisonRepository $blRepo,
