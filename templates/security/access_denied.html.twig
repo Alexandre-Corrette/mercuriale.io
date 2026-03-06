@@ -1,0 +1,48 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Acces restreint - Mercuriale.io{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/access-denied.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="ad-page">
+    <div class="ad-container">
+        <div class="ad-card">
+            <div class="ad-card__icon">
+                <i class="fas fa-lock"></i>
+            </div>
+            <h1 class="ad-card__title">Acces restreint</h1>
+            <p class="ad-card__text">
+                Vous n'avez pas les droits necessaires pour acceder a cette page.
+                Contactez votre responsable si vous pensez qu'il s'agit d'une erreur.
+            </p>
+
+            {% if app.user %}
+                <div class="ad-card__role">
+                    <i class="fas fa-user-tag"></i>
+                    {% set role = app.user.roles|first %}
+                    {% if role == 'ROLE_ADMIN' or role == 'ROLE_SUPER_ADMIN' %}
+                        Administrateur
+                    {% elseif role == 'ROLE_MANAGER' %}
+                        Gerant
+                    {% else %}
+                        Cuisinier
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            <div class="ad-card__actions">
+                <a href="javascript:history.back()" class="btn btn--secondary btn--lg">
+                    <i class="fas fa-arrow-left"></i> Retour
+                </a>
+                <a href="{{ path('admin') }}" class="btn btn--primary btn--lg">
+                    <i class="fas fa-home"></i> Tableau de bord
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

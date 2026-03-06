@@ -1,0 +1,69 @@
+/* Mercuriale.io — Access Denied page */
+
+.ad-page {
+    min-height: 100vh;
+    background: var(--mercuriale-cream);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 3rem 1rem 4rem;
+}
+
+.ad-container {
+    max-width: 480px;
+    width: 100%;
+}
+
+.ad-card {
+    background: #fff;
+    border-radius: 1rem;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    padding: 2.5rem 2rem;
+    text-align: center;
+}
+
+.ad-card__icon {
+    font-size: 3rem;
+    color: var(--mercuriale-coral);
+    margin-bottom: 1rem;
+}
+
+.ad-card__title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--mercuriale-navy);
+    margin: 0 0 0.75rem;
+}
+
+.ad-card__text {
+    color: #6b7280;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin: 0 0 1.5rem;
+}
+
+.ad-card__role {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #f3f4f6;
+    color: #6b7280;
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 1.5rem;
+}
+
+.ad-card__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+@media (max-width: 480px) {
+    .ad-card {
+        padding: 1.5rem 1.25rem;
+    }
+}
