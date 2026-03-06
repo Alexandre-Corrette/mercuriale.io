@@ -189,6 +189,30 @@
     margin-bottom: 1.5rem;
 }
 
+/* -- Processing state -- */
+.verification-card--processing .verification-card__icon {
+    color: var(--mercuriale-navy);
+}
+
+/* -- Flash messages -- */
+.verification-flash {
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    margin-bottom: 1rem;
+    font-size: 0.9375rem;
+}
+
+.verification-flash--error {
+    background: var(--color-danger-bg);
+    color: var(--color-danger);
+    border: 1px solid #fca5a5;
+}
+
+/* -- Connector active -- */
+.verification-steps__connector--active {
+    background: var(--mercuriale-coral);
+}
+
 @media (max-width: 480px) {
     .verification-card {
         padding: 1.5rem 1.25rem;

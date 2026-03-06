@@ -11,6 +11,7 @@ parameters:
     anthropic_model: '%env(ANTHROPIC_MODEL)%'
     anthropic_max_tokens: '%env(int:ANTHROPIC_MAX_TOKENS)%'
     jwt_access_token_ttl: 900
+    stripe_webhook_secret: '%env(STRIPE_WEBHOOK_SECRET)%'
 
 services:
     # default configuration for services in *this* file
@@ -90,3 +91,11 @@ services:
             $apiUrl: '%env(SIREN_API_URL)%'
             $clientId: '%env(SIREN_API_CLIENT_ID)%'
             $apiSecret: '%env(SIREN_API_SECRET)%'
+
+    App\Service\Stripe\StripeIdentityService:
+        arguments:
+            $stripeSecretKey: '%env(STRIPE_SECRET_KEY)%'
+
+    App\Service\Stripe\StripeConnectService:
+        arguments:
+            $stripeSecretKey: '%env(STRIPE_SECRET_KEY)%'
