@@ -38,10 +38,7 @@
         {% if bons_livraison is empty %}
             <div class="bl-liste-empty">
                 <i class="fas fa-file-invoice-dollar"></i>
-                <p>Aucun bon de livraison pour cet etablissement.</p>
-                <a href="{{ path('app_bl_upload') }}" class="bl-liste-empty__cta">
-                    <i class="fas fa-plus-circle"></i> Ajouter un bon
-                </a>
+                <p>Aucun bon de livraison valide pour cet etablissement.</p>
             </div>
         {% else %}
             <div class="bl-liste-rows" data-search-filter-target="list">
@@ -54,6 +51,20 @@
                         <span class="bl-liste-row__numero">{{ bl.numeroBl ? 'BL ' ~ bl.numeroBl : 'BL #' ~ bl.id }}</span>
                         <span class="bl-liste-row__date">{{ bl.dateLivraison|date('d/m/Y') }}</span>
                         <span class="bl-liste-row__fournisseur">{{ bl.fournisseur ? bl.fournisseur.nom : '—' }}</span>
+                        {% if bl.avoirs is not empty %}
+                            {% include 'components/_status_badge.html.twig' with {
+                                label: 'Avoir',
+                                variant: 'coral',
+                                size: 'sm'
+                            } only %}
+                        {% endif %}
+                        {% if row.alertCount > 0 %}
+                            {% include 'components/_status_badge.html.twig' with {
+                                label: row.alertCount ~ ' alerte' ~ (row.alertCount > 1 ? 's' : ''),
+                                variant: 'warning',
+                                size: 'sm'
+                            } only %}
+                        {% endif %}
                     </a>
                 {% endfor %}
             </div>
