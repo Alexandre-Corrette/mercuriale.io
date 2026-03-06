@@ -20,29 +20,29 @@
     {# Header #}
     <div class="fournisseur-show-header">
         <div>
-            <h1 class="hub-title">
-                <i class="fas fa-handshake"></i>
-                {{ fournisseur.nom }}
-            </h1>
+            <div class="fournisseur-show-header__title-row">
+                <h1 class="hub-title">
+                    <i class="fas fa-handshake"></i>
+                    {{ fournisseur.nom }}
+                </h1>
+                {% include 'components/_status_badge.html.twig' with {
+                    label: fournisseur.actif ? 'Actif' : 'Inactif',
+                    variant: fournisseur.actif ? 'success' : 'secondary'
+                } only %}
+            </div>
             {% if fournisseur.code %}
                 <p class="fournisseur-show-header__meta">Code {{ fournisseur.code }}</p>
             {% endif %}
         </div>
-        <div class="fournisseur-show-header__actions">
-            {% if fournisseur.websiteUrl %}
-                <a href="{{ fournisseur.websiteUrl }}" target="_blank" rel="noopener noreferrer" class="fournisseur-show-header__order-btn">
-                    <i class="fas fa-shopping-cart"></i> Commander
-                </a>
-            {% else %}
-                <span class="fournisseur-show-header__order-btn fournisseur-show-header__order-btn--disabled" title="URL du site fournisseur non renseignee">
-                    <i class="fas fa-shopping-cart"></i> Commander
-                </span>
-            {% endif %}
-            {% include 'components/_status_badge.html.twig' with {
-                label: fournisseur.actif ? 'Actif' : 'Inactif',
-                variant: fournisseur.actif ? 'success' : 'secondary'
-            } only %}
-        </div>
+        {% if fournisseur.websiteUrl %}
+            <a href="{{ fournisseur.websiteUrl }}" target="_blank" rel="noopener noreferrer" class="fournisseur-show-header__order-btn">
+                <i class="fas fa-shopping-cart"></i> Commander
+            </a>
+        {% else %}
+            <span class="fournisseur-show-header__order-btn fournisseur-show-header__order-btn--disabled" title="URL du site fournisseur non renseignee">
+                <i class="fas fa-shopping-cart"></i> Commander
+            </span>
+        {% endif %}
     </div>
 
     {# Info grid #}
