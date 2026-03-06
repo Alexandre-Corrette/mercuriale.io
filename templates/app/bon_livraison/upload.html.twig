@@ -98,7 +98,7 @@
     import { loadReferentiels } from '{{ asset('js/referentielsLoader.js') }}';
 
     // Charger les référentiels au chargement de la page
-    document.addEventListener('DOMContentLoaded', async () => {
+    document.addEventListener('turbo:load', async () => {
         await loadReferentiels();
     });
 </script>

@@ -96,7 +96,7 @@
 {% endif %}
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('turbo:load', function () {
     var items = document.querySelectorAll('.facture-split-item');
     var detailContainer = document.getElementById('facture-detail');
     if (!items.length || !detailContainer) return;
