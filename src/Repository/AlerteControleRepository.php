@@ -69,6 +69,25 @@ class AlerteControleRepository extends ServiceEntityRepository
         return $this->count(['statut' => StatutAlerte::NOUVELLE]);
     }
 
+    /**
+     * @return AlerteControle[]
+     */
+    public function findNonTraiteesForEtablissement(Etablissement $etablissement): array
+    {
+        return $this->createQueryBuilder('a')
+            ->select('a', 'l', 'bl', 'f')
+            ->join('a.ligneBl', 'l')
+            ->join('l.bonLivraison', 'bl')
+            ->leftJoin('bl.fournisseur', 'f')
+            ->where('bl.etablissement = :etablissement')
+            ->andWhere('a.statut = :statut')
+            ->setParameter('etablissement', $etablissement)
+            ->setParameter('statut', StatutAlerte::NOUVELLE)
+            ->orderBy('a.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
     public function countNonTraiteesForOrganisation(Organisation $org): int
     {
         return (int) $this->createQueryBuilder('a')
