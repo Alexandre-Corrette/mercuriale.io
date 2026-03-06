@@ -348,6 +348,9 @@ class AvoirFournisseurController extends AbstractController
 
             $avoir->setMontantHt($totalHt);
 
+            // BL anomalie traitée → passe en VALIDE (avoir couvre l'écart)
+            $bonLivraison->setStatut(StatutBonLivraison::VALIDE);
+
             $this->entityManager->persist($avoir);
             $this->entityManager->flush();
 
