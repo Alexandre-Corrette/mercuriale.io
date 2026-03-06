@@ -26,6 +26,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/app/avoirs')]
 #[IsGranted('ROLE_USER')]
+#[IsGranted('VERIFIED_FEATURE')]
 class AvoirFournisseurController extends AbstractController
 {
     public function __construct(

@@ -1,0 +1,98 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Verification - Mercuriale.io{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/verification.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="verification-page">
+    <div class="verification-container">
+        <div class="verification-header">
+            <img src="{{ asset('images/logo-mercuriale-rectangulaire.png') }}" alt="Mercuriale.io" class="verification-header__logo">
+        </div>
+
+        {% if organisation.verified %}
+            <div class="verification-card verification-card--success">
+                <div class="verification-card__icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h1 class="verification-card__title">Compte verifie</h1>
+                <p class="verification-card__text">Votre organisation est verifiee. Vous avez acces a toutes les fonctionnalites.</p>
+                <a href="{{ path('admin') }}" class="btn btn--primary btn--lg">
+                    <i class="fas fa-home"></i> Acceder au tableau de bord
+                </a>
+            </div>
+        {% elseif organisation.trialActive %}
+            <div class="verification-card verification-card--trial">
+                <div class="verification-card__icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <h1 class="verification-card__title">Periode d'essai</h1>
+                <p class="verification-card__text">
+                    Il vous reste <strong>{{ organisation.trialDaysRemaining }}</strong> jour{{ organisation.trialDaysRemaining > 1 ? 's' : '' }}.
+                    Verifiez votre identite pour debloquer toutes les fonctionnalites.
+                </p>
+
+                <div class="verification-steps">
+                    <div class="verification-steps__step verification-steps__step--pending">
+                        <span class="verification-steps__number">1</span>
+                        <span class="verification-steps__label">Piece d'identite</span>
+                    </div>
+                    <div class="verification-steps__connector"></div>
+                    <div class="verification-steps__step verification-steps__step--locked">
+                        <span class="verification-steps__number">2</span>
+                        <span class="verification-steps__label">Verification</span>
+                    </div>
+                    <div class="verification-steps__connector"></div>
+                    <div class="verification-steps__step verification-steps__step--locked">
+                        <span class="verification-steps__number">3</span>
+                        <span class="verification-steps__label">Compte active</span>
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn--primary btn--lg btn--full" disabled>
+                    <i class="fas fa-id-card"></i> Verifier mon identite (bientot disponible)
+                </button>
+
+                <a href="{{ path('admin') }}" class="verification-card__link">
+                    <i class="fas fa-arrow-left"></i> Retour au tableau de bord
+                </a>
+            </div>
+        {% else %}
+            <div class="verification-card verification-card--expired">
+                <div class="verification-card__icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h1 class="verification-card__title">Periode d'essai terminee</h1>
+                <p class="verification-card__text">
+                    Votre periode d'essai est terminee. Verifiez votre identite pour continuer a utiliser Mercuriale.io.
+                </p>
+
+                <div class="verification-steps">
+                    <div class="verification-steps__step verification-steps__step--pending">
+                        <span class="verification-steps__number">1</span>
+                        <span class="verification-steps__label">Piece d'identite</span>
+                    </div>
+                    <div class="verification-steps__connector"></div>
+                    <div class="verification-steps__step verification-steps__step--locked">
+                        <span class="verification-steps__number">2</span>
+                        <span class="verification-steps__label">Verification</span>
+                    </div>
+                    <div class="verification-steps__connector"></div>
+                    <div class="verification-steps__step verification-steps__step--locked">
+                        <span class="verification-steps__number">3</span>
+                        <span class="verification-steps__label">Compte active</span>
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn--primary btn--lg btn--full" disabled>
+                    <i class="fas fa-id-card"></i> Verifier mon identite (bientot disponible)
+                </button>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
