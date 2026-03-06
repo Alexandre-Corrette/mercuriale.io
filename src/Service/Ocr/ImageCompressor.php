@@ -55,6 +55,7 @@ class ImageCompressor
 
         $image = $this->loadImage($imagePath, $mimeType);
         $image = $this->resizeIfNeeded($image);
+        $image = $this->enhanceForOcr($image);
 
         // Boucle de compression qualité dégressive
         $quality = self::INITIAL_QUALITY;
@@ -137,6 +138,32 @@ class ImageCompressor
         if ($image === false) {
             throw new \RuntimeException('Impossible de charger l\'image avec GD');
         }
+
+        return $image;
+    }
+
+    /**
+     * Preprocessing OCR : greyscale + contrast + sharpen pour les BL cuisine.
+     */
+    private function enhanceForOcr(\GdImage $image): \GdImage
+    {
+        // Greyscale — supprime le bruit couleur (taches, graisse, encre)
+        imagefilter($image, IMG_FILTER_GRAYSCALE);
+
+        // Contraste — renforce texte vs fond (+20, négatif = plus de contraste en GD)
+        imagefilter($image, IMG_FILTER_CONTRAST, -20);
+
+        // Luminosité — compense zones sombres (plis, ombres)
+        imagefilter($image, IMG_FILTER_BRIGHTNESS, 10);
+
+        // Netteté — via unsharp mask (matrice de convolution)
+        $sharpen = [
+            [-1, -1, -1],
+            [-1, 16, -1],
+            [-1, -1, -1],
+        ];
+        $divisor = array_sum(array_map('array_sum', $sharpen));
+        imageconvolution($image, $sharpen, $divisor, 0);
 
         return $image;
     }
