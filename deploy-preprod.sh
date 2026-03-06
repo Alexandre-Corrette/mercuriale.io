@@ -158,6 +158,8 @@ fi
 log_step "7/7 — Cache clear & finalisation"
 
 ssh_exec "cd $REMOTE_DIR && $PHP_REMOTE bin/console cache:clear --env=prod --no-interaction 2>&1"
+ssh_exec "cd $REMOTE_DIR && $PHP_REMOTE bin/console asset-map:compile --env=prod --no-interaction 2>&1"
+log_ok "Assets compilés"
 ssh_exec "cd $REMOTE_DIR && $PHP_REMOTE bin/console cache:warmup --env=prod --no-interaction 2>&1"
 
 # Permissions JWT
