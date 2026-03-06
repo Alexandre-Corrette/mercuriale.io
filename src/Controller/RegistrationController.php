@@ -100,6 +100,7 @@ class RegistrationController extends AbstractController
                 if ($orgSiret !== '') {
                     $organisation->setSiret($orgSiret);
                 }
+                $organisation->setTrialEndsAt(new \DateTimeImmutable('+7 days'));
                 $em->persist($organisation);
 
                 // Create Etablissement (siege)
