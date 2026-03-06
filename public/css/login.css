@@ -108,3 +108,20 @@
     outline: 3px solid var(--mercuriale-coral);
     outline-offset: 2px;
 }
+
+.register-login-link {
+    text-align: center;
+    margin-top: 1.5rem;
+    color: #6b7280;
+    font-size: 0.9375rem;
+}
+
+.register-login-link a {
+    color: var(--mercuriale-coral);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.register-login-link a:hover {
+    text-decoration: underline;
+}

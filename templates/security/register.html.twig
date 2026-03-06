@@ -1,0 +1,214 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Inscription - Mercuriale.io{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/register.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="register-page">
+    <div class="register-container">
+        <div class="register-header">
+            <img src="{{ asset('images/logo-mercuriale-rectangulaire.png') }}" alt="Mercuriale.io" class="register-header__logo">
+            <h1 class="register-header__title">Creez votre compte</h1>
+            <p class="register-header__subtitle">Gerez vos mercuriales et maitrisez votre food cost</p>
+        </div>
+
+        {% if errors|length > 0 %}
+            <div class="register-error-box">
+                <ul class="register-errors">
+                    {% for error in errors %}
+                        <li><i class="fas fa-exclamation-circle"></i> {{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <div class="register-card">
+            <div class="register-card__body">
+                {# Step 1: SIRET lookup #}
+                <div class="register-step" id="step-siret">
+                    <h3 class="register-step__title">
+                        <span class="register-step__number">1</span> Votre entreprise
+                    </h3>
+
+                    <div class="form-group">
+                        <label for="siret_search">Numero SIRET ou SIREN</label>
+                        <div class="register-siret-row">
+                            <input type="text"
+                                   id="siret_search"
+                                   placeholder="Ex: 55204499200012"
+                                   maxlength="14"
+                                   inputmode="numeric"
+                                   pattern="[0-9]*"
+                                   class="register-siret-row__input">
+                            <button type="button" id="btn-siret-lookup" class="register-siret-row__btn">
+                                <i class="fas fa-search"></i> Rechercher
+                            </button>
+                        </div>
+                        <p class="register-hint">Entrez votre SIRET (14 chiffres) ou SIREN (9 chiffres) pour pre-remplir automatiquement.</p>
+                    </div>
+
+                    <div id="siret-loading" class="register-loading" style="display:none;">
+                        <i class="fas fa-spinner fa-spin"></i> Recherche en cours...
+                    </div>
+                    <div id="siret-error" class="register-field-error" style="display:none;"></div>
+                </div>
+
+                {# Step 2: Company info (pre-filled or manual) #}
+                <form method="post" id="register-form">
+                    <input type="hidden" name="_token" value="{{ csrf_token('registration') }}">
+
+                    <div class="register-step">
+                        <h3 class="register-step__title">
+                            <span class="register-step__number">2</span> Informations entreprise
+                        </h3>
+
+                        <div class="form-group">
+                            <label for="org_nom">Nom de l'entreprise <span class="register-required">*</span></label>
+                            <input type="text" id="org_nom" name="org_nom" required
+                                   value="{{ form_data.org_nom|default('') }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="org_siret">SIRET</label>
+                            <input type="text" id="org_siret" name="org_siret" maxlength="14"
+                                   value="{{ form_data.org_siret|default('') }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="org_adresse">Adresse</label>
+                            <input type="text" id="org_adresse" name="org_adresse"
+                                   value="{{ form_data.org_adresse|default('') }}">
+                        </div>
+
+                        <div class="register-row">
+                            <div class="form-group register-row__cp">
+                                <label for="org_cp">Code postal</label>
+                                <input type="text" id="org_cp" name="org_cp" maxlength="5"
+                                       value="{{ form_data.org_cp|default('') }}">
+                            </div>
+                            <div class="form-group register-row__ville">
+                                <label for="org_ville">Ville</label>
+                                <input type="text" id="org_ville" name="org_ville"
+                                       value="{{ form_data.org_ville|default('') }}">
+                            </div>
+                        </div>
+                    </div>
+
+                    {# Step 3: User account #}
+                    <div class="register-step">
+                        <h3 class="register-step__title">
+                            <span class="register-step__number">3</span> Votre compte
+                        </h3>
+
+                        <div class="register-row">
+                            <div class="form-group register-row__half">
+                                <label for="user_prenom">Prenom <span class="register-required">*</span></label>
+                                <input type="text" id="user_prenom" name="user_prenom" required
+                                       value="{{ form_data.user_prenom|default('') }}">
+                            </div>
+                            <div class="form-group register-row__half">
+                                <label for="user_nom">Nom <span class="register-required">*</span></label>
+                                <input type="text" id="user_nom" name="user_nom" required
+                                       value="{{ form_data.user_nom|default('') }}">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="user_email">Email <span class="register-required">*</span></label>
+                            <input type="email" id="user_email" name="user_email" required
+                                   value="{{ form_data.user_email|default('') }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="user_password">Mot de passe <span class="register-required">*</span></label>
+                            <input type="password" id="user_password" name="user_password" required minlength="8">
+                            <p class="register-hint">Minimum 8 caracteres</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="user_password_confirm">Confirmer le mot de passe <span class="register-required">*</span></label>
+                            <input type="password" id="user_password_confirm" name="user_password_confirm" required minlength="8">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="register-submit">
+                        <i class="fas fa-user-plus"></i> Creer mon compte
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <p class="register-footer">
+            Deja un compte ? <a href="{{ path('app_login') }}">Se connecter</a>
+        </p>
+    </div>
+</div>
+
+{% set siren_url = path('api_siren_lookup') %}
+<script>
+(function() {
+    var btnLookup = document.getElementById('btn-siret-lookup');
+    var inputSiret = document.getElementById('siret_search');
+    var loading = document.getElementById('siret-loading');
+    var errorDiv = document.getElementById('siret-error');
+    var baseUrl = '{{ siren_url }}';
+
+    function doLookup() {
+        var query = inputSiret.value.replace(/\s/g, '');
+        if (!query || (query.length !== 9 && query.length !== 14)) {
+            errorDiv.textContent = 'Entrez un SIREN (9 chiffres) ou SIRET (14 chiffres).';
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        errorDiv.style.display = 'none';
+        loading.style.display = 'block';
+        btnLookup.disabled = true;
+
+        fetch(baseUrl + '?q=' + encodeURIComponent(query))
+            .then(function(res) {
+                if (!res.ok) {
+                    return res.json().then(function(data) { throw new Error(data.error || 'Erreur serveur'); });
+                }
+                return res.json();
+            })
+            .then(function(data) {
+                document.getElementById('org_nom').value = data.nom_complet || '';
+                document.getElementById('org_siret').value = data.siret || query;
+                document.getElementById('org_adresse').value = data.adresse || '';
+                document.getElementById('org_cp').value = data.code_postal || '';
+                document.getElementById('org_ville').value = data.ville || '';
+
+                var fields = ['org_nom', 'org_siret', 'org_adresse', 'org_cp', 'org_ville'];
+                fields.forEach(function(id) {
+                    var el = document.getElementById(id);
+                    if (el.value) {
+                        el.classList.add('register-prefilled');
+                        setTimeout(function() { el.classList.remove('register-prefilled'); }, 2000);
+                    }
+                });
+            })
+            .catch(function(err) {
+                errorDiv.textContent = err.message;
+                errorDiv.style.display = 'block';
+            })
+            .finally(function() {
+                loading.style.display = 'none';
+                btnLookup.disabled = false;
+            });
+    }
+
+    btnLookup.addEventListener('click', doLookup);
+    inputSiret.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            doLookup();
+        }
+    });
+})();
+</script>
+{% endblock %}
