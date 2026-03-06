@@ -81,8 +81,10 @@ class AlerteControleRepository extends ServiceEntityRepository
             ->leftJoin('bl.fournisseur', 'f')
             ->where('bl.etablissement = :etablissement')
             ->andWhere('a.statut = :statut')
+            ->andWhere('bl.statut = :blStatut')
             ->setParameter('etablissement', $etablissement)
             ->setParameter('statut', StatutAlerte::NOUVELLE)
+            ->setParameter('blStatut', \App\Enum\StatutBonLivraison::ANOMALIE)
             ->orderBy('a.createdAt', 'DESC')
             ->getQuery()
             ->getResult();
