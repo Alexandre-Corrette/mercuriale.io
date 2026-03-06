@@ -6,6 +6,7 @@ namespace App\Service\Ocr;
 
 use App\DTO\ExtractionResult;
 use App\Entity\BonLivraison;
+use App\Entity\Fournisseur;
 use App\Entity\LigneBonLivraison;
 use App\Entity\Unite;
 use App\Enum\MatchConfidence;
@@ -112,7 +113,7 @@ class BonLivraisonExtractorService
             }
 
             // 2. Appeler l'API Claude (la compression est gérée dans AnthropicClient)
-            $prompt = $this->buildExtractionPrompt();
+            $prompt = $this->buildExtractionPrompt($bl);
             $response = $this->anthropicClient->analyzeImage($imagePath, $prompt);
 
             // 3. Parser la réponse JSON
@@ -197,12 +198,121 @@ class BonLivraisonExtractorService
         }
     }
 
-    private function buildExtractionPrompt(): string
+    private function buildExtractionPrompt(BonLivraison $bl): string
     {
-        return <<<'PROMPT'
-Tu es un expert en lecture de bons de livraison (BL) de la société TerreAzur (groupe Pomona), fournisseur de fruits, légumes et produits de la mer pour la restauration professionnelle.
+        $fournisseur = $bl->getFournisseur();
+        $nomFournisseur = $fournisseur?->getNom();
 
-STRUCTURE SPÉCIFIQUE DES BL TERREAZUR :
+        // Sélectionner le contexte fournisseur spécifique si connu
+        $fournisseurContext = $this->getFournisseurContext($nomFournisseur);
+
+        return <<<PROMPT
+Tu es un expert en lecture de bons de livraison (BL) pour la restauration professionnelle française.
+
+OBJECTIF : Extraire TOUTES les données structurées d'un bon de livraison scanné/photographié.
+
+APPROCHE GÉNÉRALE :
+1. Identifie d'abord le fournisseur (nom, logo, en-tête)
+2. Repère la structure du tableau produits (en-têtes de colonnes)
+3. Extrais chaque ligne produit en respectant la structure détectée
+4. Lis les totaux en bas du document
+
+{$fournisseurContext}
+
+RÈGLES CRITIQUES :
+- Copie les désignations EXACTEMENT telles qu'imprimées. Si un mot est illisible → null pour ce champ, jamais une approximation ou invention
+- Les nombres décimaux sur BL français utilisent la virgule (1,990 = 1.99 en JSON)
+- "quantite_facturee × prix_unitaire" doit être PROCHE de "total_ht_ligne" — si l'écart est >5%, note-le dans remarques
+- Si une valeur est illisible ou absente → null, jamais une valeur inventée
+- Le champ "confiance" doit être "basse" si plus de 2 lignes ont des valeurs null ou incohérentes
+- Distingue bien quantite_livree (colis/pièces physiques) et quantite_facturee (unité de facturation : KG, PU, etc.)
+- Ne confonds pas un numéro de commande avec un total HT
+
+Réponds UNIQUEMENT avec du JSON valide, sans texte avant ni après, sans bloc markdown.
+
+{
+    "fournisseur": {
+        "nom": "Nom commercial tel qu'imprimé sur le document",
+        "groupe": "Groupe/maison mère si visible ou null",
+        "adresse": "Adresse complète ou null",
+        "telephone": "Téléphone ou null",
+        "siret": "SIRET si visible ou null"
+    },
+    "document": {
+        "type": "BL",
+        "numero": "Numéro du bordereau de livraison",
+        "numero_commande": "Numéro de commande associé ou null",
+        "date": "YYYY-MM-DD",
+        "client": "Nom du client livré ou null",
+        "page": "ex: 1/2 ou null si non visible"
+    },
+    "colonnes_detectees": ["En-têtes de colonnes tels que lus sur le document"],
+    "lignes": [
+        {
+            "rang": null,
+            "code_produit": "Code article fournisseur",
+            "designation": "Désignation EXACTE telle qu'imprimée ou null si illisible",
+            "sous_detail": "Ligne en retrait sous la désignation (origine, variété) ou null",
+            "origine": "Code pays si indiqué (FR, ES, MA...) ou null",
+            "quantite_livree": 2.0,
+            "unite_livraison": "COL|BOT|BQT|SAC|KG|PU|...",
+            "quantite_facturee": 2.0,
+            "unite_facturation": "KG|PU|BOT|BQT|L|...",
+            "prix_unitaire": 7.110,
+            "majoration_decote": 0.0,
+            "total_ht_ligne": 14.22,
+            "tva_code": "Code TVA tel qu'imprimé ou null"
+        }
+    ],
+    "totaux": {
+        "nombre_colis": null,
+        "poids_total_kg": null,
+        "total_ht": null
+    },
+    "confiance": "haute|moyenne|basse",
+    "remarques": ["Incohérences détectées, valeurs incertaines, colonnes coupées..."]
+}
+PROMPT;
+    }
+
+    /**
+     * Retourne le contexte spécifique au fournisseur pour enrichir le prompt OCR.
+     */
+    private function getFournisseurContext(?string $nomFournisseur): string
+    {
+        if ($nomFournisseur === null) {
+            return $this->getGenericContext();
+        }
+
+        $nom = mb_strtolower($nomFournisseur);
+
+        if (str_contains($nom, 'terreazur') || str_contains($nom, 'terre azur') || str_contains($nom, 'pomona')) {
+            return $this->getTerreAzurContext();
+        }
+
+        if (str_contains($nom, 'bihan') || str_contains($nom, 'tmeg')) {
+            return $this->getLeBihanContext();
+        }
+
+        return $this->getGenericContext();
+    }
+
+    private function getGenericContext(): string
+    {
+        return <<<'CTX'
+STRUCTURE DU DOCUMENT :
+- Identifie les en-têtes de colonnes du tableau produits et adapte ta lecture en conséquence
+- Les colonnes courantes sont : Code, Désignation, Quantité, Unité, Prix Unitaire, Total HT
+- Certains BL ont des colonnes supplémentaires (remises, consignes, TVA, poids brut/net)
+- Le numéro de BL est généralement en haut du document, près du titre
+- Les totaux sont en bas du document
+CTX;
+    }
+
+    private function getTerreAzurContext(): string
+    {
+        return <<<'CTX'
+STRUCTURE SPÉCIFIQUE — TERREAZUR (groupe Pomona) :
 
 Le tableau produits contient ces colonnes dans cet ordre :
 [Rang/] [Code article] | Désignation | Qté livrée | Qté fact. UF / Poids brut | PU | MJ.DECOL | TVA | MT HT
@@ -218,68 +328,40 @@ Colonnes quantité :
   → Quand il y a DEUX poids (ex: "6,100 KG / 6,800 KG"), le PREMIER est le poids livré, le SECOND est le poids facturé. Utilise le SECOND pour quantite_facturee.
 
 Colonne MT HT :
-- C'est la dernière colonne à droite
-- Elle peut être partiellement coupée sur certains scans → lis-la attentivement
+- C'est la dernière colonne à droite, peut être partiellement coupée sur certains scans
 - C'est toujours : quantite_facturee × prix_unitaire ± majoration_decote
 
 Totaux en bas du document :
-- "Total X Colis" → nombre_colis (bas à gauche)
-- "Poids XX,XXX kg" → poids_total_kg (bas à gauche, juste après)
-- total_ht = SOMME de la colonne MT HT (ne pas confondre avec le numéro de commande)
-- Le numéro de commande Pomona est sur la ligne "N° commande(s) Pomona XXXXXXXXXX" → ne pas mettre dans total_ht
+- "Total X Colis" → nombre_colis
+- "Poids XX,XXX kg" → poids_total_kg
+- total_ht = SOMME de la colonne MT HT (ne PAS confondre avec le numéro de commande Pomona)
+- Le numéro de commande Pomona est sur la ligne "N° commande(s) Pomona XXXXXXXXXX"
+CTX;
+    }
 
-RÈGLES CRITIQUES :
-- Copie les désignations EXACTEMENT telles qu'imprimées. Si un mot est illisible → null pour ce champ, jamais une approximation ou invention
-- Les nombres décimaux sur BL français utilisent la virgule (1,990 = 1.99 en JSON)
-- "quantite_facturee × prix_unitaire" doit être PROCHE de "total_ht_ligne" — si l'écart est >5%, note-le dans remarques
-- Si une valeur est illisible ou absente → null, jamais une valeur inventée
-- Le champ "confiance" doit être "basse" si plus de 2 lignes ont des valeurs null ou incohérentes
+    private function getLeBihanContext(): string
+    {
+        return <<<'CTX'
+STRUCTURE SPÉCIFIQUE — LE BIHAN TMEG :
 
-Réponds UNIQUEMENT avec du JSON valide, sans texte avant ni après, sans bloc markdown.
+Numéro BL : format "002XXXXX"
 
-{
-    "fournisseur": {
-        "nom": "Nom commercial tel qu'imprimé (ex: TerreAzur)",
-        "groupe": "Groupe/maison mère si visible (ex: Pomona) ou null",
-        "adresse": "Adresse complète ou null",
-        "telephone": "Téléphone ou null",
-        "siret": "SIRET si visible ou null"
-    },
-    "document": {
-        "type": "BL",
-        "numero": "Numéro après BORDEREAU DE LIVRAISON N°",
-        "numero_commande": "Numéro après N° commande(s) Pomona",
-        "date": "YYYY-MM-DD (date après 'du' dans le titre)",
-        "client": "Nom du client livré (bloc LIVRÉ)",
-        "page": "ex: 1/2 ou null si non visible"
-    },
-    "colonnes_detectees": ["En-têtes de colonnes tels que lus sur le document"],
-    "lignes": [
-        {
-            "rang": 60,
-            "code_produit": "103634",
-            "designation": "Désignation EXACTE telle qu'imprimée ou null si illisible",
-            "sous_detail": "Ligne en retrait sous la désignation (origine, variété) ou null",
-            "origine": "Code pays si indiqué (FR, ES, MA...) ou null",
-            "quantite_livree": 2.0,
-            "unite_livraison": "COL|BOT|BQT|SAC|...",
-            "quantite_facturee": 2.0,
-            "unite_facturation": "KG|PU|BOT|BQT|...",
-            "prix_unitaire": 7.110,
-            "majoration_decote": 0.0,
-            "total_ht_ligne": 14.22,
-            "tva_code": "F 1|M 1|... tel qu'imprimé"
-        }
-    ],
-    "totaux": {
-        "nombre_colis": 9,
-        "poids_total_kg": 35.610,
-        "total_ht": null
-    },
-    "confiance": "haute|moyenne|basse",
-    "remarques": ["Incohérences détectées, valeurs incertaines, colonnes coupées..."]
-}
-PROMPT;
+Le tableau produits contient ces colonnes :
+Code | Désignation | Ref Client | Quantité Unité Cde | Quantité Unité Fac | Prix Unitaire | Montant | Dt Remise | Dt Droits | Consigne | Déconsigne
+
+Spécificités :
+- "Quantité Unité Cde" = quantite_livree (commandée/livrée)
+- "Quantité Unité Fac" = quantite_facturee (facturée)
+- "Dt Droits" = droits d'accise (pour les alcools) → ignorer pour le total_ht_ligne
+- "Consigne" / "Déconsigne" = montants de consigne bouteilles → ignorer pour le total_ht_ligne
+- Le document peut être multi-pages (page 1/2, 2/2)
+- Colonnes supplémentaires possibles : N° ACCISE, Vol Effectif, Alcool Pur, Poids Brut, Poids Net
+
+Totaux en bas :
+- Total TTC, Consignes, Total Facture
+- Montant HT par taux TVA (5,50% et 20,00%)
+- total_ht = somme des montants HT hors consignes et droits d'accise
+CTX;
     }
 
     /**
@@ -404,15 +486,38 @@ PROMPT;
 
     /**
      * Met à jour les informations du fournisseur si nécessaire.
+     * Si le BL n'a pas de fournisseur, tente de le résoudre depuis le nom extrait par OCR.
      */
     private function updateFournisseurInfo(BonLivraison $bl, array $data): void
     {
-        $fournisseur = $bl->getFournisseur();
-        if ($fournisseur === null || !isset($data['fournisseur'])) {
+        if (!isset($data['fournisseur'])) {
             return;
         }
 
         $fournisseurData = $data['fournisseur'];
+
+        // Si le BL n'a pas de fournisseur, essayer de le résoudre depuis le nom extrait
+        if ($bl->getFournisseur() === null && !empty($fournisseurData['nom'])) {
+            $fournisseur = $this->resolveFournisseurFromName($bl, $fournisseurData['nom']);
+            if ($fournisseur !== null) {
+                $bl->setFournisseur($fournisseur);
+                $this->logger->info('Fournisseur resolu depuis OCR', [
+                    'bl_id' => $bl->getId(),
+                    'nom_extrait' => $fournisseurData['nom'],
+                    'fournisseur_id' => $fournisseur->getId(),
+                ]);
+            } else {
+                $this->logger->warning('Fournisseur non resolu depuis OCR', [
+                    'bl_id' => $bl->getId(),
+                    'nom_extrait' => $fournisseurData['nom'],
+                ]);
+            }
+        }
+
+        $fournisseur = $bl->getFournisseur();
+        if ($fournisseur === null) {
+            return;
+        }
 
         // Mettre à jour les champs vides du fournisseur
         if (empty($fournisseur->getEmail()) && !empty($fournisseurData['email'])) {
@@ -427,6 +532,42 @@ PROMPT;
         if (empty($fournisseur->getSiret()) && !empty($fournisseurData['siret'])) {
             $fournisseur->setSiret($fournisseurData['siret']);
         }
+    }
+
+    /**
+     * Résout un fournisseur depuis le nom extrait par OCR en cherchant parmi les fournisseurs de l'organisation.
+     */
+    private function resolveFournisseurFromName(BonLivraison $bl, string $nomExtrait): ?Fournisseur
+    {
+        $etablissement = $bl->getEtablissement();
+        if ($etablissement === null) {
+            return null;
+        }
+
+        $organisation = $etablissement->getOrganisation();
+        if ($organisation === null) {
+            return null;
+        }
+
+        $fournisseurs = $this->fournisseurRepository->findByOrganisation($organisation);
+        $nomExtrait = mb_strtolower(trim($nomExtrait));
+
+        // Exact match first
+        foreach ($fournisseurs as $fournisseur) {
+            if (mb_strtolower($fournisseur->getNom()) === $nomExtrait) {
+                return $fournisseur;
+            }
+        }
+
+        // Partial match: OCR name contains DB name or vice versa
+        foreach ($fournisseurs as $fournisseur) {
+            $nomDb = mb_strtolower($fournisseur->getNom());
+            if (str_contains($nomExtrait, $nomDb) || str_contains($nomDb, $nomExtrait)) {
+                return $fournisseur;
+            }
+        }
+
+        return null;
     }
 
     /**

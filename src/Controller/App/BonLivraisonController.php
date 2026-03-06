@@ -5,12 +5,18 @@ declare(strict_types=1);
 namespace App\Controller\App;
 
 use App\Entity\BonLivraison;
+use App\Entity\ProduitFournisseur;
 use App\Entity\Utilisateur;
+use App\Enum\StatutBonLivraison;
 use App\Repository\AlerteControleRepository;
 use App\Repository\BonLivraisonRepository;
+use App\Repository\ProduitFournisseurRepository;
 use App\Service\BonLivraisonImageService;
 use App\Twig\Extension\AppLayoutExtension;
+use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -151,5 +157,104 @@ class BonLivraisonController extends AbstractController
         }
 
         return $this->imageService->getImageResponse($bonLivraison);
+    }
+
+    #[Route('/{id}/valider-force', name: 'app_bl_valider_force', methods: ['POST'])]
+    public function validerForce(
+        BonLivraison $bonLivraison,
+        Request $request,
+        EntityManagerInterface $em,
+        ProduitFournisseurRepository $produitFournisseurRepo,
+        LoggerInterface $logger,
+    ): Response {
+        if (!$this->isGranted('MANAGE', $bonLivraison->getEtablissement())) {
+            throw $this->createAccessDeniedException();
+        }
+
+        if (!$this->isCsrfTokenValid('valider_force_bl_' . $bonLivraison->getId(), $request->request->getString('_token'))) {
+            $this->addFlash('error', 'Token de securite invalide.');
+
+            return $this->redirectToRoute('app_bl_pending');
+        }
+
+        if ($bonLivraison->getStatut() !== StatutBonLivraison::ANOMALIE) {
+            $this->addFlash('error', 'Ce BL ne peut pas etre valide depuis cette page.');
+
+            return $this->redirectToRoute('app_bl_pending');
+        }
+
+        /** @var Utilisateur $user */
+        $user = $this->getUser();
+        $fournisseur = $bonLivraison->getFournisseur();
+        $createdCount = 0;
+
+        if ($fournisseur === null) {
+            $this->addFlash('error', 'Ce BL n\'a pas de fournisseur associe, impossible de creer les produits.');
+
+            return $this->redirectToRoute('app_bl_pending');
+        }
+
+        $em->beginTransaction();
+        try {
+            foreach ($bonLivraison->getLignes() as $ligne) {
+                if ($ligne->getProduitFournisseur() !== null) {
+                    continue;
+                }
+
+                $code = $ligne->getCodeProduitBl();
+                if ($code === null || $code === '') {
+                    continue;
+                }
+
+                // Check if product already exists for this supplier
+                $existing = $produitFournisseurRepo->findByFournisseurAndCode($fournisseur, $code);
+                if ($existing !== null) {
+                    $ligne->setProduitFournisseur($existing);
+                    continue;
+                }
+
+                // Auto-create ProduitFournisseur
+                $produit = new ProduitFournisseur();
+                $produit->setFournisseur($fournisseur);
+                $produit->setCodeFournisseur($code);
+                $produit->setDesignationFournisseur($ligne->getDesignationBl() ?? $code);
+                $produit->setUniteAchat($ligne->getUnite());
+
+                $em->persist($produit);
+                $ligne->setProduitFournisseur($produit);
+                $createdCount++;
+            }
+
+            $bonLivraison->setStatut(StatutBonLivraison::VALIDE);
+            $bonLivraison->setValidatedAt(new \DateTimeImmutable());
+            $bonLivraison->setValidatedBy($user);
+
+            $em->flush();
+            $em->commit();
+
+            $logger->info('BL force-valide', [
+                'bl_id' => $bonLivraison->getId(),
+                'numero' => $bonLivraison->getNumeroBl(),
+                'produits_crees' => $createdCount,
+                'user' => $user->getUserIdentifier(),
+            ]);
+
+            $message = 'Bon de livraison valide avec succes.';
+            if ($createdCount > 0) {
+                $message .= sprintf(' %d produit(s) fournisseur cree(s).', $createdCount);
+            }
+            $this->addFlash('success', $message);
+        } catch (\Exception $e) {
+            $em->rollback();
+
+            $logger->error('Erreur validation force BL', [
+                'bl_id' => $bonLivraison->getId(),
+                'error' => $e->getMessage(),
+            ]);
+
+            $this->addFlash('error', 'Erreur lors de la validation: ' . $e->getMessage());
+        }
+
+        return $this->redirectToRoute('app_bl_pending');
     }
 }
