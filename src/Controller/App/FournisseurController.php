@@ -223,7 +223,7 @@ class FournisseurController extends AbstractController
 
         return $this->render('app/fournisseur/show.html.twig', [
             'fournisseur' => $fournisseur,
-            'produits' => $produitRepo->findByFournisseur($fournisseur),
+            'produit_count' => $produitRepo->count(['fournisseur' => $fournisseur]),
             'bons_livraison' => $blRepo->findRecentByFournisseurForOrganisation($fournisseur, $org),
             'avoirs' => $avoirRepo->findByFournisseurForOrganisation($fournisseur, $org),
             'total_avoirs_imputes' => $avoirRepo->sumImputesByFournisseurForOrganisation($fournisseur, $org),

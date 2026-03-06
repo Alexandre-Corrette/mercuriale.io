@@ -58,6 +58,11 @@ class Fournisseur
     #[Assert\Regex(pattern: '/^\d{14}$/', message: 'Le SIRET doit contenir uniquement des chiffres')]
     private ?string $siret = null;
 
+    #[ORM\Column(length: 512, nullable: true)]
+    #[Assert\Url(message: 'L\'URL n\'est pas valide')]
+    #[Assert\Length(max: 512, maxMessage: 'L\'URL ne peut pas dépasser {{ limit }} caractères')]
+    private ?string $websiteUrl = null;
+
     #[ORM\Column(options: ['default' => true])]
     private bool $actif = true;
 
@@ -193,6 +198,18 @@ class Fournisseur
     public function setSiret(?string $siret): static
     {
         $this->siret = $siret;
+
+        return $this;
+    }
+
+    public function getWebsiteUrl(): ?string
+    {
+        return $this->websiteUrl;
+    }
+
+    public function setWebsiteUrl(?string $websiteUrl): static
+    {
+        $this->websiteUrl = $websiteUrl;
 
         return $this;
     }
