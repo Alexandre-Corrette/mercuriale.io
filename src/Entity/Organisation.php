@@ -33,6 +33,18 @@ class Organisation
     #[Assert\Regex(pattern: '/^\d{14}$/', message: 'Le SIRET doit contenir uniquement des chiffres')]
     private ?string $siret = null;
 
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $verifiedAt = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $trialEndsAt = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $stripeAccountId = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $stripeVerificationSessionId = null;
+
     /** @var Collection<int, Etablissement> */
     #[ORM\OneToMany(targetEntity: Etablissement::class, mappedBy: 'organisation', orphanRemoval: true)]
     private Collection $etablissements;
@@ -166,6 +178,91 @@ class Organisation
         }
 
         return $this;
+    }
+
+    public function getVerifiedAt(): ?\DateTimeImmutable
+    {
+        return $this->verifiedAt;
+    }
+
+    public function setVerifiedAt(?\DateTimeImmutable $verifiedAt): static
+    {
+        $this->verifiedAt = $verifiedAt;
+
+        return $this;
+    }
+
+    public function getTrialEndsAt(): ?\DateTimeImmutable
+    {
+        return $this->trialEndsAt;
+    }
+
+    public function setTrialEndsAt(?\DateTimeImmutable $trialEndsAt): static
+    {
+        $this->trialEndsAt = $trialEndsAt;
+
+        return $this;
+    }
+
+    public function getStripeAccountId(): ?string
+    {
+        return $this->stripeAccountId;
+    }
+
+    public function setStripeAccountId(?string $stripeAccountId): static
+    {
+        $this->stripeAccountId = $stripeAccountId;
+
+        return $this;
+    }
+
+    public function getStripeVerificationSessionId(): ?string
+    {
+        return $this->stripeVerificationSessionId;
+    }
+
+    public function setStripeVerificationSessionId(?string $stripeVerificationSessionId): static
+    {
+        $this->stripeVerificationSessionId = $stripeVerificationSessionId;
+
+        return $this;
+    }
+
+    public function isVerified(): bool
+    {
+        return $this->verifiedAt !== null;
+    }
+
+    public function isTrialActive(): bool
+    {
+        if ($this->trialEndsAt === null) {
+            return false;
+        }
+
+        return new \DateTimeImmutable() < $this->trialEndsAt;
+    }
+
+    public function isTrialExpired(): bool
+    {
+        if ($this->trialEndsAt === null) {
+            return false;
+        }
+
+        return new \DateTimeImmutable() >= $this->trialEndsAt;
+    }
+
+    public function getTrialDaysRemaining(): int
+    {
+        if ($this->trialEndsAt === null) {
+            return 0;
+        }
+
+        $now = new \DateTimeImmutable();
+        if ($now >= $this->trialEndsAt) {
+            return 0;
+        }
+
+        return (int) $now->diff($this->trialEndsAt)->days;
     }
 
     public function __toString(): string
