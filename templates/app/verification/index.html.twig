@@ -14,6 +14,12 @@
             <img src="{{ asset('images/logo-mercuriale-rectangulaire.png') }}" alt="Mercuriale.io" class="verification-header__logo">
         </div>
 
+        {% for message in app.flashes('error') %}
+            <div class="verification-flash verification-flash--error">
+                <i class="fas fa-exclamation-circle"></i> {{ message }}
+            </div>
+        {% endfor %}
+
         {% if organisation.verified %}
             <div class="verification-card verification-card--success">
                 <div class="verification-card__icon">
@@ -25,24 +31,23 @@
                     <i class="fas fa-home"></i> Acceder au tableau de bord
                 </a>
             </div>
-        {% elseif organisation.trialActive %}
-            <div class="verification-card verification-card--trial">
+        {% elseif organisation.stripeVerificationSessionId %}
+            <div class="verification-card verification-card--processing">
                 <div class="verification-card__icon">
-                    <i class="fas fa-clock"></i>
+                    <i class="fas fa-spinner fa-spin"></i>
                 </div>
-                <h1 class="verification-card__title">Periode d'essai</h1>
+                <h1 class="verification-card__title">Verification en cours</h1>
                 <p class="verification-card__text">
-                    Il vous reste <strong>{{ organisation.trialDaysRemaining }}</strong> jour{{ organisation.trialDaysRemaining > 1 ? 's' : '' }}.
-                    Verifiez votre identite pour debloquer toutes les fonctionnalites.
+                    Votre verification d'identite est en cours de traitement. Vous serez notifie une fois terminee.
                 </p>
 
                 <div class="verification-steps">
-                    <div class="verification-steps__step verification-steps__step--pending">
-                        <span class="verification-steps__number">1</span>
+                    <div class="verification-steps__step verification-steps__step--done">
+                        <span class="verification-steps__number"><i class="fas fa-check"></i></span>
                         <span class="verification-steps__label">Piece d'identite</span>
                     </div>
-                    <div class="verification-steps__connector"></div>
-                    <div class="verification-steps__step verification-steps__step--locked">
+                    <div class="verification-steps__connector verification-steps__connector--active"></div>
+                    <div class="verification-steps__step verification-steps__step--pending">
                         <span class="verification-steps__number">2</span>
                         <span class="verification-steps__label">Verification</span>
                     </div>
@@ -52,23 +57,27 @@
                         <span class="verification-steps__label">Compte active</span>
                     </div>
                 </div>
-
-                <button type="button" class="btn btn--primary btn--lg btn--full" disabled>
-                    <i class="fas fa-id-card"></i> Verifier mon identite (bientot disponible)
-                </button>
 
                 <a href="{{ path('admin') }}" class="verification-card__link">
                     <i class="fas fa-arrow-left"></i> Retour au tableau de bord
                 </a>
             </div>
         {% else %}
-            <div class="verification-card verification-card--expired">
+            {% set is_expired = not organisation.trialActive %}
+            <div class="verification-card {{ is_expired ? 'verification-card--expired' : 'verification-card--trial' }}">
                 <div class="verification-card__icon">
-                    <i class="fas fa-exclamation-triangle"></i>
+                    <i class="fas {{ is_expired ? 'fa-exclamation-triangle' : 'fa-clock' }}"></i>
                 </div>
-                <h1 class="verification-card__title">Periode d'essai terminee</h1>
+                <h1 class="verification-card__title">
+                    {{ is_expired ? 'Periode d\'essai terminee' : 'Periode d\'essai' }}
+                </h1>
                 <p class="verification-card__text">
-                    Votre periode d'essai est terminee. Verifiez votre identite pour continuer a utiliser Mercuriale.io.
+                    {% if is_expired %}
+                        Votre periode d'essai est terminee. Verifiez votre identite pour continuer a utiliser Mercuriale.io.
+                    {% else %}
+                        Il vous reste <strong>{{ organisation.trialDaysRemaining }}</strong> jour{{ organisation.trialDaysRemaining > 1 ? 's' : '' }}.
+                        Verifiez votre identite pour debloquer toutes les fonctionnalites.
+                    {% endif %}
                 </p>
 
                 <div class="verification-steps">
@@ -88,9 +97,18 @@
                     </div>
                 </div>
 
-                <button type="button" class="btn btn--primary btn--lg btn--full" disabled>
-                    <i class="fas fa-id-card"></i> Verifier mon identite (bientot disponible)
-                </button>
+                <form action="{{ path('app_verification_start') }}" method="post">
+                    <input type="hidden" name="_token" value="{{ csrf_token('start_verification') }}">
+                    <button type="submit" class="btn btn--primary btn--lg btn--full">
+                        <i class="fas fa-id-card"></i> Verifier mon identite
+                    </button>
+                </form>
+
+                {% if not is_expired %}
+                    <a href="{{ path('admin') }}" class="verification-card__link">
+                        <i class="fas fa-arrow-left"></i> Retour au tableau de bord
+                    </a>
+                {% endif %}
             </div>
         {% endif %}
     </div>
