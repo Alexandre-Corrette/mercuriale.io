@@ -25,53 +25,38 @@
         </div>
     </div>
 
-    {# Search #}
-    <div class="bl-liste-search">
-        <input type="text"
-               class="bl-liste-search__input"
-               id="bl-search"
-               placeholder="Rechercher un BL (numero, fournisseur...)">
-    </div>
-
-    {# List #}
-    {% if bons_livraison is empty %}
-        <div class="bl-liste-empty">
-            <i class="fas fa-file-invoice-dollar"></i>
-            <p>Aucun bon de livraison pour cet etablissement.</p>
-            <a href="{{ path('app_bl_upload') }}" class="bl-liste-empty__cta">
-                <i class="fas fa-plus-circle"></i> Ajouter un bon
-            </a>
+    {# Search + List #}
+    <div data-controller="search-filter">
+        <div class="bl-liste-search">
+            <input type="text"
+                   class="bl-liste-search__input"
+                   data-search-filter-target="input"
+                   data-action="input->search-filter#filter"
+                   placeholder="Rechercher un BL (numero, fournisseur...)">
         </div>
-    {% else %}
-        <div class="bl-liste-rows" id="bl-rows">
-            {% for row in bons_livraison %}
-                {% set bl = row.bl %}
-                <a href="{{ path('app_bl_show', {id: bl.id}) }}"
-                   class="bl-liste-row"
-                   data-search="{{ (bl.numeroBl ?? '')|lower }} {{ bl.fournisseur ? bl.fournisseur.nom|lower : '' }} {{ bl.dateLivraison|date('d/m/Y') }}">
-                    <span class="bl-liste-row__numero">{{ bl.numeroBl ? 'BL ' ~ bl.numeroBl : 'BL #' ~ bl.id }}</span>
-                    <span class="bl-liste-row__date">{{ bl.dateLivraison|date('d/m/Y') }}</span>
-                    <span class="bl-liste-row__fournisseur">{{ bl.fournisseur ? bl.fournisseur.nom : '—' }}</span>
+
+        {% if bons_livraison is empty %}
+            <div class="bl-liste-empty">
+                <i class="fas fa-file-invoice-dollar"></i>
+                <p>Aucun bon de livraison pour cet etablissement.</p>
+                <a href="{{ path('app_bl_upload') }}" class="bl-liste-empty__cta">
+                    <i class="fas fa-plus-circle"></i> Ajouter un bon
                 </a>
-            {% endfor %}
-        </div>
-    {% endif %}
-</div>
-
-<script>
-document.addEventListener('turbo:load', function () {
-    var input = document.getElementById('bl-search');
-    var container = document.getElementById('bl-rows');
-    if (!input || !container) return;
-
-    input.addEventListener('keyup', function () {
-        var query = input.value.toLowerCase().trim();
-        var items = container.querySelectorAll('.bl-liste-row');
-        items.forEach(function (row) {
-            var searchText = row.getAttribute('data-search') || '';
-            row.style.display = searchText.indexOf(query) !== -1 ? '' : 'none';
-        });
-    });
-});
-</script>
+            </div>
+        {% else %}
+            <div class="bl-liste-rows" data-search-filter-target="list">
+                {% for row in bons_livraison %}
+                    {% set bl = row.bl %}
+                    <a href="{{ path('app_bl_show', {id: bl.id}) }}"
+                       class="bl-liste-row"
+                       data-search-filter-target="item"
+                       data-search="{{ (bl.numeroBl ?? '')|lower }} {{ bl.fournisseur ? bl.fournisseur.nom|lower : '' }} {{ bl.dateLivraison|date('d/m/Y') }}">
+                        <span class="bl-liste-row__numero">{{ bl.numeroBl ? 'BL ' ~ bl.numeroBl : 'BL #' ~ bl.id }}</span>
+                        <span class="bl-liste-row__date">{{ bl.dateLivraison|date('d/m/Y') }}</span>
+                        <span class="bl-liste-row__fournisseur">{{ bl.fournisseur ? bl.fournisseur.nom : '—' }}</span>
+                    </a>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
 {% endblock %}

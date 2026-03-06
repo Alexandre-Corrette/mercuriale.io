@@ -25,57 +25,44 @@
         </div>
     </div>
 
-    {# Search #}
-    <div class="fournisseur-search">
-        <input type="text"
-               class="fournisseur-search__input"
-               id="fournisseur-search"
-               placeholder="Rechercher un fournisseur...">
-    </div>
-
-    {# Cards #}
-    {% if fournisseurs is empty %}
-        <div class="fournisseur-empty">
-            <i class="fas fa-handshake"></i>
-            <p>Aucun fournisseur enregistre.</p>
+    {# Search + Cards #}
+    <div data-controller="search-filter">
+        <div class="fournisseur-search">
+            <input type="text"
+                   class="fournisseur-search__input"
+                   data-search-filter-target="input"
+                   data-action="input->search-filter#filter"
+                   placeholder="Rechercher un fournisseur...">
         </div>
-    {% else %}
-        <div class="fournisseur-cards" id="fournisseur-cards">
-            {% for row in fournisseurs %}
-                <a href="{{ path('app_fournisseur_show', {id: row.fournisseur.id}) }}" class="fournisseur-card" data-name="{{ row.fournisseur.nom|lower }}">
-                    <div class="fournisseur-card__name">{{ row.fournisseur.nom }}</div>
-                    {% if row.fournisseur.code %}
-                        <div class="fournisseur-card__code">Code : {{ row.fournisseur.code }}</div>
-                    {% endif %}
-                    <div class="fournisseur-card__stats">
-                        <span><i class="fas fa-basket-shopping"></i> {{ row.productCount }} produit{{ row.productCount > 1 ? 's' : '' }}</span>
-                        <span><i class="fas fa-file-invoice-dollar"></i> {{ row.blCount }} BL</span>
-                    </div>
-                    {% if row.lastDelivery %}
-                        <div class="fournisseur-card__date">
-                            <i class="fas fa-calendar"></i> Derniere livraison : {{ row.lastDelivery|date('d/m/Y') }}
+
+        {% if fournisseurs is empty %}
+            <div class="fournisseur-empty">
+                <i class="fas fa-handshake"></i>
+                <p>Aucun fournisseur enregistre.</p>
+            </div>
+        {% else %}
+            <div class="fournisseur-cards" data-search-filter-target="list">
+                {% for row in fournisseurs %}
+                    <a href="{{ path('app_fournisseur_show', {id: row.fournisseur.id}) }}"
+                       class="fournisseur-card"
+                       data-search-filter-target="item"
+                       data-search="{{ row.fournisseur.nom|lower }}">
+                        <div class="fournisseur-card__name">{{ row.fournisseur.nom }}</div>
+                        {% if row.fournisseur.code %}
+                            <div class="fournisseur-card__code">Code : {{ row.fournisseur.code }}</div>
+                        {% endif %}
+                        <div class="fournisseur-card__stats">
+                            <span><i class="fas fa-basket-shopping"></i> {{ row.productCount }} produit{{ row.productCount > 1 ? 's' : '' }}</span>
+                            <span><i class="fas fa-file-invoice-dollar"></i> {{ row.blCount }} BL</span>
                         </div>
-                    {% endif %}
-                </a>
-            {% endfor %}
-        </div>
-    {% endif %}
-</div>
-
-<script>
-document.addEventListener('turbo:load', function () {
-    var input = document.getElementById('fournisseur-search');
-    var cards = document.getElementById('fournisseur-cards');
-    if (!input || !cards) return;
-
-    input.addEventListener('keyup', function () {
-        var query = input.value.toLowerCase().trim();
-        var items = cards.querySelectorAll('.fournisseur-card');
-        items.forEach(function (card) {
-            var name = card.getAttribute('data-name') || '';
-            card.style.display = name.indexOf(query) !== -1 ? '' : 'none';
-        });
-    });
-});
-</script>
+                        {% if row.lastDelivery %}
+                            <div class="fournisseur-card__date">
+                                <i class="fas fa-calendar"></i> Derniere livraison : {{ row.lastDelivery|date('d/m/Y') }}
+                            </div>
+                        {% endif %}
+                    </a>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
 {% endblock %}

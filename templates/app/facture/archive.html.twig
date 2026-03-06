@@ -29,7 +29,7 @@
         } only %}
     </div>
 {% else %}
-    <div class="facture-split">
+    <div class="facture-split" data-controller="split-detail">
         <div class="facture-split__list">
             <div class="facture-split__list-header">
                 <h2 class="facture-split__list-title">
@@ -40,6 +40,8 @@
             <div class="facture-split__list-scroll">
                 {% for facture in factures %}
                     <div class="facture-split-item{% if selected and facture.id == selected.id %} facture-split-item--active{% endif %}"
+                         data-split-detail-target="item"
+                         data-action="click->split-detail#select"
                          data-facture-id="{{ facture.idAsString }}"
                          data-url="{{ path('app_facture_archive_detail', {id: facture.idAsString}) }}">
                         <div class="facture-split-item__header">
@@ -85,7 +87,7 @@
 
         <div class="facture-split__separator" aria-hidden="true"></div>
 
-        <div class="facture-split__detail" id="facture-detail">
+        <div class="facture-split__detail" data-split-detail-target="detail">
             {% if selected %}
                 {% include 'app/facture/_archive_detail.html.twig' with {
                     facture: selected,
@@ -100,36 +102,4 @@
         </div>
     </div>
 {% endif %}
-
-<script>
-document.addEventListener('turbo:load', function () {
-    var items = document.querySelectorAll('.facture-split-item');
-    var detailContainer = document.getElementById('facture-detail');
-    if (!items.length || !detailContainer) return;
-
-    items.forEach(function (item) {
-        item.addEventListener('click', function () {
-            var url = item.getAttribute('data-url');
-            if (!url) return;
-
-            items.forEach(function (i) { i.classList.remove('facture-split-item--active'); });
-            item.classList.add('facture-split-item--active');
-
-            detailContainer.innerHTML = '<div class="facture-split__loading"><i class="fas fa-spinner fa-spin"></i></div>';
-
-            fetch(url, { credentials: 'same-origin' })
-                .then(function (response) {
-                    if (!response.ok) throw new Error('Erreur ' + response.status);
-                    return response.text();
-                })
-                .then(function (html) {
-                    detailContainer.innerHTML = html;
-                })
-                .catch(function () {
-                    detailContainer.innerHTML = '<div class="facture-split__error"><i class="fas fa-exclamation-triangle"></i> Erreur de chargement</div>';
-                });
-        });
-    });
-});
-</script>
 {% endblock %}
