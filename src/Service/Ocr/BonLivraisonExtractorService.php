@@ -9,6 +9,7 @@ use App\Entity\BonLivraison;
 use App\Entity\LigneBonLivraison;
 use App\Entity\Unite;
 use App\Enum\MatchConfidence;
+use App\Enum\TypeUnite;
 use App\Repository\FournisseurRepository;
 use App\Repository\ProduitFournisseurRepository;
 use App\Repository\UniteRepository;
@@ -19,60 +20,62 @@ class BonLivraisonExtractorService
 {
     private const UNITE_MAPPING = [
         // Poids
-        'kg' => 'kg',
-        'kilo' => 'kg',
-        'kilogramme' => 'kg',
-        'kilogrammes' => 'kg',
-        'g' => 'g',
-        'gr' => 'g',
-        'gramme' => 'g',
-        'grammes' => 'g',
+        'kg' => 'KG',
+        'kilo' => 'KG',
+        'kilogramme' => 'KG',
+        'kilogrammes' => 'KG',
+        'g' => 'KG',
+        'gr' => 'KG',
+        'gramme' => 'KG',
+        'grammes' => 'KG',
         // Volume
         'l' => 'L',
         'litre' => 'L',
         'litres' => 'L',
-        'cl' => 'cL',
-        'centilitre' => 'cL',
-        'centilitres' => 'cL',
-        'ml' => 'mL',
-        'millilitre' => 'mL',
-        'millilitres' => 'mL',
+        'cl' => 'L',
+        'centilitre' => 'L',
+        'centilitres' => 'L',
+        'ml' => 'L',
+        'millilitre' => 'L',
+        'millilitres' => 'L',
         // Pièce / unité
-        'p' => 'p',
-        'pc' => 'p',
-        'pce' => 'p',
-        'piece' => 'p',
-        'pièce' => 'p',
-        'pieces' => 'p',
-        'pièces' => 'p',
-        'u' => 'p',
-        'pu' => 'p',
-        'unite' => 'p',
-        'unité' => 'p',
-        'unites' => 'p',
-        'unités' => 'p',
+        'p' => 'PU',
+        'pc' => 'PU',
+        'pce' => 'PU',
+        'piece' => 'PU',
+        'pièce' => 'PU',
+        'pieces' => 'PU',
+        'pièces' => 'PU',
+        'u' => 'UNI',
+        'pu' => 'PU',
+        'uni' => 'UNI',
+        'unite' => 'UNI',
+        'unité' => 'UNI',
+        'unites' => 'UNI',
+        'unités' => 'UNI',
         // Conditionnements
-        'bq' => 'bq',
-        'bqt' => 'bq',
-        'barquette' => 'bq',
-        'barquettes' => 'bq',
-        'bt' => 'bt',
-        'bot' => 'bt',
-        'bouteille' => 'bt',
-        'bouteilles' => 'bt',
-        'ct' => 'ct',
-        'carton' => 'ct',
-        'cartons' => 'ct',
-        'crt' => 'ct',
-        'col' => 'col',
-        'colis' => 'col',
-        'flt' => 'flt',
-        'filet' => 'flt',
-        'sac' => 'sac',
-        'lot' => 'lot',
-        'lots' => 'lot',
-        'car' => 'ct',
-        'caisse' => 'ct',
+        'bq' => 'BQT',
+        'bqt' => 'BQT',
+        'barquette' => 'BQT',
+        'barquettes' => 'BQT',
+        'bt' => 'BOT',
+        'bot' => 'BOT',
+        'bouteille' => 'BOT',
+        'bouteilles' => 'BOT',
+        'ct' => 'CAR',
+        'carton' => 'CAR',
+        'cartons' => 'CAR',
+        'crt' => 'CAR',
+        'col' => 'COL',
+        'colis' => 'COL',
+        'flt' => 'COL',
+        'filet' => 'COL',
+        'sac' => 'SAC',
+        'fut' => 'FUT',
+        'lot' => 'PU',
+        'lots' => 'PU',
+        'car' => 'CAR',
+        'caisse' => 'CAR',
     ];
 
     public function __construct(
@@ -82,6 +85,7 @@ class BonLivraisonExtractorService
         private readonly FournisseurRepository $fournisseurRepository,
         private readonly UniteRepository $uniteRepository,
         private readonly OcrMatchingService $ocrMatchingService,
+        private readonly ExtractionValidator $extractionValidator,
         private readonly LoggerInterface $logger,
         private readonly string $projectDir,
     ) {
@@ -95,6 +99,7 @@ class BonLivraisonExtractorService
         $startTime = microtime(true);
         $warnings = [];
         $produitsNonMatches = [];
+        $this->uniteCache = [];
 
         try {
             // 1. Récupérer l'image
@@ -122,6 +127,18 @@ class BonLivraisonExtractorService
             // 4. Valider et enrichir les données
             $validationWarnings = $this->validateExtraction($data);
             $warnings = array_merge($warnings, $validationWarnings);
+
+            // 4b. Validation métier (date, rangs, totaux)
+            $businessErrors = $this->extractionValidator->validate($data);
+            if (!empty($businessErrors)) {
+                $this->logger->warning('Erreurs validation extraction BL', [
+                    'bl_id' => $bl->getId(),
+                    'errors' => $businessErrors,
+                ]);
+                foreach ($businessErrors as $err) {
+                    $warnings[] = 'Validation: ' . $err;
+                }
+            }
 
             // 5. Mettre à jour les infos du fournisseur si nouveau
             $this->updateFournisseurInfo($bl, $data);
@@ -183,79 +200,85 @@ class BonLivraisonExtractorService
     private function buildExtractionPrompt(): string
     {
         return <<<'PROMPT'
-Tu es un expert en lecture de bons de livraison (BL) pour la restauration professionnelle.
+Tu es un expert en lecture de bons de livraison (BL) de la société TerreAzur (groupe Pomona), fournisseur de fruits, légumes et produits de la mer pour la restauration professionnelle.
 
-ÉTAPE 1 — ANALYSE DU DOCUMENT
+STRUCTURE SPÉCIFIQUE DES BL TERREAZUR :
 
-Avant d'extraire les données, identifie :
-- Le fournisseur et son secteur (fruits/légumes, marée, viande, boissons, épicerie...)
-- La structure exacte des colonnes du tableau (elles varient selon les fournisseurs)
-- Les colonnes de quantité : certains BL ont une "quantité livrée" (nombre de colis/pièces) ET une "quantité facturée" (poids ou volume réel). C'est la QUANTITÉ FACTURÉE qui sert au calcul du prix.
-- La présence éventuelle de colonnes de majoration/décote (MJ, DECOL, ajustement...)
-- L'unité de facturation (UF) qui est l'unité utilisée pour le prix unitaire
+Le tableau produits contient ces colonnes dans cet ordre :
+[Rang/] [Code article] | Désignation | Qté livrée | Qté fact. UF / Poids brut | PU | MJ.DECOL | TVA | MT HT
 
-ÉTAPE 2 — EXTRACTION
-Extrais TOUTES les lignes dans le JSON ci-dessous.
+Colonne de gauche (rang + code) :
+- Format : "60/ 103634" → rang = 60, code_produit = "103634"
+- La désignation commerciale est sur la ligne principale
+- L'origine ou le sous-détail est sur la ligne en retrait en dessous (ex: "Jeunes pousses - France")
+
+Colonnes quantité :
+- "Qté livrée" = nombre de colis/bottes/bouquets physiquement livrés (COL, BOT, BQT...)
+- "Qté fact. UF / Poids brut" = quantité facturée avec son unité (KG, PU, BOT...)
+  → Quand il y a DEUX poids (ex: "6,100 KG / 6,800 KG"), le PREMIER est le poids livré, le SECOND est le poids facturé. Utilise le SECOND pour quantite_facturee.
+
+Colonne MT HT :
+- C'est la dernière colonne à droite
+- Elle peut être partiellement coupée sur certains scans → lis-la attentivement
+- C'est toujours : quantite_facturee × prix_unitaire ± majoration_decote
+
+Totaux en bas du document :
+- "Total X Colis" → nombre_colis (bas à gauche)
+- "Poids XX,XXX kg" → poids_total_kg (bas à gauche, juste après)
+- total_ht = SOMME de la colonne MT HT (ne pas confondre avec le numéro de commande)
+- Le numéro de commande Pomona est sur la ligne "N° commande(s) Pomona XXXXXXXXXX" → ne pas mettre dans total_ht
 
 RÈGLES CRITIQUES :
-- Le "prix_unitaire" est TOUJOURS celui associé à l'unité de facturation (€/kg, €/pièce, €/colis...)
-- La "quantite_facturee" est TOUJOURS la quantité de facturation (celle utilisée pour le calcul du total), PAS la quantité de colis livrés
-- L'"unite_facturation" est TOUJOURS l'unité de facturation (kg, p, L...), PAS l'unité de livraison (COL, FLT, CAR...)
-- Le "total_ht_ligne" est le montant HT final de la ligne TEL QU'IMPRIMÉ sur le BL (il peut inclure des majorations/décotes)
-- VÉRIFICATION : quantite_facturee × prix_unitaire doit être PROCHE du total_ht_ligne (l'écart éventuel = majoration/décote)
-- Les nombres décimaux utilisent le POINT comme séparateur (pas la virgule)
-- Si une valeur est illisible, mets null
+- Copie les désignations EXACTEMENT telles qu'imprimées. Si un mot est illisible → null pour ce champ, jamais une approximation ou invention
+- Les nombres décimaux sur BL français utilisent la virgule (1,990 = 1.99 en JSON)
+- "quantite_facturee × prix_unitaire" doit être PROCHE de "total_ht_ligne" — si l'écart est >5%, note-le dans remarques
+- Si une valeur est illisible ou absente → null, jamais une valeur inventée
+- Le champ "confiance" doit être "basse" si plus de 2 lignes ont des valeurs null ou incohérentes
 
-Réponds UNIQUEMENT avec du JSON valide, sans texte avant ou après.
+Réponds UNIQUEMENT avec du JSON valide, sans texte avant ni après, sans bloc markdown.
 
 {
     "fournisseur": {
-        "nom": "Nom commercial du fournisseur",
-        "groupe": "Groupe/maison mère si visible (ex: Pomona, Brake, Sysco) ou null",
-        "adresse": "Adresse ou null",
+        "nom": "Nom commercial tel qu'imprimé (ex: TerreAzur)",
+        "groupe": "Groupe/maison mère si visible (ex: Pomona) ou null",
+        "adresse": "Adresse complète ou null",
         "telephone": "Téléphone ou null",
-        "siret": "SIRET ou null"
+        "siret": "SIRET si visible ou null"
     },
     "document": {
         "type": "BL",
-        "numero": "Numéro du bon de livraison",
-        "numero_commande": "Numéro de commande ou null",
-        "date": "YYYY-MM-DD",
-        "client": "Nom du client destinataire",
+        "numero": "Numéro après BORDEREAU DE LIVRAISON N°",
+        "numero_commande": "Numéro après N° commande(s) Pomona",
+        "date": "YYYY-MM-DD (date après 'du' dans le titre)",
+        "client": "Nom du client livré (bloc LIVRÉ)",
         "page": "ex: 1/2 ou null si non visible"
     },
-    "colonnes_detectees": ["Liste des en-têtes de colonnes tels que lus sur le document"],
+    "colonnes_detectees": ["En-têtes de colonnes tels que lus sur le document"],
     "lignes": [
         {
-            "numero_ligne": 100,
-            "code_produit": "Code article fournisseur",
-            "designation": "Désignation EXACTE telle qu'imprimée, ne rien inventer",
-            "origine": "Pays/code origine si indiqué (FR, ES, MA...) ou null",
-            "quantite_livree": 3.0,
-            "unite_livraison": "PU|COL|FLT|CAR|BOT|SAC|BQT|KG|...",
-            "quantite_facturee": 4.35,
-            "unite_facturation": "kg|p|L|bot|sac|bqt|...",
-            "prix_unitaire": 1.99,
+            "rang": 60,
+            "code_produit": "103634",
+            "designation": "Désignation EXACTE telle qu'imprimée ou null si illisible",
+            "sous_detail": "Ligne en retrait sous la désignation (origine, variété) ou null",
+            "origine": "Code pays si indiqué (FR, ES, MA...) ou null",
+            "quantite_livree": 2.0,
+            "unite_livraison": "COL|BOT|BQT|SAC|...",
+            "quantite_facturee": 2.0,
+            "unite_facturation": "KG|PU|BOT|BQT|...",
+            "prix_unitaire": 7.110,
             "majoration_decote": 0.0,
-            "total_ht_ligne": 8.66,
-            "tva_code": "F 1|M 1|... tel qu'imprimé ou null"
+            "total_ht_ligne": 14.22,
+            "tva_code": "F 1|M 1|... tel qu'imprimé"
         }
     ],
     "totaux": {
-        "nombre_colis": 10,
-        "poids_total_kg": 80.501,
+        "nombre_colis": 9,
+        "poids_total_kg": 35.610,
         "total_ht": null
     },
     "confiance": "haute|moyenne|basse",
-    "remarques": ["Difficultés rencontrées, valeurs incertaines, incohérences détectées"]
+    "remarques": ["Incohérences détectées, valeurs incertaines, colonnes coupées..."]
 }
-
-EXEMPLES DE PIÈGES COURANTS :
-- "3,000 PU" avec "4,350 KG" signifie 3 pièces livrées mais 4.350 kg facturés → quantite_facturee = 4.35, unite_facturation = "kg"
-- "1,000 COL" avec "5,000 KG" signifie 1 colis livré mais 5 kg facturés → quantite_facturee = 5.0, unite_facturation = "kg"
-- "8,000 PU" avec "8,000 PU" signifie 8 pièces livrées ET facturées → quantite_facturee = 8.0, unite_facturation = "p"
-- Un total de ligne qui ne correspond pas à quantite × prix = il y a probablement une majoration/décote
-- Les virgules dans les nombres sur les BL français sont des séparateurs décimaux (1,990 = 1.99)
 PROMPT;
     }
 
@@ -264,6 +287,11 @@ PROMPT;
      */
     private function parseResponse(string $jsonResponse): ?array
     {
+        $this->logger->info('Réponse brute OCR (full)', [
+            'length' => strlen($jsonResponse),
+            'content' => $jsonResponse,
+        ]);
+
         // Nettoyer la réponse (enlever les backticks markdown si présents)
         $jsonResponse = trim($jsonResponse);
         if (str_starts_with($jsonResponse, '```json')) {
@@ -277,12 +305,21 @@ PROMPT;
         }
         $jsonResponse = trim($jsonResponse);
 
+        // Try direct parse first
         $data = json_decode($jsonResponse, true);
+
+        // If failed, try extracting JSON object from response text
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            if (preg_match('/\{[\s\S]*\}/u', $jsonResponse, $matches)) {
+                $data = json_decode($matches[0], true);
+            }
+        }
 
         if (json_last_error() !== JSON_ERROR_NONE) {
             $this->logger->error('Erreur parsing JSON extraction', [
                 'error' => json_last_error_msg(),
                 'response_length' => strlen($jsonResponse),
+                'first_200' => mb_substr($jsonResponse, 0, 200),
             ]);
 
             return null;
@@ -302,6 +339,7 @@ PROMPT;
 
         if (empty($data['fournisseur']['nom'])) {
             $warnings[] = 'Nom du fournisseur non détecté';
+
         }
 
         if (empty($data['lignes']) || !is_array($data['lignes'])) {
@@ -462,7 +500,7 @@ PROMPT;
             // Identifiants produit
             $ligne->setCodeProduitBl($ligneData['code_produit'] ?? null);
             $ligne->setDesignationBl($ligneData['designation'] ?? 'Produit inconnu');
-            $ligne->setNumeroLigneBl(isset($ligneData['numero_ligne']) ? (int) $ligneData['numero_ligne'] : null);
+            $ligne->setNumeroLigneBl(isset($ligneData['rang']) ? (int) $ligneData['rang'] : (isset($ligneData['numero_ligne']) ? (int) $ligneData['numero_ligne'] : null));
             $ligne->setOrigine($ligneData['origine'] ?? null);
 
             // Quantité livrée (nombre de colis/pièces)
@@ -481,7 +519,7 @@ PROMPT;
             $ligne->setQuantiteCommandee(null);
 
             // Unité de référence = unité de facturation (celle de la mercuriale)
-            $uniteFactStr = $ligneData['unite_facturation'] ?? 'p';
+            $uniteFactStr = $ligneData['unite_facturation'] ?? 'PU';
             $unite = $this->resolveUnite($uniteFactStr);
             $ligne->setUnite($unite);
 
@@ -531,6 +569,9 @@ PROMPT;
         return $lignes;
     }
 
+    /** @var array<string, Unite> Cache des unités résolues pendant l'extraction */
+    private array $uniteCache = [];
+
     /**
      * Résout une unité depuis une chaîne extraite.
      */
@@ -538,24 +579,34 @@ PROMPT;
     {
         $uniteStr = strtolower(trim($uniteStr));
 
-        // Mapper vers le code standard
-        $code = self::UNITE_MAPPING[$uniteStr] ?? 'p';
+        // Mapper vers le code standard (DB codes are uppercase)
+        $code = self::UNITE_MAPPING[$uniteStr] ?? 'PU';
 
-        // Chercher l'unité en base
-        $unite = $this->uniteRepository->findOneBy(['code' => $code]);
-
-        // Fallback sur pièce si non trouvée
-        if ($unite === null) {
-            $unite = $this->uniteRepository->findOneBy(['code' => 'p']);
+        // Retourner depuis le cache si déjà résolu
+        if (isset($this->uniteCache[$code])) {
+            return $this->uniteCache[$code];
         }
 
-        // Créer l'unité pièce si elle n'existe pas
+        // Chercher l'unité en base (try lowercase then uppercase)
+        $unite = $this->uniteRepository->findOneBy(['code' => $code])
+            ?? $this->uniteRepository->findOneBy(['code' => strtoupper($code)]);
+
+        // Fallback sur PU (Pièce unitaire) si non trouvée
+        if ($unite === null) {
+            $unite = $this->uniteRepository->findOneBy(['code' => 'PU'])
+                ?? $this->uniteRepository->findOneBy(['code' => 'p']);
+        }
+
+        // Créer l'unité pièce en dernier recours
         if ($unite === null) {
             $unite = new Unite();
-            $unite->setCode('p');
-            $unite->setNom('Pièce');
+            $unite->setCode('PU');
+            $unite->setNom('Pièce unitaire');
+            $unite->setType(TypeUnite::QUANTITE);
             $this->entityManager->persist($unite);
         }
+
+        $this->uniteCache[$code] = $unite;
 
         return $unite;
     }
