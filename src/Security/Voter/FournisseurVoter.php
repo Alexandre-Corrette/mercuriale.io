@@ -19,6 +19,7 @@ class FournisseurVoter extends Voter
     public const VIEW = 'VIEW';
     public const EDIT = 'EDIT';
     public const IMPORT = 'IMPORT';
+    public const CREATE = 'FOURNISSEUR_CREATE';
 
     public function __construct(
         private readonly OrganisationFournisseurRepository $organisationFournisseurRepository,
@@ -28,6 +29,10 @@ class FournisseurVoter extends Voter
 
     protected function supports(string $attribute, mixed $subject): bool
     {
+        if ($attribute === self::CREATE) {
+            return true;
+        }
+
         return \in_array($attribute, [self::VIEW, self::EDIT, self::IMPORT], true)
             && $subject instanceof Fournisseur;
     }
@@ -40,14 +45,19 @@ class FournisseurVoter extends Voter
             return false;
         }
 
-        /** @var Fournisseur $fournisseur */
-        $fournisseur = $subject;
-
-        // Verify user has an organisation
         $organisation = $user->getOrganisation();
         if ($organisation === null) {
             return false;
         }
+
+        // CREATE doesn't require a specific fournisseur — just role check
+        if ($attribute === self::CREATE) {
+            return \in_array('ROLE_ADMIN', $user->getRoles(), true)
+                || \in_array('ROLE_MANAGER', $user->getRoles(), true);
+        }
+
+        /** @var Fournisseur $fournisseur */
+        $fournisseur = $subject;
 
         // Verify organisation has access to this fournisseur via OrganisationFournisseur
         // OR via a direct Etablissement link (fournisseur_etablissement)

@@ -1,0 +1,118 @@
+{% extends 'admin/hub/layout.html.twig' %}
+
+{% set hub_title = 'Nouveau fournisseur' %}
+{% set hub_breadcrumbs = [
+    { label: 'Fournisseurs', route: 'app_fournisseurs_hub' },
+    { label: 'Nouveau fournisseur' }
+] %}
+
+{% block title %}Nouveau fournisseur — Mercuriale.io{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/fournisseur.css') }}">
+{% endblock %}
+
+{% block hub_content %}
+<div class="fournisseur-create">
+    <div class="fournisseur-create__header">
+        <h1 class="fournisseur-create__title">
+            <i class="fas fa-plus-circle"></i>
+            Nouveau fournisseur
+        </h1>
+        <p class="fournisseur-create__subtitle">
+            Renseignez les informations du fournisseur ou utilisez la recherche SIREN.
+        </p>
+    </div>
+
+    {% for message in app.flashes('success') %}
+        <div class="fournisseur-create__flash fournisseur-create__flash--success">
+            <i class="fas fa-check-circle"></i> {{ message }}
+        </div>
+    {% endfor %}
+
+    {% for message in app.flashes('error') %}
+        <div class="fournisseur-create__flash fournisseur-create__flash--error">
+            <i class="fas fa-exclamation-circle"></i> {{ message }}
+        </div>
+    {% endfor %}
+
+    {{ form_start(form, {attr: {class: 'fournisseur-create__form'}}) }}
+
+        <div class="fournisseur-create__section">
+            <h2 class="fournisseur-create__section-title">
+                <i class="fas fa-building"></i> Identite
+            </h2>
+
+            <div class="fournisseur-create__field">
+                {{ form_label(form.nom, null, {label_attr: {class: 'fournisseur-create__label'}}) }}
+                {{ form_widget(form.nom, {attr: {class: 'fournisseur-create__input', placeholder: 'Ex: TerreAzur, Metro...'}}) }}
+                {{ form_errors(form.nom) }}
+            </div>
+
+            <div class="fournisseur-create__row">
+                <div class="fournisseur-create__field">
+                    {{ form_label(form.code, null, {label_attr: {class: 'fournisseur-create__label'}}) }}
+                    {{ form_widget(form.code, {attr: {class: 'fournisseur-create__input', placeholder: 'Code interne'}}) }}
+                    {{ form_errors(form.code) }}
+                </div>
+                <div class="fournisseur-create__field">
+                    {{ form_label(form.siret, null, {label_attr: {class: 'fournisseur-create__label'}}) }}
+                    {{ form_widget(form.siret, {attr: {class: 'fournisseur-create__input', placeholder: '12345678901234', maxlength: 14}}) }}
+                    {{ form_errors(form.siret) }}
+                </div>
+            </div>
+        </div>
+
+        <div class="fournisseur-create__section">
+            <h2 class="fournisseur-create__section-title">
+                <i class="fas fa-map-marker-alt"></i> Coordonnees
+            </h2>
+
+            <div class="fournisseur-create__field">
+                {{ form_label(form.adresse, null, {label_attr: {class: 'fournisseur-create__label'}}) }}
+                {{ form_widget(form.adresse, {attr: {class: 'fournisseur-create__input', placeholder: 'Adresse postale'}}) }}
+                {{ form_errors(form.adresse) }}
+            </div>
+
+            <div class="fournisseur-create__row">
+                <div class="fournisseur-create__field">
+                    {{ form_label(form.codePostal, null, {label_attr: {class: 'fournisseur-create__label'}}) }}
+                    {{ form_widget(form.codePostal, {attr: {class: 'fournisseur-create__input', placeholder: '33000', maxlength: 10}}) }}
+                    {{ form_errors(form.codePostal) }}
+                </div>
+                <div class="fournisseur-create__field">
+                    {{ form_label(form.ville, null, {label_attr: {class: 'fournisseur-create__label'}}) }}
+                    {{ form_widget(form.ville, {attr: {class: 'fournisseur-create__input', placeholder: 'Bordeaux'}}) }}
+                    {{ form_errors(form.ville) }}
+                </div>
+            </div>
+
+            <div class="fournisseur-create__row">
+                <div class="fournisseur-create__field">
+                    {{ form_label(form.telephone, null, {label_attr: {class: 'fournisseur-create__label'}}) }}
+                    {{ form_widget(form.telephone, {attr: {class: 'fournisseur-create__input', placeholder: '05 56 00 00 00'}}) }}
+                    {{ form_errors(form.telephone) }}
+                </div>
+                <div class="fournisseur-create__field">
+                    {{ form_label(form.email, null, {label_attr: {class: 'fournisseur-create__label'}}) }}
+                    {{ form_widget(form.email, {attr: {class: 'fournisseur-create__input', placeholder: 'contact@fournisseur.fr'}}) }}
+                    {{ form_errors(form.email) }}
+                </div>
+            </div>
+        </div>
+
+        {{ form_rest(form) }}
+
+        <div class="fournisseur-create__actions">
+            <button type="submit" class="btn btn--primary">
+                <i class="fas fa-save"></i> Creer le fournisseur
+            </button>
+            <a href="{{ path('app_fournisseurs_hub') }}" class="btn btn--secondary">
+                <i class="fas fa-times"></i> Annuler
+            </a>
+        </div>
+
+    {{ form_end(form) }}
+</div>
+{% endblock %}
