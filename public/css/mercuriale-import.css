@@ -1,4 +1,563 @@
-/* Mercuriale Import - Checkbox list for etablissements */
+/* =============================================
+   Mercuriale Import — MERC-98
+   BEM classes for the 4-step import wizard
+   ============================================= */
+
+/* ── Card ── */
+.mi-card {
+    background: #fff;
+    border-radius: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+.mi-card__body {
+    padding: 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .mi-card__body {
+        padding: 2rem;
+    }
+}
+
+/* ── Progress Stepper ── */
+.mi-progress {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.mi-progress__step {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.mi-progress__circle {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.mi-progress__label {
+    font-weight: 500;
+    font-size: 0.9375rem;
+}
+
+.mi-progress__step--done .mi-progress__circle {
+    background-color: var(--color-success);
+    color: #fff;
+}
+
+.mi-progress__step--done .mi-progress__label {
+    color: var(--color-success);
+}
+
+.mi-progress__step--active .mi-progress__circle {
+    background-color: var(--mercuriale-coral);
+    color: #fff;
+}
+
+.mi-progress__step--active .mi-progress__label {
+    color: var(--mercuriale-coral);
+}
+
+.mi-progress__step--pending .mi-progress__circle {
+    background-color: #d1d5db;
+    color: #fff;
+}
+
+.mi-progress__step--pending .mi-progress__label {
+    color: #9ca3af;
+}
+
+.mi-progress__connector {
+    width: 4rem;
+    height: 2px;
+    background-color: #d1d5db;
+    flex-shrink: 0;
+}
+
+.mi-progress__connector--done {
+    background-color: var(--color-success);
+}
+
+@media (max-width: 480px) {
+    .mi-progress {
+        gap: 0.5rem;
+    }
+
+    .mi-progress__label {
+        display: none;
+    }
+
+    .mi-progress__connector {
+        width: 2rem;
+    }
+}
+
+/* ── Form Groups ── */
+.mi-form-group {
+    margin-bottom: 1.5rem;
+}
+
+.mi-form-group__label {
+    display: block;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.5rem;
+}
+
+.mi-form-group__hint {
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.mi-form-field {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 0.75rem;
+    background-color: #fff;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.mi-form-field:focus {
+    outline: none;
+    border-color: var(--mercuriale-coral);
+    box-shadow: 0 0 0 4px rgba(240, 117, 96, 0.1);
+}
+
+.mi-form-field--sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.9375rem;
+    border-radius: 0.5rem;
+}
+
+/* ── Section Title (small caps) ── */
+.mi-section-title {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 1rem;
+}
+
+/* ── Dropzone ── */
+.mi-dropzone {
+    border: 2px dashed #d1d5db;
+    border-radius: 1rem;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    background-color: #f9fafb;
+    transition: border-color 0.3s, background-color 0.3s;
+}
+
+.mi-dropzone:hover {
+    border-color: var(--mercuriale-coral);
+    background-color: rgba(240, 117, 96, 0.05);
+}
+
+.mi-dropzone__icon {
+    width: 4rem;
+    height: 4rem;
+    margin: 0 auto 1rem;
+    background: linear-gradient(135deg, var(--mercuriale-navy), var(--mercuriale-navy-light));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.5rem;
+}
+
+.mi-dropzone__title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 0.5rem;
+}
+
+.mi-dropzone__subtitle {
+    color: #6b7280;
+    margin-bottom: 1rem;
+}
+
+.mi-dropzone__hint {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background-color: var(--mercuriale-cream-dark);
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+/* ── File Preview ── */
+.mi-file-preview {
+    display: none;
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: #f9fafb;
+    border-radius: 0.75rem;
+}
+
+.mi-file-preview--visible {
+    display: block;
+}
+
+.mi-file-preview__row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.mi-file-preview__icon {
+    width: 3rem;
+    height: 3rem;
+    background-color: var(--color-success-bg);
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-success);
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.mi-file-preview__info {
+    flex: 1;
+    min-width: 0;
+}
+
+.mi-file-preview__remove {
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    border: none;
+    border-radius: 0.5rem;
+    color: #6b7280;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+    flex-shrink: 0;
+}
+
+.mi-file-preview__remove:hover {
+    background-color: var(--color-danger-bg);
+    color: var(--color-danger);
+}
+
+/* ── Error Box ── */
+.mi-error-box {
+    padding: 1rem;
+    background-color: var(--color-danger-bg);
+    border: 1px solid #fca5a5;
+    border-radius: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.mi-error-box__title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #991b1b;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.mi-error-box__list {
+    list-style: disc;
+    padding-left: 1.25rem;
+    color: #b91c1c;
+    font-size: 0.875rem;
+}
+
+.mi-error-box__list li + li {
+    margin-top: 0.25rem;
+}
+
+.mi-error-box__footer {
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    color: #dc2626;
+}
+
+/* ── Error summary card ── */
+.mi-error-summary {
+    background: #fff;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.mi-error-summary__title {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #991b1b;
+    margin-bottom: 0.5rem;
+}
+
+.mi-error-summary__list {
+    list-style: none;
+    padding: 0;
+    font-size: 0.875rem;
+    color: #b91c1c;
+}
+
+.mi-error-summary__list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.mi-error-summary__list li + li {
+    margin-top: 0.25rem;
+}
+
+.mi-error-summary__list li i {
+    margin-top: 0.15rem;
+    flex-shrink: 0;
+}
+
+/* ── Pending Import Item ── */
+.mi-pending-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    background-color: #f9fafb;
+    border-radius: 0.75rem;
+}
+
+.mi-pending-item + .mi-pending-item {
+    margin-top: 0.75rem;
+}
+
+.mi-pending-item__name {
+    font-weight: 600;
+    color: #111827;
+}
+
+.mi-pending-item__meta {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+/* ── Result Banner ── */
+.mi-result-banner {
+    padding: 2rem;
+    text-align: center;
+    color: #fff;
+}
+
+.mi-result-banner--success {
+    background: linear-gradient(135deg, var(--color-success) 0%, var(--color-success-light) 100%);
+}
+
+.mi-result-banner--partial {
+    background: linear-gradient(135deg, var(--color-warning) 0%, #b45309 100%);
+}
+
+.mi-result-banner--failure {
+    background: linear-gradient(135deg, var(--color-danger) 0%, var(--color-danger-light) 100%);
+}
+
+.mi-result-banner__icon {
+    width: 5rem;
+    height: 5rem;
+    margin: 0 auto 1rem;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+}
+
+.mi-result-banner__title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.mi-result-banner__subtitle {
+    opacity: 0.85;
+}
+
+/* ── Result actions footer ── */
+.mi-result-footer {
+    padding: 1.5rem;
+    background-color: #f9fafb;
+    border-top: 1px solid #f3f4f6;
+}
+
+/* ── Table row error ── */
+.mi-table-row--error {
+    background-color: var(--color-danger-bg);
+}
+
+/* ── Mapping grid ── */
+.mi-mapping-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+    .mi-mapping-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* ── Mapping field groups ── */
+.mi-field-section {
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.mi-field-section:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.mi-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* ── Checkbox option row ── */
+.mi-checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.mi-checkbox-row label {
+    color: #374151;
+}
+
+/* ── Truncated table cell ── */
+.mi-cell-truncate {
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mi-cell-truncate--wide {
+    max-width: 200px;
+}
+
+/* ── Text utilities (semantic, not Tailwind) ── */
+.mi-text-muted {
+    color: #9ca3af;
+}
+
+.mi-text-secondary {
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.mi-text-mono {
+    font-family: ui-monospace, SFMono-Regular, monospace;
+}
+
+.mi-text-right {
+    text-align: right;
+}
+
+.mi-text-center {
+    text-align: center;
+}
+
+.mi-text-success {
+    color: var(--color-success);
+}
+
+.mi-text-danger {
+    color: var(--color-danger);
+    font-size: 0.75rem;
+}
+
+.mi-text-warning {
+    color: var(--color-warning);
+    font-size: 0.75rem;
+}
+
+.mi-required {
+    color: var(--color-danger);
+}
+
+/* ── Spacing helpers ── */
+.mi-mb-sm {
+    margin-bottom: 1rem;
+}
+
+.mi-mb-md {
+    margin-bottom: 1.5rem;
+}
+
+.mi-mt-sm {
+    margin-top: 1rem;
+}
+
+/* ── Error state card (full width centered) ── */
+.mi-error-state {
+    padding: 2rem;
+    text-align: center;
+}
+
+.mi-error-state__icon {
+    width: 4rem;
+    height: 4rem;
+    margin: 0 auto 1rem;
+    background-color: var(--color-danger-bg);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-danger);
+    font-size: 1.5rem;
+}
+
+.mi-error-state__title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 0.5rem;
+}
+
+.mi-error-state__message {
+    color: #6b7280;
+    margin-bottom: 1.5rem;
+}
+
+/* ── Execution time ── */
+.mi-execution-time {
+    text-align: center;
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-bottom: 1.5rem;
+}
+
+/* ── Checkbox list (etablissements) ── */
 .mercuriale-import-checkboxes {
     max-height: 200px;
     overflow-y: auto;
@@ -8,26 +567,27 @@
     background: #fff;
 }
 
+/* Symfony renders checkboxes as nested divs: <div id="..."><div><input><label></div>...</div> */
+/* Symfony renders: div#id > input + label (flat, no inner div) */
 .mercuriale-import-checkboxes > div {
     display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.mercuriale-import-checkboxes label {
-    display: flex;
+    flex-direction: row;
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 0.75rem;
     border-radius: 0.5rem;
     cursor: pointer;
     transition: background-color 0.15s;
-    font-size: 0.9375rem;
-    color: #374151;
 }
 
-.mercuriale-import-checkboxes label:hover {
+.mercuriale-import-checkboxes > div:hover {
     background-color: #f9fafb;
+}
+
+.mercuriale-import-checkboxes label {
+    font-size: 0.9375rem;
+    color: #374151;
+    cursor: pointer;
 }
 
 .mercuriale-import-checkboxes input[type="checkbox"] {
@@ -35,4 +595,9 @@
     height: 1.125rem;
     accent-color: #e8734a;
     flex-shrink: 0;
+}
+
+/* ── Overflow wrapper ── */
+.mi-overflow-x {
+    overflow-x: auto;
 }

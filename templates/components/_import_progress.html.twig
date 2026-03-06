@@ -1,0 +1,32 @@
+{# Import progress stepper — usage: {% include 'components/_import_progress.html.twig' with { current_step: 2 } only %} #}
+{% set steps = [
+    { number: 1, label: 'Upload' },
+    { number: 2, label: 'Mapping' },
+    { number: 3, label: 'Preview' },
+    { number: 4, label: 'Import' }
+] %}
+
+<div class="mi-progress">
+    {% for step in steps %}
+        {% if not loop.first %}
+            <div class="mi-progress__connector{{ step.number <= current_step ? ' mi-progress__connector--done' : '' }}"></div>
+        {% endif %}
+
+        {% if step.number < current_step %}
+            <div class="mi-progress__step mi-progress__step--done">
+                <div class="mi-progress__circle"><i class="fas fa-check"></i></div>
+                <span class="mi-progress__label">{{ step.label }}</span>
+            </div>
+        {% elseif step.number == current_step %}
+            <div class="mi-progress__step mi-progress__step--active">
+                <div class="mi-progress__circle">{{ step.number }}</div>
+                <span class="mi-progress__label">{{ step.label }}</span>
+            </div>
+        {% else %}
+            <div class="mi-progress__step mi-progress__step--pending">
+                <div class="mi-progress__circle">{{ step.number }}</div>
+                <span class="mi-progress__label">{{ step.label }}</span>
+            </div>
+        {% endif %}
+    {% endfor %}
+</div>

@@ -2,42 +2,22 @@
 
 {% set hub_title = 'Mercuriale' %}
 {% set hub_breadcrumbs = [
-    { label: 'Mercuriale', url: path('admin_hub_mercuriale') },
-    { label: 'Aperçu' }
+    { label: 'Mercuriale', url: path('app_produits_liste') },
+    { label: 'Apercu' }
 ] %}
 
 {% block title %}Preview Import - Mercuriale.io{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/mercuriale-import.css') }}">
+{% endblock %}
 
 {% block hub_content %}
 <div class="hub-content hub-content--medium">
     <h1 class="hub-title"><i class="fas fa-search"></i> Previsualisation de l'import</h1>
 
-    {# Progress steps #}
-    <div class="flex items-center justify-center gap-4 mb-8">
-        <div class="flex items-center gap-2 text-green-600">
-            <div class="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center">
-                <i class="fas fa-check"></i>
-            </div>
-            <span class="font-medium">Upload</span>
-        </div>
-        <div class="w-16 h-0.5 bg-green-600"></div>
-        <div class="flex items-center gap-2 text-green-600">
-            <div class="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center">
-                <i class="fas fa-check"></i>
-            </div>
-            <span class="font-medium">Mapping</span>
-        </div>
-        <div class="w-16 h-0.5 bg-coral"></div>
-        <div class="flex items-center gap-2 text-coral">
-            <div class="w-8 h-8 rounded-full bg-coral text-white flex items-center justify-center">3</div>
-            <span class="font-medium">Preview</span>
-        </div>
-        <div class="w-16 h-0.5 bg-gray-300"></div>
-        <div class="flex items-center gap-2 text-gray-400">
-            <div class="w-8 h-8 rounded-full bg-gray-300 text-white flex items-center justify-center">4</div>
-            <span class="font-medium">Import</span>
-        </div>
-    </div>
+    {% include 'components/_import_progress.html.twig' with { current_step: 3 } only %}
 
     {# Import info #}
     <div class="hub-import-info">
@@ -57,13 +37,13 @@
 
     {% if error %}
         {# Error state #}
-        <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
-            <div class="p-8 text-center">
-                <div class="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
-                    <i class="fas fa-exclamation-triangle text-2xl text-red-600"></i>
+        <div class="mi-card">
+            <div class="mi-error-state">
+                <div class="mi-error-state__icon">
+                    <i class="fas fa-exclamation-triangle"></i>
                 </div>
-                <h2 class="text-xl font-bold text-gray-900 mb-2">Erreur lors de l'analyse</h2>
-                <p class="text-gray-500 mb-6">{{ error }}</p>
+                <h2 class="mi-error-state__title">Erreur lors de l'analyse</h2>
+                <p class="mi-error-state__message">{{ error }}</p>
                 <a href="{{ path('app_mercuriale_import_mapping', {importId: import.idAsString}) }}" class="hub-cta hub-cta--secondary">
                     <i class="fas fa-arrow-left"></i> Modifier le mapping
                 </a>
@@ -105,21 +85,21 @@
             {# Show first errors as summary #}
             {% set errorLines = preview.lines|filter(line => line.hasErrors)|slice(0, 5) %}
             {% if errorLines|length > 0 %}
-                <div class="bg-white rounded-xl shadow-lg p-4 mb-6">
-                    <div class="text-sm font-medium text-red-800 mb-2">Erreurs detectees :</div>
-                    <ul class="text-sm text-red-700 space-y-1">
+                <div class="mi-error-summary">
+                    <div class="mi-error-summary__title">Erreurs detectees :</div>
+                    <ul class="mi-error-summary__list">
                         {% for line in errorLines %}
                             {% for error in line.errors %}
-                                <li class="flex items-start gap-2">
-                                    <i class="fas fa-exclamation-circle mt-0.5 flex-shrink-0"></i>
+                                <li>
+                                    <i class="fas fa-exclamation-circle"></i>
                                     <span>Ligne {{ line.row }} : {{ error.message }}</span>
                                 </li>
                             {% endfor %}
                         {% endfor %}
                     </ul>
                     {% if preview.errorRows > 5 %}
-                        <div class="mt-2 text-xs text-red-600">
-                            <i class="fas fa-info-circle mr-1"></i>
+                        <div class="mi-error-box__footer">
+                            <i class="fas fa-info-circle"></i>
                             Et {{ preview.errorRows - 5 }} autre(s) erreur(s) - voir le tableau ci-dessous
                         </div>
                     {% endif %}
@@ -130,10 +110,10 @@
         {# Lines detail #}
         <div class="hub-section">
             <div class="hub-section__header">
-                <h2 class="hub-section__title"><i class="fas fa-list mr-2"></i>Detail des lignes</h2>
+                <h2 class="hub-section__title"><i class="fas fa-list"></i> Detail des lignes</h2>
             </div>
 
-            <div class="overflow-x-auto">
+            <div class="mi-overflow-x">
                 <table class="hub-table">
                     <thead>
                         <tr>
@@ -148,8 +128,8 @@
                     </thead>
                     <tbody>
                         {% for line in preview.lines|slice(0, 100) %}
-                            <tr class="{{ line.hasErrors ? 'bg-red-50' : '' }}">
-                                <td class="text-gray-400">{{ line.row }}</td>
+                            <tr class="{{ line.hasErrors ? 'mi-table-row--error' : '' }}">
+                                <td class="mi-text-muted">{{ line.row }}</td>
                                 <td>
                                     {% if line.action == 'create' %}
                                         <span class="hub-badge hub-badge--success">Creation</span>
@@ -161,10 +141,10 @@
                                         <span class="hub-badge hub-badge--danger">Erreur</span>
                                     {% endif %}
                                 </td>
-                                <td class="font-mono">{{ line.codeFournisseur ?: '-' }}</td>
-                                <td class="truncate max-w-[200px]" title="{{ line.designation }}">{{ line.designation ?: '-' }}</td>
+                                <td class="mi-text-mono">{{ line.codeFournisseur ?: '-' }}</td>
+                                <td class="mi-cell-truncate mi-cell-truncate--wide" title="{{ line.designation }}">{{ line.designation ?: '-' }}</td>
                                 <td>{{ line.unite ?: '-' }}</td>
-                                <td class="text-right font-mono">
+                                <td class="mi-text-right mi-text-mono">
                                     {% if line.prix %}
                                         {{ line.prix|number_format(4, ',', ' ') }} EUR
                                     {% else %}
@@ -173,19 +153,19 @@
                                 </td>
                                 <td>
                                     {% if line.hasErrors %}
-                                        <div class="text-red-600 text-xs">
+                                        <div class="mi-text-danger">
                                             {% for error in line.errors %}
-                                                <div><i class="fas fa-times-circle mr-1"></i>{{ error.message }}</div>
+                                                <div><i class="fas fa-times-circle"></i> {{ error.message }}</div>
                                             {% endfor %}
                                         </div>
                                     {% elseif line.hasWarnings %}
-                                        <div class="text-amber-600 text-xs">
+                                        <div class="mi-text-warning">
                                             {% for warning in line.warnings %}
-                                                <div><i class="fas fa-exclamation-triangle mr-1"></i>{{ warning.message }}</div>
+                                                <div><i class="fas fa-exclamation-triangle"></i> {{ warning.message }}</div>
                                             {% endfor %}
                                         </div>
                                     {% else %}
-                                        <span class="text-green-600"><i class="fas fa-check"></i></span>
+                                        <span class="mi-text-success"><i class="fas fa-check"></i></span>
                                     {% endif %}
                                 </td>
                             </tr>
@@ -196,7 +176,7 @@
 
             {% if preview.lines|length > 100 %}
                 <div class="hub-table__empty">
-                    <i class="fas fa-info-circle mr-1"></i>
+                    <i class="fas fa-info-circle"></i>
                     Affichage limite aux 100 premieres lignes ({{ preview.lines|length }} lignes au total)
                 </div>
             {% endif %}
@@ -211,7 +191,7 @@
             {% if preview.canProceed %}
                 <form action="{{ path('app_mercuriale_import_confirm', {importId: import.idAsString}) }}" method="post">
                     <input type="hidden" name="_token" value="{{ csrf_token('confirm_import_' ~ import.idAsString) }}">
-                    <button type="submit" class="hub-cta hub-cta--primary" onclick="this.disabled=true; this.innerHTML='<i class=\'fas fa-spinner fa-spin mr-2\'></i>Import en cours...'; this.form.submit();">
+                    <button type="submit" class="hub-cta hub-cta--primary" onclick="this.disabled=true; this.innerHTML='<i class=\'fas fa-spinner fa-spin\'></i> Import en cours...'; this.form.submit();">
                         <i class="fas fa-check"></i> Confirmer l'import ({{ preview.validRows }} lignes)
                     </button>
                 </form>
