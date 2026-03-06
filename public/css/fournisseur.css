@@ -114,6 +114,37 @@
     margin-top: 0.25rem;
 }
 
+.fournisseur-show-header__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.fournisseur-show-header__order-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    background: #16a34a;
+    color: #fff;
+    border-radius: var(--radius-lg);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color var(--transition-fast);
+}
+
+.fournisseur-show-header__order-btn:hover {
+    background: #15803d;
+}
+
+.fournisseur-show-header__order-btn--disabled {
+    background: #d1d5db;
+    color: #9ca3af;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
 /* ── Show page: Info grid ── */
 .fournisseur-show-info {
     display: grid;
