@@ -43,7 +43,7 @@
 
         {% include 'components/_dashboard_tile.html.twig' with {
             label: 'Nouveau fournisseur', icon: 'fa-plus-circle',
-            color: 'green', disabled: true
+            url: path('app_fournisseur_create'), color: 'green'
         } only %}
 
         {% include 'components/_dashboard_tile.html.twig' with {

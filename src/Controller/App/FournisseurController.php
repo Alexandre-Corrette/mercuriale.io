@@ -5,12 +5,17 @@ declare(strict_types=1);
 namespace App\Controller\App;
 
 use App\Entity\Fournisseur;
+use App\Entity\OrganisationFournisseur;
 use App\Entity\Utilisateur;
+use App\Form\FournisseurCreateType;
 use App\Repository\AvoirFournisseurRepository;
 use App\Repository\BonLivraisonRepository;
 use App\Repository\FournisseurRepository;
 use App\Repository\ProduitFournisseurRepository;
+use App\Security\Voter\FournisseurVoter;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -21,6 +26,7 @@ class FournisseurController extends AbstractController
 {
     public function __construct(
         private readonly FournisseurRepository $fournisseurRepo,
+        private readonly EntityManagerInterface $entityManager,
     ) {
     }
 
@@ -33,6 +39,40 @@ class FournisseurController extends AbstractController
 
         return $this->render('app/fournisseur/hub.html.twig', [
             'fournisseur_count' => $this->fournisseurRepo->countActiveForOrganisation($org),
+        ]);
+    }
+
+    #[Route('/nouveau', name: 'app_fournisseur_create', methods: ['GET', 'POST'])]
+    public function create(Request $request): Response
+    {
+        $this->denyAccessUnlessGranted(FournisseurVoter::CREATE);
+
+        /** @var Utilisateur $user */
+        $user = $this->getUser();
+        $org = $user->getOrganisation();
+
+        $fournisseur = new Fournisseur();
+        $form = $this->createForm(FournisseurCreateType::class, $fournisseur);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $orgFournisseur = new OrganisationFournisseur();
+            $orgFournisseur->setOrganisation($org);
+            $orgFournisseur->setFournisseur($fournisseur);
+            $orgFournisseur->setActif(true);
+
+            $this->entityManager->wrapInTransaction(function () use ($fournisseur, $orgFournisseur): void {
+                $this->entityManager->persist($fournisseur);
+                $this->entityManager->persist($orgFournisseur);
+            });
+
+            $this->addFlash('success', 'Fournisseur cree avec succes.');
+
+            return $this->redirectToRoute('app_fournisseur_show', ['id' => $fournisseur->getId()]);
+        }
+
+        return $this->render('app/fournisseur/create.html.twig', [
+            'form' => $form,
         ]);
     }
 
