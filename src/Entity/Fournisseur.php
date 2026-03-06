@@ -82,6 +82,10 @@ class Fournisseur
     #[ORM\OneToMany(targetEntity: AvoirFournisseur::class, mappedBy: 'fournisseur')]
     private Collection $avoirs;
 
+    /** @var Collection<int, ContactFournisseur> */
+    #[ORM\OneToMany(targetEntity: ContactFournisseur::class, mappedBy: 'fournisseur', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    private Collection $contacts;
+
     public function __construct()
     {
         $this->organisationFournisseurs = new ArrayCollection();
@@ -89,6 +93,7 @@ class Fournisseur
         $this->bonsLivraison = new ArrayCollection();
         $this->etablissements = new ArrayCollection();
         $this->avoirs = new ArrayCollection();
+        $this->contacts = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -279,6 +284,46 @@ class Fournisseur
     public function getAvoirs(): Collection
     {
         return $this->avoirs;
+    }
+
+    /**
+     * @return Collection<int, ContactFournisseur>
+     */
+    public function getContacts(): Collection
+    {
+        return $this->contacts;
+    }
+
+    public function addContact(ContactFournisseur $contact): static
+    {
+        if (!$this->contacts->contains($contact)) {
+            $this->contacts->add($contact);
+            $contact->setFournisseur($this);
+        }
+
+        return $this;
+    }
+
+    public function removeContact(ContactFournisseur $contact): static
+    {
+        if ($this->contacts->removeElement($contact)) {
+            if ($contact->getFournisseur() === $this) {
+                $contact->setFournisseur(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getContactPrincipal(): ?ContactFournisseur
+    {
+        foreach ($this->contacts as $contact) {
+            if ($contact->isPrincipal()) {
+                return $contact;
+            }
+        }
+
+        return null;
     }
 
     public function getAdresseComplete(): string

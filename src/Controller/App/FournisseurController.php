@@ -4,17 +4,22 @@ declare(strict_types=1);
 
 namespace App\Controller\App;
 
+use App\Entity\ContactFournisseur;
 use App\Entity\Fournisseur;
 use App\Entity\OrganisationFournisseur;
 use App\Entity\Utilisateur;
+use App\Form\ContactFournisseurType;
 use App\Form\FournisseurCreateType;
 use App\Repository\AvoirFournisseurRepository;
 use App\Repository\BonLivraisonRepository;
+use App\Repository\ContactFournisseurRepository;
 use App\Repository\FournisseurRepository;
 use App\Repository\ProduitFournisseurRepository;
 use App\Security\Voter\FournisseurVoter;
+use App\Service\SirenApiService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -76,6 +81,26 @@ class FournisseurController extends AbstractController
         ]);
     }
 
+    #[Route('/siren-lookup', name: 'app_fournisseur_siren_lookup', methods: ['GET'])]
+    public function sirenLookup(Request $request, SirenApiService $sirenApi): JsonResponse
+    {
+        $this->denyAccessUnlessGranted(FournisseurVoter::CREATE);
+
+        $query = $request->query->getString('q');
+
+        if ($query === '') {
+            return $this->json(['error' => 'Parametre q requis.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $result = $sirenApi->lookup($query);
+
+        if ($result === null) {
+            return $this->json(['error' => 'Aucune entreprise trouvee.'], Response::HTTP_NOT_FOUND);
+        }
+
+        return $this->json($result);
+    }
+
     #[Route('/liste', name: 'app_fournisseurs_liste', methods: ['GET'])]
     public function liste(): Response
     {
@@ -95,6 +120,7 @@ class FournisseurController extends AbstractController
         ProduitFournisseurRepository $produitRepo,
         BonLivraisonRepository $blRepo,
         AvoirFournisseurRepository $avoirRepo,
+        ContactFournisseurRepository $contactRepo,
     ): Response {
         $this->denyAccessUnlessGranted('VIEW', $fournisseur);
 
@@ -102,12 +128,18 @@ class FournisseurController extends AbstractController
         $user = $this->getUser();
         $org = $user->getOrganisation();
 
+        $contactForm = $this->createForm(ContactFournisseurType::class, new ContactFournisseur(), [
+            'action' => $this->generateUrl('app_fournisseur_contact_create', ['id' => $fournisseur->getId()]),
+        ]);
+
         return $this->render('app/fournisseur/show.html.twig', [
             'fournisseur' => $fournisseur,
             'produits' => $produitRepo->findByFournisseur($fournisseur),
             'bons_livraison' => $blRepo->findRecentByFournisseurForOrganisation($fournisseur, $org),
             'avoirs' => $avoirRepo->findByFournisseurForOrganisation($fournisseur, $org),
             'total_avoirs_imputes' => $avoirRepo->sumImputesByFournisseurForOrganisation($fournisseur, $org),
+            'contacts' => $contactRepo->findByFournisseur($fournisseur),
+            'contact_form' => $contactForm,
         ]);
     }
 }

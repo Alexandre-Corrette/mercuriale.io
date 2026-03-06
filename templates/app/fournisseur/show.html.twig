@@ -12,6 +12,7 @@
 {% block stylesheets %}
     {{ parent() }}
     <link rel="stylesheet" href="{{ asset('css/fournisseur.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/contact-fournisseur.css') }}">
 {% endblock %}
 
 {% block hub_content %}
@@ -65,6 +66,137 @@
                 } only %}
             </div>
         </div>
+    </div>
+
+    {# Contacts #}
+    <div class="fournisseur-show-section contacts-section">
+        <div class="contacts-section__header">
+            <h2 class="contacts-section__title">
+                <i class="fas fa-address-book"></i> Contacts ({{ contacts|length }})
+            </h2>
+            {% if is_granted('EDIT', fournisseur) %}
+                <button type="button" class="contacts-section__add-btn" onclick="document.getElementById('contact-form-add').classList.toggle('is-visible')">
+                    <i class="fas fa-plus"></i> Ajouter
+                </button>
+            {% endif %}
+        </div>
+
+        {# Inline add form (hidden by default) #}
+        {% if is_granted('EDIT', fournisseur) %}
+            <div id="contact-form-add" class="contact-form-inline">
+                <h3 class="contact-form-inline__title">Nouveau contact</h3>
+                {{ form_start(contact_form, {attr: {class: 'contact-form-inline__grid'}}) }}
+                    <div class="contact-form-inline__field">
+                        {{ form_label(contact_form.nom, null, {label_attr: {class: 'contact-form-inline__label'}}) }}
+                        {{ form_widget(contact_form.nom, {attr: {class: 'contact-form-inline__input', placeholder: 'Nom'}}) }}
+                        {{ form_errors(contact_form.nom) }}
+                    </div>
+                    <div class="contact-form-inline__field">
+                        {{ form_label(contact_form.prenom, null, {label_attr: {class: 'contact-form-inline__label'}}) }}
+                        {{ form_widget(contact_form.prenom, {attr: {class: 'contact-form-inline__input', placeholder: 'Prenom'}}) }}
+                    </div>
+                    <div class="contact-form-inline__field">
+                        {{ form_label(contact_form.role, null, {label_attr: {class: 'contact-form-inline__label'}}) }}
+                        {{ form_widget(contact_form.role, {attr: {class: 'contact-form-inline__input'}}) }}
+                    </div>
+                    <div class="contact-form-inline__field">
+                        {{ form_label(contact_form.email, null, {label_attr: {class: 'contact-form-inline__label'}}) }}
+                        {{ form_widget(contact_form.email, {attr: {class: 'contact-form-inline__input', placeholder: 'email@exemple.fr'}}) }}
+                    </div>
+                    <div class="contact-form-inline__field">
+                        {{ form_label(contact_form.telephone, null, {label_attr: {class: 'contact-form-inline__label'}}) }}
+                        {{ form_widget(contact_form.telephone, {attr: {class: 'contact-form-inline__input', placeholder: '06 00 00 00 00'}}) }}
+                    </div>
+                    <div class="contact-form-inline__field contact-form-inline__checkbox">
+                        {{ form_widget(contact_form.principal) }}
+                        {{ form_label(contact_form.principal, null, {label_attr: {class: 'contact-form-inline__label'}}) }}
+                    </div>
+                    <div class="contact-form-inline__field contact-form-inline__field--full">
+                        {{ form_label(contact_form.note, null, {label_attr: {class: 'contact-form-inline__label'}}) }}
+                        {{ form_widget(contact_form.note, {attr: {class: 'contact-form-inline__input', placeholder: 'Notes...'}}) }}
+                    </div>
+                    {{ form_rest(contact_form) }}
+                    <div class="contact-form-inline__actions">
+                        <button type="submit" class="contact-form-inline__btn contact-form-inline__btn--save">
+                            <i class="fas fa-save"></i> Enregistrer
+                        </button>
+                        <button type="button" class="contact-form-inline__btn contact-form-inline__btn--cancel" onclick="document.getElementById('contact-form-add').classList.remove('is-visible')">
+                            Annuler
+                        </button>
+                    </div>
+                {{ form_end(contact_form) }}
+            </div>
+        {% endif %}
+
+        {% if contacts is empty %}
+            <div class="contacts-section__empty">
+                <i class="fas fa-exclamation-triangle"></i>
+                Aucun contact renseigne pour ce fournisseur.
+                {% if is_granted('EDIT', fournisseur) %}
+                    <a href="#" onclick="event.preventDefault(); document.getElementById('contact-form-add').classList.add('is-visible')">Ajouter un contact</a>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="contacts-grid">
+                {% for contact in contacts %}
+                    <div class="contact-card{{ contact.principal ? ' contact-card--primary' : '' }}">
+                        <div class="contact-card__header">
+                            <div>
+                                <h3 class="contact-card__name">{{ contact.nomComplet }}</h3>
+                                {% if contact.role %}
+                                    <p class="contact-card__role">{{ contact.role }}</p>
+                                {% endif %}
+                            </div>
+                            {% if contact.principal %}
+                                <span class="contact-card__badge-primary">
+                                    <i class="fas fa-star"></i> Principal
+                                </span>
+                            {% endif %}
+                        </div>
+                        <div class="contact-card__info">
+                            {% if contact.email %}
+                                <div class="contact-card__info-row">
+                                    <i class="fas fa-envelope"></i>
+                                    <a href="mailto:{{ contact.email }}">{{ contact.email }}</a>
+                                </div>
+                            {% endif %}
+                            {% if contact.telephone %}
+                                <div class="contact-card__info-row">
+                                    <i class="fas fa-phone"></i>
+                                    <a href="tel:{{ contact.telephone }}">{{ contact.telephone }}</a>
+                                </div>
+                            {% endif %}
+                        </div>
+                        {% if contact.note %}
+                            <div class="contact-card__note">{{ contact.note }}</div>
+                        {% endif %}
+                        {% if is_granted('EDIT', fournisseur) %}
+                            <div class="contact-card__actions">
+                                {% if contact.email %}
+                                    <a href="mailto:{{ contact.email }}" class="contact-card__action contact-card__action--email">
+                                        <i class="fas fa-paper-plane"></i> Email
+                                    </a>
+                                {% endif %}
+                                {% if not contact.principal %}
+                                    <form method="post" action="{{ path('app_fournisseur_contact_set_primary', {id: fournisseur.id, contactId: contact.idAsString}) }}">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('set_primary_' ~ contact.idAsString) }}">
+                                        <button type="submit" class="contact-card__action contact-card__action--primary">
+                                            <i class="fas fa-star"></i> Principal
+                                        </button>
+                                    </form>
+                                {% endif %}
+                                <form method="post" action="{{ path('app_fournisseur_contact_delete', {id: fournisseur.id, contactId: contact.idAsString}) }}" onsubmit="return confirm('Supprimer ce contact ?')">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete_contact_' ~ contact.idAsString) }}">
+                                    <button type="submit" class="contact-card__action contact-card__action--delete">
+                                        <i class="fas fa-trash"></i> Supprimer
+                                    </button>
+                                </form>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
     </div>
 
     {# Produits #}
