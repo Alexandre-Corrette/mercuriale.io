@@ -1,0 +1,149 @@
+/* Mercuriale.io — Verification page styles */
+
+.verification-page {
+    min-height: 100vh;
+    background: var(--mercuriale-cream);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 2rem 1rem 4rem;
+}
+
+.verification-container {
+    max-width: 520px;
+    width: 100%;
+    font-family: sans-serif;
+}
+
+/* -- Header -- */
+.verification-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.verification-header__logo {
+    height: 80px;
+    width: auto;
+}
+
+/* -- Card -- */
+.verification-card {
+    background: #fff;
+    border-radius: 1rem;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    padding: 2.5rem 2rem;
+    text-align: center;
+}
+
+.verification-card__icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.verification-card--success .verification-card__icon {
+    color: var(--color-success);
+}
+
+.verification-card--trial .verification-card__icon {
+    color: var(--mercuriale-coral);
+}
+
+.verification-card--expired .verification-card__icon {
+    color: var(--color-danger);
+}
+
+.verification-card__title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--mercuriale-navy);
+    margin: 0 0 0.75rem;
+}
+
+.verification-card__text {
+    color: #6b7280;
+    font-size: 1rem;
+    line-height: 1.5;
+    margin: 0 0 1.5rem;
+}
+
+.verification-card__link {
+    display: inline-block;
+    margin-top: 1rem;
+    color: var(--mercuriale-coral);
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 0.9375rem;
+}
+
+.verification-card__link:hover {
+    text-decoration: underline;
+}
+
+/* -- Steps -- */
+.verification-steps {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 1.5rem;
+}
+
+.verification-steps__step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.verification-steps__number {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.verification-steps__step--pending .verification-steps__number {
+    background: linear-gradient(135deg, var(--mercuriale-coral), var(--mercuriale-coral-light, #f7a08a));
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(240, 117, 96, 0.3);
+}
+
+.verification-steps__step--done .verification-steps__number {
+    background: var(--color-success);
+    color: #fff;
+}
+
+.verification-steps__step--locked .verification-steps__number {
+    background: #e5e7eb;
+    color: #9ca3af;
+}
+
+.verification-steps__label {
+    font-size: 0.75rem;
+    color: #6b7280;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.verification-steps__connector {
+    width: 2rem;
+    height: 2px;
+    background: #e5e7eb;
+    margin: 0 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 480px) {
+    .verification-card {
+        padding: 1.5rem 1.25rem;
+    }
+
+    .verification-steps__connector {
+        width: 1rem;
+    }
+}

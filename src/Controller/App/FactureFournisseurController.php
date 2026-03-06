@@ -27,6 +27,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/app/fournisseurs/factures')]
 #[IsGranted('ROLE_USER')]
+#[IsGranted('VERIFIED_FEATURE')]
 class FactureFournisseurController extends AbstractController
 {
     public function __construct(

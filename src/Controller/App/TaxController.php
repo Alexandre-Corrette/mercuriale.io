@@ -14,6 +14,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/app/fournisseurs/taxes')]
 #[IsGranted('ROLE_GERANT')]
+#[IsGranted('VERIFIED_FEATURE')]
 class TaxController extends AbstractController
 {
     public function __construct(
