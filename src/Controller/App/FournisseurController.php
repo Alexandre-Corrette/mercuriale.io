@@ -32,6 +32,7 @@ class FournisseurController extends AbstractController
     public function __construct(
         private readonly FournisseurRepository $fournisseurRepo,
         private readonly EntityManagerInterface $entityManager,
+        private readonly ContactFournisseurRepository $contactRepo,
     ) {
     }
 
@@ -120,7 +121,6 @@ class FournisseurController extends AbstractController
         ProduitFournisseurRepository $produitRepo,
         BonLivraisonRepository $blRepo,
         AvoirFournisseurRepository $avoirRepo,
-        ContactFournisseurRepository $contactRepo,
     ): Response {
         $this->denyAccessUnlessGranted('VIEW', $fournisseur);
 
@@ -138,8 +138,125 @@ class FournisseurController extends AbstractController
             'bons_livraison' => $blRepo->findRecentByFournisseurForOrganisation($fournisseur, $org),
             'avoirs' => $avoirRepo->findByFournisseurForOrganisation($fournisseur, $org),
             'total_avoirs_imputes' => $avoirRepo->sumImputesByFournisseurForOrganisation($fournisseur, $org),
-            'contacts' => $contactRepo->findByFournisseur($fournisseur),
+            'contacts' => $this->contactRepo->findByFournisseur($fournisseur),
             'contact_form' => $contactForm,
         ]);
+    }
+
+    #[Route('/{id}/contacts', name: 'app_fournisseur_contact_create', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function contactCreate(Fournisseur $fournisseur, Request $request): Response
+    {
+        $this->denyAccessUnlessGranted(FournisseurVoter::EDIT, $fournisseur);
+
+        $contact = new ContactFournisseur();
+        $contact->setFournisseur($fournisseur);
+
+        $form = $this->createForm(ContactFournisseurType::class, $contact);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $this->entityManager->wrapInTransaction(function () use ($contact, $fournisseur): void {
+                if ($contact->isPrincipal()) {
+                    $this->demoteCurrentPrimary($fournisseur);
+                }
+                $this->entityManager->persist($contact);
+            });
+
+            $this->addFlash('success', 'Contact ajoute avec succes.');
+        } else {
+            $this->addFlash('error', 'Erreur lors de l\'ajout du contact.');
+        }
+
+        return $this->redirectToRoute('app_fournisseur_show', ['id' => $fournisseur->getId()]);
+    }
+
+    #[Route('/{id}/contacts/{contactId}/edit', name: 'app_fournisseur_contact_edit', methods: ['POST'], requirements: ['id' => '\d+', 'contactId' => '[0-9a-f-]+'])]
+    public function contactEdit(Fournisseur $fournisseur, string $contactId, Request $request): Response
+    {
+        $this->denyAccessUnlessGranted(FournisseurVoter::EDIT, $fournisseur);
+
+        $contact = $this->findContactOrThrow($fournisseur, $contactId);
+
+        $form = $this->createForm(ContactFournisseurType::class, $contact);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $this->entityManager->wrapInTransaction(function () use ($contact, $fournisseur): void {
+                if ($contact->isPrincipal()) {
+                    $this->demoteCurrentPrimary($fournisseur, $contact);
+                }
+                $this->entityManager->flush();
+            });
+
+            $this->addFlash('success', 'Contact modifie avec succes.');
+        } else {
+            $this->addFlash('error', 'Erreur lors de la modification du contact.');
+        }
+
+        return $this->redirectToRoute('app_fournisseur_show', ['id' => $fournisseur->getId()]);
+    }
+
+    #[Route('/{id}/contacts/{contactId}/delete', name: 'app_fournisseur_contact_delete', methods: ['POST'], requirements: ['id' => '\d+', 'contactId' => '[0-9a-f-]+'])]
+    public function contactDelete(Fournisseur $fournisseur, string $contactId, Request $request): Response
+    {
+        $this->denyAccessUnlessGranted(FournisseurVoter::EDIT, $fournisseur);
+
+        $contact = $this->findContactOrThrow($fournisseur, $contactId);
+
+        if (!$this->isCsrfTokenValid('delete_contact_' . $contactId, $request->request->getString('_token'))) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+
+            return $this->redirectToRoute('app_fournisseur_show', ['id' => $fournisseur->getId()]);
+        }
+
+        $this->entityManager->remove($contact);
+        $this->entityManager->flush();
+
+        $this->addFlash('success', 'Contact supprime.');
+
+        return $this->redirectToRoute('app_fournisseur_show', ['id' => $fournisseur->getId()]);
+    }
+
+    #[Route('/{id}/contacts/{contactId}/set-primary', name: 'app_fournisseur_contact_set_primary', methods: ['POST'], requirements: ['id' => '\d+', 'contactId' => '[0-9a-f-]+'])]
+    public function contactSetPrimary(Fournisseur $fournisseur, string $contactId, Request $request): Response
+    {
+        $this->denyAccessUnlessGranted(FournisseurVoter::EDIT, $fournisseur);
+
+        $contact = $this->findContactOrThrow($fournisseur, $contactId);
+
+        if (!$this->isCsrfTokenValid('set_primary_' . $contactId, $request->request->getString('_token'))) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+
+            return $this->redirectToRoute('app_fournisseur_show', ['id' => $fournisseur->getId()]);
+        }
+
+        $this->entityManager->wrapInTransaction(function () use ($contact, $fournisseur): void {
+            $this->demoteCurrentPrimary($fournisseur);
+            $contact->setPrincipal(true);
+        });
+
+        $this->addFlash('success', sprintf('%s est maintenant le contact principal.', $contact->getNomComplet()));
+
+        return $this->redirectToRoute('app_fournisseur_show', ['id' => $fournisseur->getId()]);
+    }
+
+    private function findContactOrThrow(Fournisseur $fournisseur, string $contactId): ContactFournisseur
+    {
+        $contact = $this->contactRepo->find($contactId);
+
+        if ($contact === null || $contact->getFournisseur()?->getId() !== $fournisseur->getId()) {
+            throw $this->createNotFoundException('Contact introuvable.');
+        }
+
+        return $contact;
+    }
+
+    private function demoteCurrentPrimary(Fournisseur $fournisseur, ?ContactFournisseur $except = null): void
+    {
+        foreach ($fournisseur->getContacts() as $existing) {
+            if ($existing->isPrincipal() && $existing !== $except) {
+                $existing->setPrincipal(false);
+            }
+        }
     }
 }
