@@ -48,6 +48,8 @@ class SirenApiService
         $siege = $result['siege'] ?? [];
         $siren = $result['siren'] ?? $query;
 
+        $enseigne = $siege['enseigne_1'] ?? $siege['enseigne_2'] ?? $siege['enseigne_3'] ?? null;
+
         return [
             'nom_complet' => $result['nom_complet'] ?? '',
             'siren' => $siren,
@@ -57,6 +59,7 @@ class SirenApiService
             'ville' => $siege['libelle_commune'] ?? null,
             'code_naf' => $result['activite_principale'] ?? null,
             'tva_intracom' => $this->computeVatNumber($siren),
+            'enseigne' => $enseigne,
         ];
     }
 
