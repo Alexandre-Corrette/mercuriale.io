@@ -22,6 +22,49 @@
     </div>
 </div>
 
+{# Supplier correction #}
+{% set set_fournisseur_url = path('app_bl_set_fournisseur', {id: bonLivraison.id}) %}
+<div class="mb-4 p-3 rounded-xl extraction-fournisseur"
+     data-controller="fournisseur-correction"
+     data-fournisseur-correction-url-value="{{ set_fournisseur_url }}">
+    <div class="extraction-fournisseur__header">
+        <div class="extraction-fournisseur__current">
+            <span class="text-gray-500 text-sm">Fournisseur :</span>
+            {% if bonLivraison.fournisseur %}
+                <span class="extraction-fournisseur__name" data-fournisseur-correction-target="name">
+                    <i class="fas fa-check-circle extraction-fournisseur__icon--ok"></i>
+                    {{ bonLivraison.fournisseur.nom }}
+                </span>
+            {% else %}
+                <span class="extraction-fournisseur__name extraction-fournisseur__name--missing" data-fournisseur-correction-target="name">
+                    <i class="fas fa-exclamation-triangle extraction-fournisseur__icon--warn"></i>
+                    Non identifie
+                </span>
+            {% endif %}
+        </div>
+        <button type="button"
+                class="extraction-fournisseur__edit-btn"
+                data-action="fournisseur-correction#toggle"
+                data-fournisseur-correction-target="editBtn">
+            <i class="fas fa-pen"></i> Corriger
+        </button>
+    </div>
+
+    <div class="extraction-fournisseur__dropdown hidden" data-fournisseur-correction-target="dropdown">
+        <select class="extraction-fournisseur__select"
+                data-fournisseur-correction-target="select"
+                data-action="change->fournisseur-correction#save">
+            <option value="">— Aucun fournisseur —</option>
+            {% for f in fournisseurs|default([]) %}
+                <option value="{{ f.id }}" {% if bonLivraison.fournisseur and bonLivraison.fournisseur.id == f.id %}selected{% endif %}>
+                    {{ f.nom }}
+                </option>
+            {% endfor %}
+        </select>
+        <span class="extraction-fournisseur__status hidden" data-fournisseur-correction-target="status"></span>
+    </div>
+</div>
+
 {# Warnings from extraction #}
 {% if bonLivraison.donneesBrutes.remarques is defined and bonLivraison.donneesBrutes.remarques|length > 0 %}
 <div class="mb-4 p-3 bg-gold/10 border border-gold rounded-lg text-sm">

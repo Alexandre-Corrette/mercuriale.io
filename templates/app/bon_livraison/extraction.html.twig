@@ -99,7 +99,9 @@
                 {% else %}
                     {# Show extracted data #}
                     <div data-controller="extraction-alertes">
-                        {% include 'app/bon_livraison/_extraction_data.html.twig' %}
+                        {% include 'app/bon_livraison/_extraction_data.html.twig' with {
+                            fournisseurs: fournisseurs|default([])
+                        } %}
                     </div>
                 {% endif %}
             </div>

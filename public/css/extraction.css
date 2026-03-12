@@ -116,3 +116,95 @@
     font-size: 1.875rem;
     margin-bottom: 0.5rem;
 }
+
+/* Supplier correction block */
+.extraction-fournisseur {
+    background-color: var(--mercuriale-cream);
+    border: 1px solid var(--mercuriale-cream-dark);
+}
+
+.extraction-fournisseur__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.extraction-fournisseur__current {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.extraction-fournisseur__name {
+    font-weight: 600;
+    color: var(--mercuriale-navy);
+}
+
+.extraction-fournisseur__name--missing {
+    color: var(--color-warning);
+    font-weight: 500;
+}
+
+.extraction-fournisseur__icon--ok {
+    color: var(--color-success);
+    margin-right: 0.25rem;
+}
+
+.extraction-fournisseur__icon--warn {
+    color: var(--color-warning);
+    margin-right: 0.25rem;
+}
+
+.extraction-fournisseur__edit-btn {
+    background: none;
+    border: 1px solid var(--mercuriale-navy);
+    color: var(--mercuriale-navy);
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.8125rem;
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+    white-space: nowrap;
+}
+
+.extraction-fournisseur__edit-btn:hover {
+    background-color: var(--mercuriale-navy);
+    color: #fff;
+}
+
+.extraction-fournisseur__dropdown {
+    margin-top: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.extraction-fournisseur__select {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--mercuriale-cream-dark);
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--mercuriale-navy);
+    background-color: #fff;
+}
+
+.extraction-fournisseur__select:focus {
+    outline: none;
+    border-color: var(--mercuriale-navy);
+    box-shadow: 0 0 0 2px rgba(26, 43, 73, 0.1);
+}
+
+.extraction-fournisseur__status {
+    font-size: 0.8125rem;
+    white-space: nowrap;
+}
+
+.extraction-fournisseur__status--ok {
+    color: var(--color-success);
+}
+
+.extraction-fournisseur__status--error {
+    color: var(--color-danger);
+}
