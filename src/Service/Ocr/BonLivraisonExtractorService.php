@@ -29,6 +29,10 @@ class BonLivraisonExtractorService
         'gr' => 'KG',
         'gramme' => 'KG',
         'grammes' => 'KG',
+        'mg' => 'KG',
+        'milligramme' => 'KG',
+        'tonne' => 'KG',
+        't' => 'KG',
         // Volume
         'l' => 'L',
         'litre' => 'L',
@@ -39,6 +43,11 @@ class BonLivraisonExtractorService
         'ml' => 'L',
         'millilitre' => 'L',
         'millilitres' => 'L',
+        'dl' => 'L',
+        'décilitre' => 'L',
+        'decilitre' => 'L',
+        'hl' => 'L',
+        'hectolitre' => 'L',
         // Pièce / unité
         'p' => 'PU',
         'pc' => 'PU',
@@ -54,6 +63,15 @@ class BonLivraisonExtractorService
         'unité' => 'UNI',
         'unites' => 'UNI',
         'unités' => 'UNI',
+        'uvc' => 'PU',
+        'uvp' => 'PU',
+        'lot' => 'PU',
+        'lots' => 'PU',
+        'dz' => 'PU',
+        'douzaine' => 'PU',
+        'pqt' => 'PU',
+        'paquet' => 'PU',
+        'paquets' => 'PU',
         // Conditionnements
         'bq' => 'BQT',
         'bqt' => 'BQT',
@@ -61,22 +79,55 @@ class BonLivraisonExtractorService
         'barquettes' => 'BQT',
         'bt' => 'BOT',
         'bot' => 'BOT',
+        'btl' => 'BOT',
         'bouteille' => 'BOT',
         'bouteilles' => 'BOT',
+        'flacon' => 'BOT',
+        'flacons' => 'BOT',
+        'fl' => 'BOT',
         'ct' => 'CAR',
         'carton' => 'CAR',
         'cartons' => 'CAR',
         'crt' => 'CAR',
+        'car' => 'CAR',
+        'caisse' => 'CAR',
+        'caisses' => 'CAR',
         'col' => 'COL',
         'colis' => 'COL',
         'flt' => 'COL',
         'filet' => 'COL',
         'sac' => 'SAC',
+        'sacs' => 'SAC',
+        'sachet' => 'SAC',
+        'sachets' => 'SAC',
+        'bag' => 'SAC',
         'fut' => 'FUT',
-        'lot' => 'PU',
-        'lots' => 'PU',
-        'car' => 'CAR',
-        'caisse' => 'CAR',
+        'fût' => 'FUT',
+        'futs' => 'FUT',
+        'bte' => 'BTE',
+        'boite' => 'BTE',
+        'boîte' => 'BTE',
+        'boites' => 'BTE',
+        'boîtes' => 'BTE',
+        'pck' => 'PCK',
+        'pack' => 'PCK',
+        'packs' => 'PCK',
+        'pal' => 'PAL',
+        'palette' => 'PAL',
+        'palettes' => 'PAL',
+        'plt' => 'PLT',
+        'plateau' => 'PLT',
+        'plateaux' => 'PLT',
+        'bdn' => 'BDN',
+        'bidon' => 'BDN',
+        'bidons' => 'BDN',
+        'jer' => 'JER',
+        'jerrycan' => 'JER',
+        'bac' => 'PU',
+        'bacs' => 'PU',
+        'rouleau' => 'PU',
+        'rouleaux' => 'PU',
+        'rlx' => 'PU',
     ];
 
     public function __construct(
@@ -275,6 +326,20 @@ Réponds UNIQUEMENT avec du JSON valide, sans texte avant ni après, sans bloc m
 PROMPT;
     }
 
+    private const SUPPLIER_KEYWORDS = [
+        'terreazur' => 'getTerreAzurContext',
+        'terre azur' => 'getTerreAzurContext',
+        'pomona' => 'getTerreAzurContext',
+        'bihan' => 'getLeBihanContext',
+        'tmeg' => 'getLeBihanContext',
+        'brake' => 'getBrakeContext',
+        'metro' => 'getMetroContext',
+        'transgourmet' => 'getTransgourmetContext',
+        'promocash' => 'getTransgourmetContext',
+        'sysco' => 'getSyscoContext',
+        'davigel' => 'getSyscoContext',
+    ];
+
     /**
      * Retourne le contexte spécifique au fournisseur pour enrichir le prompt OCR.
      */
@@ -284,28 +349,88 @@ PROMPT;
             return $this->getGenericContext();
         }
 
-        $nom = mb_strtolower($nomFournisseur);
+        $normalized = self::normalizeName($nomFournisseur);
 
-        if (str_contains($nom, 'terreazur') || str_contains($nom, 'terre azur') || str_contains($nom, 'pomona')) {
-            return $this->getTerreAzurContext();
-        }
-
-        if (str_contains($nom, 'bihan') || str_contains($nom, 'tmeg')) {
-            return $this->getLeBihanContext();
+        foreach (self::SUPPLIER_KEYWORDS as $keyword => $method) {
+            if (str_contains($normalized, $keyword)) {
+                return $this->$method();
+            }
         }
 
         return $this->getGenericContext();
     }
 
+    /**
+     * Normalise un nom de fournisseur : supprime accents, tirets, ponctuation, lowercase.
+     */
+    public static function normalizeName(string $name): string
+    {
+        $name = mb_strtolower(trim($name));
+
+        // Suppression des accents
+        if (class_exists(\Transliterator::class)) {
+            $transliterator = \Transliterator::create('NFD; [:Nonspacing Mark:] Remove; NFC');
+            if ($transliterator !== null) {
+                $name = $transliterator->transliterate($name);
+            }
+        } else {
+            // Fallback sans ext-intl
+            $name = strtr($name, [
+                'à' => 'a', 'â' => 'a', 'ä' => 'a', 'á' => 'a',
+                'è' => 'e', 'ê' => 'e', 'ë' => 'e', 'é' => 'e',
+                'ì' => 'i', 'î' => 'i', 'ï' => 'i', 'í' => 'i',
+                'ò' => 'o', 'ô' => 'o', 'ö' => 'o', 'ó' => 'o',
+                'ù' => 'u', 'û' => 'u', 'ü' => 'u', 'ú' => 'u',
+                'ç' => 'c', 'ñ' => 'n',
+            ]);
+        }
+
+        // Suppression tirets, underscores, points
+        $name = str_replace(['-', '_', '.'], ' ', $name);
+
+        // Suppression espaces multiples
+        $name = (string) preg_replace('/\s+/', ' ', $name);
+
+        return trim($name);
+    }
+
     private function getGenericContext(): string
     {
         return <<<'CTX'
-STRUCTURE DU DOCUMENT :
-- Identifie les en-têtes de colonnes du tableau produits et adapte ta lecture en conséquence
+GUIDE D'EXTRACTION UNIVERSEL — BL RESTAURATION FRANÇAISE :
+
+ÉTAPE 1 — IDENTIFIER LA STRUCTURE :
+- Lis d'abord les en-têtes de colonnes du tableau produits AVANT de lire les lignes
+- Repère s'il y a une colonne de numéro de ligne (rang, n° ligne, #)
+- Repère si les désignations ont des sous-détails en retrait (origine, variété, calibre, DLC)
 - Les colonnes courantes sont : Code, Désignation, Quantité, Unité, Prix Unitaire, Total HT
-- Certains BL ont des colonnes supplémentaires (remises, consignes, TVA, poids brut/net)
-- Le numéro de BL est généralement en haut du document, près du titre
-- Les totaux sont en bas du document
+- Colonnes supplémentaires possibles : Remise, Consigne, Déconsigne, TVA, Poids brut/net, Droits d'accise, DLC, Lot
+
+ÉTAPE 2 — QUANTITÉS (CRITIQUE) :
+- Beaucoup de BL ont DEUX colonnes quantité : quantité livrée (colis, pièces) et quantité facturée (KG, L, PU)
+- Si UNE SEULE colonne quantité → l'utiliser comme quantite_livree ET quantite_facturee
+- Si DEUX colonnes (ex: "Qté Cde / Qté Fac", "Qté livrée / Poids net", "Nb colis / Qté fact.") → mapper la première vers quantite_livree et la seconde vers quantite_facturee
+- L'unité de facturation (celle du prix unitaire) va dans unite_facturation
+- L'unité de livraison (colis, pièces physiques) va dans unite_livraison
+- Si un champ contient DEUX valeurs (ex: "6,100 KG / 6,800 KG"), le PREMIER est le livré, le SECOND est le facturé
+
+ÉTAPE 3 — UNITÉS FRANÇAISES :
+- Abréviations courantes : KG, L, PU (pièce), COL (colis), BOT (bouteille), BQT (barquette), SAC, CAR (carton), FUT (fût), UNI (unité), FLT (filet), PLT (plateau), PCK (pack), BTE (boîte), PAL (palette)
+- L'unité de facturation ≠ unité de livraison (ex: livré en COL, facturé en KG)
+- Le prix unitaire correspond TOUJOURS à l'unité de facturation
+
+ÉTAPE 4 — TOTAUX ET RÉCAPITULATIFS :
+- Distinguer total HT (hors taxes), TVA et TTC (toutes taxes comprises)
+- total_ht = somme des montants HT des lignes, HORS consignes, déconsignes et droits d'accise
+- Ne JAMAIS confondre un numéro de commande, un numéro client ou un code tournée avec un montant
+- Si plusieurs taux TVA (5,5%, 10%, 20%), le total_ht est la somme de toutes les bases HT
+- Le numéro de BL est généralement en haut du document (en-tête, près du titre "Bon de livraison" ou "BL")
+
+ÉTAPE 5 — MULTI-PAGES ET QUALITÉ :
+- Si le document indique "page X/Y" ou "1/2, 2/2", le noter dans document.page
+- Les totaux sont généralement sur la dernière page uniquement
+- Les colonnes de droite (montants) sont souvent partiellement coupées sur les scans → null si illisible
+- Zones d'ombre, pliures, taches → null plutôt que deviner une valeur
 CTX;
     }
 
@@ -361,6 +486,115 @@ Totaux en bas :
 - Total TTC, Consignes, Total Facture
 - Montant HT par taux TVA (5,50% et 20,00%)
 - total_ht = somme des montants HT hors consignes et droits d'accise
+CTX;
+    }
+
+    private function getBrakeContext(): string
+    {
+        return <<<'CTX'
+STRUCTURE SPÉCIFIQUE — BRAKE (groupe Sysco) :
+
+Fournisseur surgelés, épicerie et produits frais pour la restauration.
+
+Numéro BL : format 8-10 chiffres, parfois préfixé "BL" ou "LIV".
+
+Le tableau produits contient ces colonnes :
+Code Article | Désignation | Qté Cde | Qté Liv | Unité | PU HT | Montant HT | TVA
+
+Spécificités :
+- "Qté Cde" = quantite commandée (utiliser comme quantite_livree si "Qté Liv" absente)
+- "Qté Liv" = quantite_livree (quantité réellement livrée)
+- L'unité est souvent l'unité de facturation : PCK (pack), CAR (carton), KG, PU, BTE (boîte)
+- Si une seule colonne quantité → c'est à la fois quantite_livree et quantite_facturee
+- Informations supplémentaires possibles : DLC, N° Lot, Température livraison
+- Les remises/promotions sont parfois sur une ligne séparée sous le produit
+
+Totaux en bas :
+- Total HT, Total TVA (par taux), Total TTC
+- total_ht = somme des montants HT lignes
+CTX;
+    }
+
+    private function getMetroContext(): string
+    {
+        return <<<'CTX'
+STRUCTURE SPÉCIFIQUE — METRO (Cash & Carry) :
+
+Format ticket/facture plutôt que BL classique. Souvent un reçu de caisse professionnel.
+
+Numéro de document : peut être "Facture", "Ticket" ou "BL" suivi de chiffres.
+
+Le tableau produits contient ces colonnes :
+Article/EAN | Désignation | Qté | PU HT | PU TTC | Montant | TVA%
+
+Spécificités :
+- UNE SEULE colonne quantité → utiliser comme quantite_livree ET quantite_facturee
+- Le code article peut être un EAN (code-barres 13 chiffres) ou un code interne Metro
+- Numéro de carte Metro souvent en en-tête → ne PAS confondre avec le numéro de BL
+- Remises professionnelles possibles (prix barré / prix remisé) → utiliser le prix FINAL (après remise)
+- Multi-TVA : 5,5% (alimentaire), 10% (restauration), 20% (non alimentaire)
+- Unités courantes : KG, PU, PCK (pack), BOT, CAR, BTE
+- Le montant ligne est parfois TTC (vérifier l'en-tête de colonne)
+
+Totaux en bas :
+- Récapitulatif par taux TVA : Base HT | TVA | TTC
+- total_ht = somme des bases HT de tous les taux TVA
+- Ne PAS confondre le numéro de carte Metro ou le n° de client avec un montant
+CTX;
+    }
+
+    private function getTransgourmetContext(): string
+    {
+        return <<<'CTX'
+STRUCTURE SPÉCIFIQUE — TRANSGOURMET (ex-Promocash, groupe Coop) :
+
+Distribution généraliste CHR (Cafés, Hôtels, Restaurants).
+
+Numéro BL : format 10 chiffres, parfois préfixé "BL" ou "N° Livraison".
+
+Le tableau produits contient ces colonnes :
+Réf. | Désignation | Qté Cde | Qté Liv | UVC | PU HT | Montant HT
+
+Spécificités :
+- "Qté Cde" = quantite commandée
+- "Qté Liv" = quantite_livree (si absente, utiliser Qté Cde)
+- "UVC" = Unité de Vente Consommateur → c'est l'unité de facturation (unite_facturation)
+- Des remises en cascade sont possibles (remise 1 + remise 2 sur une même ligne)
+- Si remise présente : total_ht_ligne = (qté × PU) - remises
+- Produits parfois regroupés par famille/rayon (en-tête de section)
+- Code article Transgourmet = 6-8 chiffres
+
+Totaux en bas :
+- Total HT, Total TVA (ventilé par taux), Total TTC
+- Éventuellement franco de port ou frais de livraison → inclure dans total_ht si c'est une ligne produit
+- total_ht = somme des montants HT lignes (hors frais de port séparés)
+CTX;
+    }
+
+    private function getSyscoContext(): string
+    {
+        return <<<'CTX'
+STRUCTURE SPÉCIFIQUE — SYSCO FRANCE (ex-Davigel pour surgelés) :
+
+Distribution alimentaire multi-gamme (frais, surgelés, épicerie).
+
+Numéro BL : format 8-10 chiffres, similaire à Brake (même groupe).
+
+Le tableau produits contient ces colonnes :
+Code | Libellé / Désignation | Qté Cde | Qté Liv | Unité | PU | Montant
+
+Spécificités :
+- "Qté Cde" = quantite commandée
+- "Qté Liv" = quantite_livree (réellement livrée, peut différer de la commande)
+- Numéro de tournée en en-tête → ne PAS confondre avec le numéro de BL
+- Informations DLC / N° Lot parfois en sous-ligne
+- Unités courantes : KG, PU, CAR (carton), PCK (pack), BTE (boîte), SAC
+- Les produits surgelés (ex-Davigel) ont parfois un code température
+
+Totaux en bas :
+- Total HT, Total TVA, Total TTC
+- total_ht = somme des montants HT lignes
+- Ne PAS confondre le code tournée ou le code chauffeur avec un montant
 CTX;
     }
 
