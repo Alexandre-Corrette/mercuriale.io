@@ -51,6 +51,7 @@ class RegistrationController extends AbstractController
             $orgAdresse = trim($request->request->getString('org_adresse'));
             $orgCp = trim($request->request->getString('org_cp'));
             $orgVille = trim($request->request->getString('org_ville'));
+            $etabNom = trim($request->request->getString('etab_nom'));
 
             // Utilisateur
             $userNom = trim($request->request->getString('user_nom'));
@@ -108,6 +109,7 @@ class RegistrationController extends AbstractController
                         'codePostal' => $orgCp,
                         'ville' => $orgVille,
                     ],
+                    $etabNom !== '' ? $etabNom : null,
                 );
 
                 // Create Utilisateur
@@ -116,7 +118,7 @@ class RegistrationController extends AbstractController
                 $utilisateur->setNom($userNom);
                 $utilisateur->setPrenom($userPrenom);
                 $utilisateur->setEmail($userEmail);
-                $utilisateur->setRoles(['ROLE_USER', 'ROLE_GERANT']);
+                $utilisateur->setRoles(['ROLE_ADMIN']);
                 $utilisateur->setPassword(
                     $passwordHasher->hashPassword($utilisateur, $userPassword)
                 );
@@ -124,7 +126,7 @@ class RegistrationController extends AbstractController
 
                 // Link user to organisation + etablissement
                 $onboardingService->linkUserToOrganisation($utilisateur, $organisation);
-                $onboardingService->linkUserToEtablissement($utilisateur, $etablissement, 'ROLE_GERANT');
+                $onboardingService->linkUserToEtablissement($utilisateur, $etablissement, 'ROLE_ADMIN');
 
                 // Validate all entities
                 $allErrors = [];

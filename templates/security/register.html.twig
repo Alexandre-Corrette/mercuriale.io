@@ -96,6 +96,14 @@
                                        value="{{ form_data.org_ville|default('') }}">
                             </div>
                         </div>
+
+                        <div class="form-group">
+                            <label for="etab_nom">Nom de l'etablissement</label>
+                            <input type="text" id="etab_nom" name="etab_nom"
+                                   placeholder="Ex: Restaurant Le Maritime"
+                                   value="{{ form_data.etab_nom|default('') }}">
+                            <p class="register-hint">Si le nom de votre etablissement est different de celui de l'entreprise. Sinon, laissez vide.</p>
+                        </div>
                     </div>
 
                     {# Step 3: User account #}
@@ -182,8 +190,11 @@
                 document.getElementById('org_adresse').value = data.adresse || '';
                 document.getElementById('org_cp').value = data.code_postal || '';
                 document.getElementById('org_ville').value = data.ville || '';
+                if (data.enseigne) {
+                    document.getElementById('etab_nom').value = data.enseigne;
+                }
 
-                var fields = ['org_nom', 'org_siret', 'org_adresse', 'org_cp', 'org_ville'];
+                var fields = ['org_nom', 'org_siret', 'org_adresse', 'org_cp', 'org_ville', 'etab_nom'];
                 fields.forEach(function(id) {
                     var el = document.getElementById(id);
                     if (el.value) {

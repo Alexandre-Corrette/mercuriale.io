@@ -36,6 +36,7 @@ class OnboardingService
         ?string $siren,
         ?string $siret,
         array $adresseData = [],
+        ?string $etabNom = null,
     ): array {
         if ($siren !== null && $siren !== '') {
             $existing = $this->organisationRepository->findBySiren($siren);
@@ -72,7 +73,7 @@ class OnboardingService
 
         $etablissement = new Etablissement();
         $etablissement->setOrganisation($organisation);
-        $etablissement->setNom($nom);
+        $etablissement->setNom($etabNom !== null && $etabNom !== '' ? $etabNom : $nom);
         $etablissement->setIsPrimary(true);
         if ($siret !== null && $siret !== '') {
             $etablissement->setSiret($siret);

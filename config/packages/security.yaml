@@ -51,8 +51,10 @@ security:
     # Role hierarchy
     role_hierarchy:
         ROLE_SUPER_ADMIN: ROLE_ADMIN
-        ROLE_ADMIN: ROLE_MANAGER
+        ROLE_ADMIN: [ROLE_GERANT, ROLE_MANAGER]
+        ROLE_GERANT: ROLE_USER
         ROLE_MANAGER: ROLE_USER
+        ROLE_CUISINIER: ROLE_USER
 
     # Access control rules
     access_control:
