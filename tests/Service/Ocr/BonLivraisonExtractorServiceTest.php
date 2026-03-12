@@ -16,8 +16,10 @@ use App\Repository\ProduitFournisseurRepository;
 use App\Repository\UniteRepository;
 use App\Service\Ocr\AnthropicClient;
 use App\Service\Ocr\BonLivraisonExtractorService;
+use App\Service\Ocr\ExtractionValidator;
 use App\Service\Ocr\OcrMatchingService;
 use Doctrine\ORM\EntityManagerInterface;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -30,6 +32,7 @@ class BonLivraisonExtractorServiceTest extends TestCase
     private MockObject&FournisseurRepository $fournisseurRepository;
     private MockObject&UniteRepository $uniteRepository;
     private MockObject&OcrMatchingService $ocrMatchingService;
+    private MockObject&ExtractionValidator $extractionValidator;
     private MockObject&LoggerInterface $logger;
     private BonLivraisonExtractorService $service;
 
@@ -41,7 +44,10 @@ class BonLivraisonExtractorServiceTest extends TestCase
         $this->fournisseurRepository = $this->createMock(FournisseurRepository::class);
         $this->uniteRepository = $this->createMock(UniteRepository::class);
         $this->ocrMatchingService = $this->createMock(OcrMatchingService::class);
+        $this->extractionValidator = $this->createMock(ExtractionValidator::class);
         $this->logger = $this->createMock(LoggerInterface::class);
+
+        $this->extractionValidator->method('validate')->willReturn([]);
 
         $this->service = new BonLivraisonExtractorService(
             $this->anthropicClient,
@@ -50,6 +56,7 @@ class BonLivraisonExtractorServiceTest extends TestCase
             $this->fournisseurRepository,
             $this->uniteRepository,
             $this->ocrMatchingService,
+            $this->extractionValidator,
             $this->logger,
             '/tmp/test-project',
         );
@@ -258,6 +265,171 @@ class BonLivraisonExtractorServiceTest extends TestCase
         $bl->setDateLivraison(new \DateTimeImmutable('2026-01-31'));
 
         return $bl;
+    }
+
+    // =============================================
+    // MERC-108 — Supplier name normalization tests
+    // =============================================
+
+    #[DataProvider('normalizeNameProvider')]
+    public function testNormalizeName(string $input, string $expected): void
+    {
+        $this->assertSame($expected, BonLivraisonExtractorService::normalizeName($input));
+    }
+
+    public static function normalizeNameProvider(): iterable
+    {
+        yield 'lowercase' => ['TERREAZUR', 'terreazur'];
+        yield 'accents removed' => ['Métro', 'metro'];
+        yield 'accents complex' => ['Café Hôtel Résidence', 'cafe hotel residence'];
+        yield 'tirets replaced' => ['Terre-Azur', 'terre azur'];
+        yield 'underscores replaced' => ['Terre_Azur', 'terre azur'];
+        yield 'dots replaced' => ['S.A.S.', 's a s'];
+        yield 'multiple spaces collapsed' => ['Brake   France', 'brake france'];
+        yield 'trim whitespace' => ['  Metro  ', 'metro'];
+        yield 'mixed accents and tirets' => ['Café-Résidence_Hôtel', 'cafe residence hotel'];
+        yield 'already clean' => ['pomona', 'pomona'];
+    }
+
+    // =============================================
+    // MERC-108 — Supplier detection tests
+    // =============================================
+
+    #[DataProvider('supplierDetectionProvider')]
+    public function testSupplierDetection(string $supplierName, string $expectedContextSubstring): void
+    {
+        $bl = new BonLivraison();
+        $etablissement = $this->createMock(Etablissement::class);
+        $bl->setEtablissement($etablissement);
+
+        $fournisseur = $this->createMock(Fournisseur::class);
+        $fournisseur->method('getId')->willReturn(1);
+        $fournisseur->method('getNom')->willReturn($supplierName);
+        $bl->setFournisseur($fournisseur);
+        $bl->setDateLivraison(new \DateTimeImmutable());
+
+        // Use reflection to test the private buildExtractionPrompt method
+        $reflection = new \ReflectionMethod($this->service, 'buildExtractionPrompt');
+        $prompt = $reflection->invoke($this->service, $bl);
+
+        $this->assertStringContainsString($expectedContextSubstring, $prompt);
+    }
+
+    public static function supplierDetectionProvider(): iterable
+    {
+        // TerreAzur variants
+        yield 'TerreAzur exact' => ['TerreAzur', 'TERREAZUR'];
+        yield 'Terre Azur spaced' => ['Terre Azur', 'TERREAZUR'];
+        yield 'Terre-Azur hyphen' => ['Terre-Azur', 'TERREAZUR'];
+        yield 'TERREAZUR uppercase' => ['TERREAZUR', 'TERREAZUR'];
+        yield 'Pomona TerreAzur group' => ['Pomona TerreAzur', 'TERREAZUR'];
+        yield 'Pomona alone' => ['Pomona', 'TERREAZUR'];
+
+        // Le Bihan variants
+        yield 'Le Bihan' => ['Le Bihan', 'LE BIHAN TMEG'];
+        yield 'TMEG' => ['TMEG Distribution', 'LE BIHAN TMEG'];
+
+        // Brake variants
+        yield 'Brake France' => ['Brake France', 'BRAKE'];
+        yield 'BRAKE SAS' => ['BRAKE SAS', 'BRAKE'];
+        yield 'brake lowercase' => ['brake', 'BRAKE'];
+
+        // Metro variants
+        yield 'METRO Cash & Carry' => ['METRO Cash & Carry', 'METRO'];
+        yield 'Métro accented' => ['Métro', 'METRO'];
+        yield 'metro lowercase' => ['metro', 'METRO'];
+
+        // Transgourmet variants
+        yield 'Transgourmet' => ['Transgourmet', 'TRANSGOURMET'];
+        yield 'Transgourmet Opérations' => ['Transgourmet Opérations', 'TRANSGOURMET'];
+        yield 'PROMOCASH' => ['PROMOCASH', 'TRANSGOURMET'];
+        yield 'Promocash lowercase' => ['promocash', 'TRANSGOURMET'];
+
+        // Sysco variants
+        yield 'Sysco France' => ['Sysco France', 'SYSCO'];
+        yield 'SYSCO SAS' => ['SYSCO SAS', 'SYSCO'];
+        yield 'Davigel' => ['Davigel', 'SYSCO'];
+
+        // Generic fallback
+        yield 'Unknown supplier' => ['Fournisseur Inconnu SARL', 'GUIDE D\'EXTRACTION UNIVERSEL'];
+        yield 'Random name' => ['Jean Dupont Primeurs', 'GUIDE D\'EXTRACTION UNIVERSEL'];
+    }
+
+    public function testGenericContextIsComprehensive(): void
+    {
+        $bl = new BonLivraison();
+        $etablissement = $this->createMock(Etablissement::class);
+        $bl->setEtablissement($etablissement);
+        $bl->setDateLivraison(new \DateTimeImmutable());
+        // No fournisseur → generic context
+
+        $reflection = new \ReflectionMethod($this->service, 'buildExtractionPrompt');
+        $prompt = $reflection->invoke($this->service, $bl);
+
+        // Verify the generic context covers all critical sections
+        $this->assertStringContainsString('IDENTIFIER LA STRUCTURE', $prompt);
+        $this->assertStringContainsString('QUANTITÉS', $prompt);
+        $this->assertStringContainsString('UNITÉS FRANÇAISES', $prompt);
+        $this->assertStringContainsString('TOTAUX ET RÉCAPITULATIFS', $prompt);
+        $this->assertStringContainsString('MULTI-PAGES', $prompt);
+    }
+
+    // =============================================
+    // MERC-109 — Unit mapping tests
+    // =============================================
+
+    #[DataProvider('uniteMappingProvider')]
+    public function testUniteMapping(string $input, string $expectedCode): void
+    {
+        // Access UNITE_MAPPING via reflection
+        $reflection = new \ReflectionClass(BonLivraisonExtractorService::class);
+        $mapping = $reflection->getConstant('UNITE_MAPPING');
+
+        $normalizedInput = strtolower(trim($input));
+        $result = $mapping[$normalizedInput] ?? 'PU';
+
+        $this->assertSame($expectedCode, $result, "Unit '$input' should map to '$expectedCode'");
+    }
+
+    public static function uniteMappingProvider(): iterable
+    {
+        // Existing mappings (regression)
+        yield 'kg' => ['kg', 'KG'];
+        yield 'KG uppercase' => ['KG', 'KG'];
+        yield 'litre' => ['litre', 'L'];
+        yield 'bouteille' => ['bouteille', 'BOT'];
+        yield 'colis' => ['colis', 'COL'];
+        yield 'carton' => ['carton', 'CAR'];
+        yield 'sac' => ['sac', 'SAC'];
+        yield 'barquette' => ['barquette', 'BQT'];
+        yield 'piece' => ['piece', 'PU'];
+
+        // New mappings (MERC-109)
+        yield 'pack' => ['pack', 'PCK'];
+        yield 'pck' => ['pck', 'PCK'];
+        yield 'palette' => ['palette', 'PAL'];
+        yield 'pal' => ['pal', 'PAL'];
+        yield 'plateau' => ['plateau', 'PLT'];
+        yield 'plt' => ['plt', 'PLT'];
+        yield 'bidon' => ['bidon', 'BDN'];
+        yield 'bdn' => ['bdn', 'BDN'];
+        yield 'jerrycan' => ['jerrycan', 'JER'];
+        yield 'boite' => ['boite', 'BTE'];
+        yield 'boîte accented' => ['boîte', 'BTE'];
+        yield 'bte' => ['bte', 'BTE'];
+        yield 'sachet' => ['sachet', 'SAC'];
+        yield 'flacon' => ['flacon', 'BOT'];
+        yield 'btl brake' => ['btl', 'BOT'];
+        yield 'uvc transgourmet' => ['uvc', 'PU'];
+        yield 'douzaine' => ['douzaine', 'PU'];
+        yield 'paquet' => ['paquet', 'PU'];
+        yield 'dl volume' => ['dl', 'L'];
+        yield 'hectolitre' => ['hl', 'L'];
+        yield 'tonne' => ['tonne', 'KG'];
+        yield 'fût accented' => ['fût', 'FUT'];
+
+        // Fallback
+        yield 'unknown unit' => ['bidule', 'PU'];
     }
 
     private function getMockFoodFlowResponse(): array
