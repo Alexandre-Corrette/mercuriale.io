@@ -23,6 +23,25 @@ class BonLivraisonRepository extends ServiceEntityRepository
         parent::__construct($registry, BonLivraison::class);
     }
 
+    public function findDuplicate(Etablissement $etablissement, Fournisseur $fournisseur, string $numeroBl, ?int $excludeId = null): ?BonLivraison
+    {
+        $qb = $this->createQueryBuilder('bl')
+            ->where('bl.etablissement = :etablissement')
+            ->andWhere('bl.fournisseur = :fournisseur')
+            ->andWhere('bl.numeroBl = :numeroBl')
+            ->setParameter('etablissement', $etablissement)
+            ->setParameter('fournisseur', $fournisseur)
+            ->setParameter('numeroBl', $numeroBl)
+            ->setMaxResults(1);
+
+        if ($excludeId !== null) {
+            $qb->andWhere('bl.id != :excludeId')
+                ->setParameter('excludeId', $excludeId);
+        }
+
+        return $qb->getQuery()->getOneOrNullResult();
+    }
+
     /**
      * @return BonLivraison[]
      */

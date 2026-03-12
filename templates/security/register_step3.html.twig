@@ -13,7 +13,7 @@
         <div class="register-header">
             <img src="{{ asset('images/logo-mercuriale-rectangulaire.png') }}" alt="Mercuriale.io" class="register-header__logo">
             <h1 class="register-header__title">Ajouter un etablissement</h1>
-            <p class="register-header__subtitle">Ajoutez vos etablissements supplementaires ou passez au tableau de bord</p>
+            <p class="register-header__subtitle">Ajoutez vos etablissements supplementaires ou continuez vers la verification</p>
         </div>
 
         {% for message in app.flashes('success') %}
@@ -106,8 +106,8 @@
                         <button type="submit" class="register-submit">
                             <i class="fas fa-plus"></i> Ajouter cet etablissement
                         </button>
-                        <a href="{{ path('admin') }}" class="register-skip">
-                            Passer au tableau de bord <i class="fas fa-arrow-right"></i>
+                        <a href="{{ path('app_verification') }}" class="register-skip">
+                            Continuer <i class="fas fa-arrow-right"></i>
                         </a>
                     </div>
                 </form>
