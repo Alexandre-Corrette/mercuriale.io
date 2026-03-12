@@ -4,16 +4,17 @@
 
 {% block stylesheets %}
     {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/components/header.css') }}">
     <link rel="stylesheet" href="{{ asset('css/verification.css') }}">
+{% endblock %}
+
+{% block app_header %}
+    {% include 'components/_header.html.twig' %}
 {% endblock %}
 
 {% block body %}
 <div class="verification-page">
     <div class="verification-container">
-        <div class="verification-header">
-            <img src="{{ asset('images/logo-mercuriale-rectangulaire.png') }}" alt="Mercuriale.io" class="verification-header__logo">
-        </div>
-
         {% for message in app.flashes('error') %}
             <div class="verification-flash verification-flash--error">
                 <i class="fas fa-exclamation-circle"></i> {{ message }}
