@@ -1,0 +1,182 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Ajouter un etablissement - Mercuriale.io{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/register.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="register-page">
+    <div class="register-container">
+        <div class="register-header">
+            <img src="{{ asset('images/logo-mercuriale-rectangulaire.png') }}" alt="Mercuriale.io" class="register-header__logo">
+            <h1 class="register-header__title">Ajouter un etablissement</h1>
+            <p class="register-header__subtitle">Ajoutez vos etablissements supplementaires ou passez au tableau de bord</p>
+        </div>
+
+        {% for message in app.flashes('success') %}
+            <div class="register-success-box">
+                <i class="fas fa-check-circle"></i> {{ message }}
+            </div>
+        {% endfor %}
+
+        {% if errors|length > 0 %}
+            <div class="register-error-box">
+                <ul class="register-errors">
+                    {% for error in errors %}
+                        <li><i class="fas fa-exclamation-circle"></i> {{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <div class="register-card">
+            <div class="register-card__body">
+                <div class="register-step" id="step-siret-lookup">
+                    <h3 class="register-step__title">
+                        <span class="register-step__number"><i class="fas fa-search"></i></span> Recherche par SIRET
+                    </h3>
+
+                    <div class="form-group">
+                        <label for="siret_search">Numero SIRET</label>
+                        <div class="register-siret-row">
+                            <input type="text"
+                                   id="siret_search"
+                                   placeholder="Ex: 55204499200012"
+                                   maxlength="14"
+                                   inputmode="numeric"
+                                   pattern="[0-9]*"
+                                   class="register-siret-row__input">
+                            <button type="button" id="btn-siret-lookup" class="register-siret-row__btn">
+                                <i class="fas fa-search"></i> Rechercher
+                            </button>
+                        </div>
+                        <p class="register-hint">Entrez le SIRET (14 chiffres) de l'etablissement a ajouter.</p>
+                    </div>
+
+                    <div id="siret-loading" class="register-loading" style="display:none;">
+                        <i class="fas fa-spinner fa-spin"></i> Recherche en cours...
+                    </div>
+                    <div id="siret-error" class="register-field-error" style="display:none;"></div>
+                </div>
+
+                <form method="post">
+                    <input type="hidden" name="_token" value="{{ csrf_token('registration_step3') }}">
+
+                    <div class="register-step">
+                        <h3 class="register-step__title">
+                            <span class="register-step__number"><i class="fas fa-store"></i></span> Informations de l'etablissement
+                        </h3>
+
+                        <div class="form-group">
+                            <label for="etab_nom">Nom de l'etablissement <span class="register-required">*</span></label>
+                            <input type="text" id="etab_nom" name="etab_nom" required
+                                   value="{{ form_data.etab_nom|default('') }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="etab_siret">SIRET</label>
+                            <input type="text" id="etab_siret" name="etab_siret" maxlength="14"
+                                   value="{{ form_data.etab_siret|default('') }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="etab_adresse">Adresse</label>
+                            <input type="text" id="etab_adresse" name="etab_adresse"
+                                   value="{{ form_data.etab_adresse|default('') }}">
+                        </div>
+
+                        <div class="register-row">
+                            <div class="form-group register-row__cp">
+                                <label for="etab_cp">Code postal</label>
+                                <input type="text" id="etab_cp" name="etab_cp" maxlength="5"
+                                       value="{{ form_data.etab_cp|default('') }}">
+                            </div>
+                            <div class="form-group register-row__ville">
+                                <label for="etab_ville">Ville</label>
+                                <input type="text" id="etab_ville" name="etab_ville"
+                                       value="{{ form_data.etab_ville|default('') }}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="register-step3-actions">
+                        <button type="submit" class="register-submit">
+                            <i class="fas fa-plus"></i> Ajouter cet etablissement
+                        </button>
+                        <a href="{{ path('admin') }}" class="register-skip">
+                            Passer au tableau de bord <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% set siren_url = path('api_siren_lookup') %}
+<script>
+(function() {
+    var btnLookup = document.getElementById('btn-siret-lookup');
+    var inputSiret = document.getElementById('siret_search');
+    var loading = document.getElementById('siret-loading');
+    var errorDiv = document.getElementById('siret-error');
+    var baseUrl = '{{ siren_url }}';
+
+    function doLookup() {
+        var query = inputSiret.value.replace(/\s/g, '');
+        if (!query || query.length !== 14) {
+            errorDiv.textContent = 'Entrez un SIRET (14 chiffres).';
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        errorDiv.style.display = 'none';
+        loading.style.display = 'block';
+        btnLookup.disabled = true;
+
+        fetch(baseUrl + '?q=' + encodeURIComponent(query))
+            .then(function(res) {
+                if (!res.ok) {
+                    return res.json().then(function(data) { throw new Error(data.error || 'Erreur serveur'); });
+                }
+                return res.json();
+            })
+            .then(function(data) {
+                document.getElementById('etab_nom').value = data.nom_complet || '';
+                document.getElementById('etab_siret').value = data.siret || query;
+                document.getElementById('etab_adresse').value = data.adresse || '';
+                document.getElementById('etab_cp').value = data.code_postal || '';
+                document.getElementById('etab_ville').value = data.ville || '';
+
+                var fields = ['etab_nom', 'etab_siret', 'etab_adresse', 'etab_cp', 'etab_ville'];
+                fields.forEach(function(id) {
+                    var el = document.getElementById(id);
+                    if (el.value) {
+                        el.classList.add('register-prefilled');
+                        setTimeout(function() { el.classList.remove('register-prefilled'); }, 2000);
+                    }
+                });
+            })
+            .catch(function(err) {
+                errorDiv.textContent = err.message;
+                errorDiv.style.display = 'block';
+            })
+            .finally(function() {
+                loading.style.display = 'none';
+                btnLookup.disabled = false;
+            });
+    }
+
+    btnLookup.addEventListener('click', doLookup);
+    inputSiret.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            doLookup();
+        }
+    });
+})();
+</script>
+{% endblock %}
