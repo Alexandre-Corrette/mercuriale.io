@@ -18,6 +18,7 @@ use App\Form\BonLivraisonUploadType;
 use App\Form\MercurialeColumnMappingType;
 use App\Form\MercurialeImportUploadType;
 use App\Repository\BonLivraisonRepository;
+use App\Repository\FournisseurRepository;
 use App\Repository\MercurialeImportRepository;
 use App\Service\Controle\ControleService;
 use App\Service\Import\MercurialeBulkImporter;
@@ -116,7 +117,7 @@ class UploadController extends AbstractController
     }
 
     #[Route('/app/bl/{id}/extraction', name: 'app_bl_extraction', methods: ['GET'])]
-    public function extraction(BonLivraison $bonLivraison): Response
+    public function extraction(BonLivraison $bonLivraison, FournisseurRepository $fournisseurRepository): Response
     {
         if (!$this->isGranted('VIEW', $bonLivraison->getEtablissement())) {
             throw $this->createAccessDeniedException();
@@ -124,10 +125,17 @@ class UploadController extends AbstractController
 
         $needsExtraction = $bonLivraison->getDonneesBrutes() === null;
 
+        $fournisseurs = [];
+        $organisation = $bonLivraison->getEtablissement()?->getOrganisation();
+        if ($organisation !== null) {
+            $fournisseurs = $fournisseurRepository->findByOrganisation($organisation);
+        }
+
         return $this->render('app/bon_livraison/extraction.html.twig', [
             'bonLivraison' => $bonLivraison,
             'needsExtraction' => $needsExtraction,
             'extractionResult' => null,
+            'fournisseurs' => $fournisseurs,
         ]);
     }
 
@@ -336,6 +344,54 @@ class UploadController extends AbstractController
                 'error' => 'Erreur lors de la correction',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    #[Route('/app/bl/{id}/set-fournisseur', name: 'app_bl_set_fournisseur', methods: ['POST'])]
+    public function setFournisseur(
+        BonLivraison $bonLivraison,
+        Request $request,
+        FournisseurRepository $fournisseurRepository,
+    ): JsonResponse {
+        if (!$this->isGranted('MANAGE', $bonLivraison->getEtablissement())) {
+            return new JsonResponse(['error' => 'Acces refuse'], Response::HTTP_FORBIDDEN);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        $fournisseurId = $data['fournisseur_id'] ?? null;
+
+        if ($fournisseurId === null) {
+            $bonLivraison->setFournisseur(null);
+            $this->entityManager->flush();
+
+            return new JsonResponse(['success' => true, 'fournisseur' => null]);
+        }
+
+        $fournisseur = $fournisseurRepository->find((int) $fournisseurId);
+        if ($fournisseur === null) {
+            return new JsonResponse(['error' => 'Fournisseur non trouve'], Response::HTTP_NOT_FOUND);
+        }
+
+        // Verify fournisseur belongs to same organisation
+        if (!$this->isGranted('VIEW', $fournisseur)) {
+            return new JsonResponse(['error' => 'Acces refuse'], Response::HTTP_FORBIDDEN);
+        }
+
+        $bonLivraison->setFournisseur($fournisseur);
+        $this->entityManager->flush();
+
+        $this->logger->info('Fournisseur BL corrige manuellement', [
+            'bl_id' => $bonLivraison->getId(),
+            'fournisseur_id' => $fournisseur->getId(),
+            'fournisseur_nom' => $fournisseur->getNom(),
+        ]);
+
+        return new JsonResponse([
+            'success' => true,
+            'fournisseur' => [
+                'id' => $fournisseur->getId(),
+                'nom' => $fournisseur->getNom(),
+            ],
+        ]);
     }
 
     #[Route('/app/bl/batch-validate', name: 'app_bl_batch_validate', methods: ['GET'])]
