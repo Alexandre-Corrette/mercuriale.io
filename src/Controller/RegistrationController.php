@@ -4,20 +4,22 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Entity\Etablissement;
-use App\Entity\Organisation;
 use App\Entity\Utilisateur;
-use App\Entity\UtilisateurEtablissement;
+use App\Exception\DuplicateSirenException;
+use App\Exception\DuplicateSiretException;
+use App\Service\OnboardingService;
 use App\Service\SirenApiService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class RegistrationController extends AbstractController
@@ -29,6 +31,8 @@ class RegistrationController extends AbstractController
         UserPasswordHasherInterface $passwordHasher,
         ValidatorInterface $validator,
         LoggerInterface $logger,
+        OnboardingService $onboardingService,
+        Security $security,
     ): Response {
         if ($this->getUser()) {
             return $this->redirectToRoute('admin');
@@ -57,7 +61,6 @@ class RegistrationController extends AbstractController
 
             $errors = [];
 
-            // Validate required fields
             if ($orgNom === '') {
                 $errors[] = 'Le nom de l\'entreprise est obligatoire.';
             }
@@ -80,7 +83,6 @@ class RegistrationController extends AbstractController
                 $errors[] = 'Les mots de passe ne correspondent pas.';
             }
 
-            // Check email uniqueness
             if ($userEmail !== '' && $em->getRepository(Utilisateur::class)->findOneBy(['email' => $userEmail])) {
                 $errors[] = 'Cette adresse email est deja utilisee.';
             }
@@ -92,31 +94,21 @@ class RegistrationController extends AbstractController
                 ]);
             }
 
+            // Extract SIREN from SIRET (first 9 digits)
+            $orgSiren = ($orgSiret !== '' && strlen($orgSiret) === 14) ? substr($orgSiret, 0, 9) : null;
+
             $em->beginTransaction();
             try {
-                // Create Organisation
-                $organisation = new Organisation();
-                $organisation->setNom($orgNom);
-                if ($orgSiret !== '') {
-                    $organisation->setSiret($orgSiret);
-                }
-                $organisation->setTrialEndsAt(new \DateTimeImmutable('+7 days'));
-                $em->persist($organisation);
-
-                // Create Etablissement (siege)
-                $etablissement = new Etablissement();
-                $etablissement->setOrganisation($organisation);
-                $etablissement->setNom($orgNom);
-                if ($orgAdresse !== '') {
-                    $etablissement->setAdresse($orgAdresse);
-                }
-                if ($orgCp !== '') {
-                    $etablissement->setCodePostal($orgCp);
-                }
-                if ($orgVille !== '') {
-                    $etablissement->setVille($orgVille);
-                }
-                $em->persist($etablissement);
+                [$organisation, $etablissement] = $onboardingService->createOrganisationWithEtablissement(
+                    $orgNom,
+                    $orgSiren,
+                    $orgSiret !== '' ? $orgSiret : null,
+                    [
+                        'adresse' => $orgAdresse,
+                        'codePostal' => $orgCp,
+                        'ville' => $orgVille,
+                    ],
+                );
 
                 // Create Utilisateur
                 $utilisateur = new Utilisateur();
@@ -130,16 +122,13 @@ class RegistrationController extends AbstractController
                 );
                 $em->persist($utilisateur);
 
-                // Link user to etablissement
-                $ue = new UtilisateurEtablissement();
-                $ue->setUtilisateur($utilisateur);
-                $ue->setEtablissement($etablissement);
-                $ue->setRole('ROLE_GERANT');
-                $em->persist($ue);
+                // Link user to organisation + etablissement
+                $onboardingService->linkUserToOrganisation($utilisateur, $organisation);
+                $onboardingService->linkUserToEtablissement($utilisateur, $etablissement, 'ROLE_GERANT');
 
                 // Validate all entities
                 $allErrors = [];
-                foreach ([$organisation, $etablissement, $utilisateur, $ue] as $entity) {
+                foreach ([$organisation, $etablissement, $utilisateur] as $entity) {
                     $violations = $validator->validate($entity);
                     foreach ($violations as $violation) {
                         $allErrors[] = $violation->getMessage();
@@ -164,9 +153,17 @@ class RegistrationController extends AbstractController
                     'email' => $userEmail,
                 ]);
 
-                $this->addFlash('success', 'Compte cree avec succes ! Connectez-vous pour commencer.');
+                // Auto-login and redirect to step 3
+                $security->login($utilisateur, 'form_login', 'main');
 
-                return $this->redirectToRoute('app_login');
+                return $this->redirectToRoute('app_register_step3');
+            } catch (DuplicateSirenException|DuplicateSiretException $e) {
+                $em->rollback();
+
+                return $this->render('security/register.html.twig', [
+                    'errors' => [$e->getMessage()],
+                    'form_data' => $request->request->all(),
+                ]);
             } catch (\Exception $e) {
                 $em->rollback();
                 $logger->error('Erreur inscription', ['error' => $e->getMessage()]);
@@ -179,6 +176,115 @@ class RegistrationController extends AbstractController
         }
 
         return $this->render('security/register.html.twig', [
+            'errors' => [],
+            'form_data' => [],
+        ]);
+    }
+
+    #[Route('/inscription/etablissement', name: 'app_register_step3', methods: ['GET', 'POST'])]
+    #[IsGranted('ROLE_USER')]
+    public function registerStep3(
+        Request $request,
+        EntityManagerInterface $em,
+        OnboardingService $onboardingService,
+        ValidatorInterface $validator,
+        LoggerInterface $logger,
+        RateLimiterFactory $onboardingLimiter,
+    ): Response {
+        /** @var Utilisateur $user */
+        $user = $this->getUser();
+
+        if ($request->isMethod('POST')) {
+            $limiter = $onboardingLimiter->create($request->getClientIp() ?? 'unknown');
+            if (!$limiter->consume()->isAccepted()) {
+                $this->addFlash('error', 'Trop de requetes. Reessayez dans quelques instants.');
+
+                return $this->redirectToRoute('app_register_step3');
+            }
+
+            if (!$this->isCsrfTokenValid('registration_step3', $request->request->getString('_token'))) {
+                $this->addFlash('error', 'Token de securite invalide.');
+
+                return $this->redirectToRoute('app_register_step3');
+            }
+
+            $nom = trim($request->request->getString('etab_nom'));
+            $siret = trim($request->request->getString('etab_siret'));
+            $adresse = trim($request->request->getString('etab_adresse'));
+            $cp = trim($request->request->getString('etab_cp'));
+            $ville = trim($request->request->getString('etab_ville'));
+
+            $errors = [];
+            if ($nom === '') {
+                $errors[] = 'Le nom de l\'etablissement est obligatoire.';
+            }
+
+            if (!empty($errors)) {
+                return $this->render('security/register_step3.html.twig', [
+                    'errors' => $errors,
+                    'form_data' => $request->request->all(),
+                ]);
+            }
+
+            $em->beginTransaction();
+            try {
+                $organisation = $user->getOrganisation();
+                $etablissement = $onboardingService->addEtablissementToOrganisation(
+                    $organisation,
+                    $nom,
+                    $siret !== '' ? $siret : null,
+                    [
+                        'adresse' => $adresse,
+                        'codePostal' => $cp,
+                        'ville' => $ville,
+                    ],
+                );
+                $onboardingService->linkUserToEtablissement($user, $etablissement, 'ROLE_GERANT');
+
+                $violations = $validator->validate($etablissement);
+                if (\count($violations) > 0) {
+                    $em->rollback();
+                    $validationErrors = [];
+                    foreach ($violations as $violation) {
+                        $validationErrors[] = $violation->getMessage();
+                    }
+
+                    return $this->render('security/register_step3.html.twig', [
+                        'errors' => $validationErrors,
+                        'form_data' => $request->request->all(),
+                    ]);
+                }
+
+                $em->flush();
+                $em->commit();
+
+                $logger->info('Nouvel etablissement ajoute', [
+                    'etablissement' => $nom,
+                    'organisation' => $organisation->getNom(),
+                ]);
+
+                $this->addFlash('success', 'Etablissement ajoute avec succes !');
+
+                return $this->redirectToRoute('app_register_step3');
+            } catch (DuplicateSiretException $e) {
+                $em->rollback();
+
+                return $this->render('security/register_step3.html.twig', [
+                    'errors' => [$e->getMessage()],
+                    'form_data' => $request->request->all(),
+                ]);
+            } catch (\Exception $e) {
+                $em->rollback();
+                $logger->error('Erreur ajout etablissement', ['error' => $e->getMessage()]);
+
+                return $this->render('security/register_step3.html.twig', [
+                    'errors' => ['Une erreur est survenue.'],
+                    'form_data' => $request->request->all(),
+                ]);
+            }
+        }
+
+        return $this->render('security/register_step3.html.twig', [
             'errors' => [],
             'form_data' => [],
         ]);

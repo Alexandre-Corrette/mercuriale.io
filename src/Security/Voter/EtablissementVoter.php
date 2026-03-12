@@ -7,6 +7,7 @@ namespace App\Security\Voter;
 use App\Entity\Etablissement;
 use App\Entity\Utilisateur;
 use App\Repository\UtilisateurEtablissementRepository;
+use App\Repository\UtilisateurOrganisationRepository;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 
@@ -21,6 +22,7 @@ class EtablissementVoter extends Voter
 
     public function __construct(
         private readonly UtilisateurEtablissementRepository $utilisateurEtablissementRepository,
+        private readonly UtilisateurOrganisationRepository $utilisateurOrganisationRepository,
     ) {
     }
 
@@ -41,14 +43,17 @@ class EtablissementVoter extends Voter
         /** @var Etablissement $etablissement */
         $etablissement = $subject;
 
-        // ROLE_ADMIN a accès à tous les établissements de son organisation
+        // ROLE_ADMIN a accès à tous les établissements de ses organisations
         if (in_array('ROLE_ADMIN', $user->getRoles(), true)) {
-            // Vérifier que l'établissement appartient à la même organisation
-            if ($user->getOrganisation() === null) {
+            $etabOrg = $etablissement->getOrganisation();
+            if ($etabOrg === null) {
                 return false;
             }
 
-            return $etablissement->getOrganisation()?->getId() === $user->getOrganisation()->getId();
+            // Check via UtilisateurOrganisation (multi-org aware)
+            $uo = $this->utilisateurOrganisationRepository->findOneByUtilisateurAndOrganisation($user, $etabOrg);
+
+            return $uo !== null;
         }
 
         // Pour les autres utilisateurs, vérifier via UtilisateurEtablissement
@@ -64,7 +69,7 @@ class EtablissementVoter extends Voter
         $role = $access->getRole();
 
         return match ($attribute) {
-            self::VIEW => true, // Si l'accès existe, l'utilisateur peut voir
+            self::VIEW => true,
             self::UPLOAD => in_array($role, ['ROLE_MANAGER', 'ROLE_OPERATOR'], true),
             self::MANAGE => $role === 'ROLE_MANAGER',
             default => false,

@@ -1,0 +1,81 @@
+{% extends 'admin/hub/layout.html.twig' %}
+
+{% set hub_title = 'Nouvelle societe' %}
+{% set hub_breadcrumbs = [
+    { label: 'Profil', url: path('app_profil_hub') },
+    { label: 'Societes', url: path('app_societes_index') },
+    { label: 'Nouvelle societe' }
+] %}
+
+{% block title %}Nouvelle societe — Mercuriale.io{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/societes.css') }}">
+{% endblock %}
+
+{% block hub_content %}
+<div class="societes-page">
+    <div class="societes-form-header">
+        <h1 class="societes-form-header__title">Creer une nouvelle societe</h1>
+    </div>
+
+    {% for message in app.flashes('error') %}
+        <div class="societes-flash societes-flash--error">
+            <i class="fas fa-exclamation-circle"></i> {{ message }}
+        </div>
+    {% endfor %}
+
+    <div class="societes-form-card">
+        {{ form_start(form) }}
+            <div class="societes-form-grid">
+                <div class="societes-form-group">
+                    {{ form_label(form.nom) }}
+                    {{ form_widget(form.nom, {'attr': {'class': 'societes-input'}}) }}
+                    {{ form_errors(form.nom) }}
+                </div>
+
+                <div class="societes-form-group">
+                    {{ form_label(form.siren) }}
+                    {{ form_widget(form.siren, {'attr': {'class': 'societes-input', 'maxlength': '9'}}) }}
+                    {{ form_errors(form.siren) }}
+                </div>
+
+                <div class="societes-form-group">
+                    {{ form_label(form.siret) }}
+                    {{ form_widget(form.siret, {'attr': {'class': 'societes-input', 'maxlength': '14'}}) }}
+                    {{ form_errors(form.siret) }}
+                </div>
+
+                <div class="societes-form-group">
+                    {{ form_label(form.adresse) }}
+                    {{ form_widget(form.adresse, {'attr': {'class': 'societes-input'}}) }}
+                    {{ form_errors(form.adresse) }}
+                </div>
+
+                <div class="societes-form-row">
+                    <div class="societes-form-group societes-form-group--cp">
+                        {{ form_label(form.codePostal) }}
+                        {{ form_widget(form.codePostal, {'attr': {'class': 'societes-input', 'maxlength': '5'}}) }}
+                        {{ form_errors(form.codePostal) }}
+                    </div>
+                    <div class="societes-form-group societes-form-group--ville">
+                        {{ form_label(form.ville) }}
+                        {{ form_widget(form.ville, {'attr': {'class': 'societes-input'}}) }}
+                        {{ form_errors(form.ville) }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="societes-form-actions">
+                <button type="submit" class="societes-btn societes-btn--primary">
+                    <i class="fas fa-plus"></i> Creer la societe
+                </button>
+                <a href="{{ path('app_societes_index') }}" class="societes-btn societes-btn--secondary">
+                    Annuler
+                </a>
+            </div>
+        {{ form_end(form) }}
+    </div>
+</div>
+{% endblock %}

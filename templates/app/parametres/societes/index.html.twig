@@ -1,0 +1,94 @@
+{% extends 'admin/hub/layout.html.twig' %}
+
+{% set hub_title = 'Societes' %}
+{% set hub_breadcrumbs = [
+    { label: 'Profil', url: path('app_profil_hub') },
+    { label: 'Societes' }
+] %}
+
+{% block title %}Societes — Mercuriale.io{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/societes.css') }}">
+{% endblock %}
+
+{% block hub_content %}
+<div class="societes-page">
+    <div class="societes-header">
+        <h1 class="societes-header__title">Mes societes</h1>
+        <a href="{{ path('app_societes_new') }}" class="societes-header__btn">
+            <i class="fas fa-plus"></i> Nouvelle societe
+        </a>
+    </div>
+
+    {% for message in app.flashes('success') %}
+        <div class="societes-flash societes-flash--success">
+            <i class="fas fa-check-circle"></i> {{ message }}
+        </div>
+    {% endfor %}
+
+    {% for message in app.flashes('error') %}
+        <div class="societes-flash societes-flash--error">
+            <i class="fas fa-exclamation-circle"></i> {{ message }}
+        </div>
+    {% endfor %}
+
+    {% for uo in user_organisations %}
+        {% set org = uo.organisation %}
+        <div class="societes-card">
+            <div class="societes-card__header">
+                <div class="societes-card__info">
+                    <h2 class="societes-card__name">
+                        <i class="fas fa-building"></i> {{ org.nom }}
+                    </h2>
+                    {% if org.siren %}
+                        <span class="societes-card__siren">SIREN : {{ org.siren }}</span>
+                    {% endif %}
+                    {% if org.siret %}
+                        <span class="societes-card__siret">SIRET : {{ org.siret }}</span>
+                    {% endif %}
+                </div>
+                <a href="{{ path('app_societes_etablissement_new', {orgId: org.id}) }}" class="societes-card__add-btn">
+                    <i class="fas fa-plus"></i> Ajouter un etablissement
+                </a>
+            </div>
+
+            <div class="societes-card__etabs">
+                {% for etab in org.etablissements %}
+                    <div class="societes-etab">
+                        <div class="societes-etab__icon">
+                            <i class="fas fa-store"></i>
+                        </div>
+                        <div class="societes-etab__info">
+                            <span class="societes-etab__name">
+                                {{ etab.nom }}
+                                {% if etab.isPrimary %}
+                                    <span class="societes-etab__badge">Siege</span>
+                                {% endif %}
+                            </span>
+                            {% if etab.adresseComplete %}
+                                <span class="societes-etab__address">{{ etab.adresseComplete }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="societes-etab__status">
+                            {% if etab.actif %}
+                                <span class="societes-etab__active"><i class="fas fa-check-circle"></i> Actif</span>
+                            {% else %}
+                                <span class="societes-etab__inactive"><i class="fas fa-times-circle"></i> Inactif</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% else %}
+                    <p class="societes-card__empty">Aucun etablissement.</p>
+                {% endfor %}
+            </div>
+        </div>
+    {% else %}
+        <div class="societes-empty">
+            <i class="fas fa-building"></i>
+            <p>Aucune societe trouvee.</p>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

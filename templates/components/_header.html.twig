@@ -47,6 +47,7 @@
 
             {% set etablissements = user_etablissements() %}
             {% set selected = selected_etablissement() %}
+            {% set multi_org = has_multiple_organisations() %}
             {% if selected %}
             <div class="m-header__restaurant-dropdown"
                  data-controller="header-dropdown">
@@ -64,18 +65,40 @@
                     <ul class="m-header__restaurant-menu"
                         data-header-dropdown-target="menu"
                         role="menu">
-                        {% for etab in etablissements %}
-                            <li role="menuitem">
-                                <a href="{{ path('app_etablissement_switch', {id: etab.id}) }}"
-                                   class="m-header__restaurant-option{% if etab.id == selected.id %} m-header__restaurant-option--active{% endif %}">
-                                    <i class="fas fa-store" aria-hidden="true"></i>
-                                    {{ etab.nom }}
-                                    {% if etab.id == selected.id %}
-                                        <i class="fas fa-check m-header__restaurant-check" aria-hidden="true"></i>
-                                    {% endif %}
-                                </a>
-                            </li>
-                        {% endfor %}
+                        {% if multi_org %}
+                            {% set org_groups = user_organisations_with_etablissements() %}
+                            {% for group in org_groups %}
+                                <li class="m-header__restaurant-org-header" role="presentation">
+                                    <i class="fas fa-building" aria-hidden="true"></i>
+                                    {{ group.organisation.nom }}
+                                </li>
+                                {% for etab in group.etablissements %}
+                                    <li role="menuitem">
+                                        <a href="{{ path('app_etablissement_switch', {id: etab.id}) }}"
+                                           class="m-header__restaurant-option m-header__restaurant-option--grouped{% if etab.id == selected.id %} m-header__restaurant-option--active{% endif %}">
+                                            <i class="fas fa-store" aria-hidden="true"></i>
+                                            {{ etab.nom }}
+                                            {% if etab.id == selected.id %}
+                                                <i class="fas fa-check m-header__restaurant-check" aria-hidden="true"></i>
+                                            {% endif %}
+                                        </a>
+                                    </li>
+                                {% endfor %}
+                            {% endfor %}
+                        {% else %}
+                            {% for etab in etablissements %}
+                                <li role="menuitem">
+                                    <a href="{{ path('app_etablissement_switch', {id: etab.id}) }}"
+                                       class="m-header__restaurant-option{% if etab.id == selected.id %} m-header__restaurant-option--active{% endif %}">
+                                        <i class="fas fa-store" aria-hidden="true"></i>
+                                        {{ etab.nom }}
+                                        {% if etab.id == selected.id %}
+                                            <i class="fas fa-check m-header__restaurant-check" aria-hidden="true"></i>
+                                        {% endif %}
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        {% endif %}
                     </ul>
                 {% else %}
                     <div class="m-header__restaurant">

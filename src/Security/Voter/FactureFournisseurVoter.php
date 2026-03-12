@@ -7,6 +7,7 @@ namespace App\Security\Voter;
 use App\Entity\FactureFournisseur;
 use App\Entity\Utilisateur;
 use App\Repository\UtilisateurEtablissementRepository;
+use App\Repository\UtilisateurOrganisationRepository;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 
@@ -20,6 +21,7 @@ class FactureFournisseurVoter extends Voter
 
     public function __construct(
         private readonly UtilisateurEtablissementRepository $utilisateurEtablissementRepository,
+        private readonly UtilisateurOrganisationRepository $utilisateurOrganisationRepository,
     ) {
     }
 
@@ -45,13 +47,16 @@ class FactureFournisseurVoter extends Voter
             return false;
         }
 
-        // ROLE_ADMIN : accès à tous les établissements de son organisation
+        // ROLE_ADMIN : accès à tous les établissements de ses organisations
         if (in_array('ROLE_ADMIN', $user->getRoles(), true)) {
-            if ($user->getOrganisation() === null) {
+            $etabOrg = $etablissement->getOrganisation();
+            if ($etabOrg === null) {
                 return false;
             }
 
-            return $etablissement->getOrganisation()?->getId() === $user->getOrganisation()->getId();
+            $uo = $this->utilisateurOrganisationRepository->findOneByUtilisateurAndOrganisation($user, $etabOrg);
+
+            return $uo !== null;
         }
 
         // Pour les autres utilisateurs, vérifier via UtilisateurEtablissement
