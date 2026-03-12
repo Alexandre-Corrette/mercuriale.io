@@ -8,6 +8,7 @@ use App\Entity\Fournisseur;
 use App\Entity\Utilisateur;
 use App\Repository\FournisseurRepository;
 use App\Repository\OrganisationFournisseurRepository;
+use App\Repository\UtilisateurOrganisationRepository;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 
@@ -24,6 +25,7 @@ class FournisseurVoter extends Voter
     public function __construct(
         private readonly OrganisationFournisseurRepository $organisationFournisseurRepository,
         private readonly FournisseurRepository $fournisseurRepository,
+        private readonly UtilisateurOrganisationRepository $utilisateurOrganisationRepository,
     ) {
     }
 
@@ -59,12 +61,24 @@ class FournisseurVoter extends Voter
         /** @var Fournisseur $fournisseur */
         $fournisseur = $subject;
 
-        // Verify organisation has access to this fournisseur via OrganisationFournisseur
-        // OR via a direct Etablissement link (fournisseur_etablissement)
-        $hasOrgAccess = $this->organisationFournisseurRepository->hasAccess($organisation, $fournisseur);
-        $hasEtabAccess = !$hasOrgAccess && $this->fournisseurRepository->hasAccessViaEtablissement($organisation, $fournisseur);
+        // Check access across all user's organisations (multi-org aware for ROLE_ADMIN)
+        $hasAccess = false;
+        if (\in_array('ROLE_ADMIN', $user->getRoles(), true)) {
+            $userOrgs = $this->utilisateurOrganisationRepository->findByUtilisateur($user);
+            foreach ($userOrgs as $uo) {
+                $org = $uo->getOrganisation();
+                if ($this->organisationFournisseurRepository->hasAccess($org, $fournisseur)
+                    || $this->fournisseurRepository->hasAccessViaEtablissement($org, $fournisseur)) {
+                    $hasAccess = true;
+                    break;
+                }
+            }
+        } else {
+            $hasAccess = $this->organisationFournisseurRepository->hasAccess($organisation, $fournisseur)
+                || $this->fournisseurRepository->hasAccessViaEtablissement($organisation, $fournisseur);
+        }
 
-        if (!$hasOrgAccess && !$hasEtabAccess) {
+        if (!$hasAccess) {
             return false;
         }
 

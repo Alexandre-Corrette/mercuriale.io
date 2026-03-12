@@ -34,6 +34,10 @@ class Etablissement
     #[Assert\Length(max: 255, maxMessage: 'Le nom ne peut pas dépasser {{ limit }} caractères')]
     private ?string $nom = null;
 
+    #[ORM\Column(length: 14, nullable: true)]
+    #[Assert\Regex(pattern: '/^\d{14}$/', message: 'Le SIRET doit contenir exactement 14 chiffres')]
+    private ?string $siret = null;
+
     #[ORM\Column(length: 255, nullable: true)]
     #[Assert\Length(max: 255, maxMessage: 'L\'adresse ne peut pas dépasser {{ limit }} caractères')]
     private ?string $adresse = null;
@@ -55,6 +59,9 @@ class Etablissement
     #[Assert\Email(message: 'L\'adresse email n\'est pas valide')]
     #[Assert\Length(max: 255, maxMessage: 'L\'email ne peut pas dépasser {{ limit }} caractères')]
     private ?string $email = null;
+
+    #[ORM\Column(options: ['default' => false])]
+    private bool $isPrimary = false;
 
     #[ORM\Column(options: ['default' => true])]
     private bool $actif = true;
@@ -116,6 +123,18 @@ class Etablissement
         return $this;
     }
 
+    public function getSiret(): ?string
+    {
+        return $this->siret;
+    }
+
+    public function setSiret(?string $siret): static
+    {
+        $this->siret = $siret;
+
+        return $this;
+    }
+
     public function getAdresse(): ?string
     {
         return $this->adresse;
@@ -172,6 +191,18 @@ class Etablissement
     public function setEmail(?string $email): static
     {
         $this->email = $email;
+
+        return $this;
+    }
+
+    public function isPrimary(): bool
+    {
+        return $this->isPrimary;
+    }
+
+    public function setIsPrimary(bool $isPrimary): static
+    {
+        $this->isPrimary = $isPrimary;
 
         return $this;
     }

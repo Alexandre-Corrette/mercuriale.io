@@ -17,4 +17,9 @@ class OrganisationRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Organisation::class);
     }
+
+    public function findBySiren(string $siren): ?Organisation
+    {
+        return $this->findOneBy(['siren' => $siren]);
+    }
 }

@@ -63,9 +63,14 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: UtilisateurEtablissement::class, mappedBy: 'utilisateur', orphanRemoval: true)]
     private Collection $utilisateurEtablissements;
 
+    /** @var Collection<int, UtilisateurOrganisation> */
+    #[ORM\OneToMany(targetEntity: UtilisateurOrganisation::class, mappedBy: 'utilisateur', orphanRemoval: true)]
+    private Collection $utilisateurOrganisations;
+
     public function __construct()
     {
         $this->utilisateurEtablissements = new ArrayCollection();
+        $this->utilisateurOrganisations = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -216,6 +221,45 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
         }
 
         return $this;
+    }
+
+    /**
+     * @return Collection<int, UtilisateurOrganisation>
+     */
+    public function getUtilisateurOrganisations(): Collection
+    {
+        return $this->utilisateurOrganisations;
+    }
+
+    public function addUtilisateurOrganisation(UtilisateurOrganisation $utilisateurOrganisation): static
+    {
+        if (!$this->utilisateurOrganisations->contains($utilisateurOrganisation)) {
+            $this->utilisateurOrganisations->add($utilisateurOrganisation);
+            $utilisateurOrganisation->setUtilisateur($this);
+        }
+
+        return $this;
+    }
+
+    public function removeUtilisateurOrganisation(UtilisateurOrganisation $utilisateurOrganisation): static
+    {
+        if ($this->utilisateurOrganisations->removeElement($utilisateurOrganisation)) {
+            if ($utilisateurOrganisation->getUtilisateur() === $this) {
+                $utilisateurOrganisation->setUtilisateur(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Organisation[]
+     */
+    public function getOrganisations(): array
+    {
+        return $this->utilisateurOrganisations
+            ->map(fn (UtilisateurOrganisation $uo) => $uo->getOrganisation())
+            ->toArray();
     }
 
     /**

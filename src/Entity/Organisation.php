@@ -28,6 +28,10 @@ class Organisation
     #[Assert\Length(max: 255, maxMessage: 'Le nom ne peut pas dépasser {{ limit }} caractères')]
     private ?string $nom = null;
 
+    #[ORM\Column(length: 9, nullable: true, unique: true)]
+    #[Assert\Regex(pattern: '/^\d{9}$/', message: 'Le SIREN doit contenir exactement 9 chiffres')]
+    private ?string $siren = null;
+
     #[ORM\Column(length: 14, nullable: true)]
     #[Assert\Length(exactly: 14, exactMessage: 'Le SIRET doit contenir exactement {{ limit }} caractères')]
     #[Assert\Regex(pattern: '/^\d{14}$/', message: 'Le SIRET doit contenir uniquement des chiffres')]
@@ -57,11 +61,19 @@ class Organisation
     #[ORM\OneToMany(targetEntity: OrganisationFournisseur::class, mappedBy: 'organisation', orphanRemoval: true)]
     private Collection $organisationFournisseurs;
 
+    #[ORM\OneToOne(targetEntity: Abonnement::class, mappedBy: 'organisation')]
+    private ?Abonnement $abonnement = null;
+
+    /** @var Collection<int, UtilisateurOrganisation> */
+    #[ORM\OneToMany(targetEntity: UtilisateurOrganisation::class, mappedBy: 'organisation', orphanRemoval: true)]
+    private Collection $utilisateurOrganisations;
+
     public function __construct()
     {
         $this->etablissements = new ArrayCollection();
         $this->utilisateurs = new ArrayCollection();
         $this->organisationFournisseurs = new ArrayCollection();
+        $this->utilisateurOrganisations = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -77,6 +89,18 @@ class Organisation
     public function setNom(string $nom): static
     {
         $this->nom = $nom;
+
+        return $this;
+    }
+
+    public function getSiren(): ?string
+    {
+        return $this->siren;
+    }
+
+    public function setSiren(?string $siren): static
+    {
+        $this->siren = $siren;
 
         return $this;
     }
@@ -263,6 +287,51 @@ class Organisation
         }
 
         return (int) $now->diff($this->trialEndsAt)->days;
+    }
+
+    /**
+     * @return Collection<int, UtilisateurOrganisation>
+     */
+    public function getUtilisateurOrganisations(): Collection
+    {
+        return $this->utilisateurOrganisations;
+    }
+
+    public function addUtilisateurOrganisation(UtilisateurOrganisation $utilisateurOrganisation): static
+    {
+        if (!$this->utilisateurOrganisations->contains($utilisateurOrganisation)) {
+            $this->utilisateurOrganisations->add($utilisateurOrganisation);
+            $utilisateurOrganisation->setOrganisation($this);
+        }
+
+        return $this;
+    }
+
+    public function removeUtilisateurOrganisation(UtilisateurOrganisation $utilisateurOrganisation): static
+    {
+        if ($this->utilisateurOrganisations->removeElement($utilisateurOrganisation)) {
+            if ($utilisateurOrganisation->getOrganisation() === $this) {
+                $utilisateurOrganisation->setOrganisation(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getAbonnement(): ?Abonnement
+    {
+        return $this->abonnement;
+    }
+
+    public function setAbonnement(?Abonnement $abonnement): static
+    {
+        if ($abonnement !== null && $abonnement->getOrganisation() !== $this) {
+            $abonnement->setOrganisation($this);
+        }
+
+        $this->abonnement = $abonnement;
+
+        return $this;
     }
 
     public function __toString(): string
