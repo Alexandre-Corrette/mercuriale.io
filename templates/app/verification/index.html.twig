@@ -35,11 +35,11 @@
         {% elseif organisation.stripeVerificationSessionId %}
             <div class="verification-card verification-card--processing">
                 <div class="verification-card__icon">
-                    <i class="fas fa-spinner fa-spin"></i>
+                    <i class="fas fa-clock"></i>
                 </div>
-                <h1 class="verification-card__title">Verification en cours</h1>
+                <h1 class="verification-card__title">Verification en attente</h1>
                 <p class="verification-card__text">
-                    Votre verification d'identite est en cours de traitement. Vous serez notifie une fois terminee.
+                    Votre verification d'identite a ete initiee. Si vous n'avez pas termine, vous pouvez relancer le processus.
                 </p>
 
                 <div class="verification-steps">
@@ -58,6 +58,13 @@
                         <span class="verification-steps__label">Compte active</span>
                     </div>
                 </div>
+
+                <form action="{{ path('app_verification_start') }}" method="post">
+                    <input type="hidden" name="_token" value="{{ csrf_token('start_verification') }}">
+                    <button type="submit" class="btn btn--primary btn--lg btn--full">
+                        <i class="fas fa-redo"></i> Relancer la verification
+                    </button>
+                </form>
 
                 <a href="{{ path('admin') }}" class="verification-card__link">
                     <i class="fas fa-arrow-left"></i> Retour au tableau de bord
