@@ -9,6 +9,7 @@ enum StatutBonLivraison: string
     case BROUILLON = 'BROUILLON';
     case VALIDE = 'VALIDE';
     case ANOMALIE = 'ANOMALIE';
+    case DOUBLON = 'DOUBLON';
     case ARCHIVE = 'ARCHIVE';
 
     public function label(): string
@@ -17,6 +18,7 @@ enum StatutBonLivraison: string
             self::BROUILLON => 'Brouillon',
             self::VALIDE => 'Validé',
             self::ANOMALIE => 'Anomalie',
+            self::DOUBLON => 'Doublon',
             self::ARCHIVE => 'Archivé',
         };
     }
@@ -27,6 +29,7 @@ enum StatutBonLivraison: string
             self::BROUILLON => 'secondary',
             self::VALIDE => 'success',
             self::ANOMALIE => 'danger',
+            self::DOUBLON => 'warning',
             self::ARCHIVE => 'dark',
         };
     }

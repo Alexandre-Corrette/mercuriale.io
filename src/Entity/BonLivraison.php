@@ -15,6 +15,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: BonLivraisonRepository::class)]
 #[ORM\Table(name: 'bon_livraison')]
+#[ORM\UniqueConstraint(name: 'uniq_bl_etablissement_fournisseur_numero', columns: ['etablissement_id', 'fournisseur_id', 'numero_bl'])]
 #[ORM\Index(columns: ['etablissement_id'], name: 'idx_bl_etablissement')]
 #[ORM\Index(columns: ['fournisseur_id'], name: 'idx_bl_fournisseur')]
 #[ORM\Index(columns: ['date_livraison'], name: 'idx_bl_date')]
