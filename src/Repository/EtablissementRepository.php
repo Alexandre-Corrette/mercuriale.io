@@ -29,6 +29,11 @@ class EtablissementRepository extends ServiceEntityRepository
         return $this->findBy(['organisation' => $organisation, 'actif' => true], ['nom' => 'ASC']);
     }
 
+    public function findBySiret(string $siret): ?Etablissement
+    {
+        return $this->findOneBy(['siret' => $siret]);
+    }
+
     /**
      * @return Etablissement[]
      */
@@ -71,15 +76,13 @@ class EtablissementRepository extends ServiceEntityRepository
             return $qb;
         }
 
-        // ROLE_ADMIN voit tous les établissements de son organisation
+        // ROLE_ADMIN voit tous les établissements de ses organisations (multi-org)
         if (in_array('ROLE_ADMIN', $user->getRoles(), true)) {
-            $organisation = $user->getOrganisation();
-            if ($organisation !== null) {
-                $qb->andWhere('e.organisation = :organisation')
-                    ->setParameter('organisation', $organisation);
-            } else {
-                $qb->andWhere('1 = 0');
-            }
+            $qb->innerJoin('e.organisation', 'orgAdmin')
+                ->innerJoin('orgAdmin.utilisateurOrganisations', 'uoAdmin')
+                ->andWhere('uoAdmin.utilisateur = :user')
+                ->setParameter('user', $user);
+
             return $qb;
         }
 

@@ -344,3 +344,26 @@
         min-width: 200px;
     }
 }
+
+/* ── Multi-org grouped dropdown ── */
+.m-header__restaurant-org-header {
+    padding: 0.5rem 1rem 0.25rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--mercuriale-coral, #e76f51);
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    list-style: none;
+    border-top: 1px solid #e5e7eb;
+}
+
+.m-header__restaurant-org-header:first-child {
+    border-top: none;
+}
+
+.m-header__restaurant-option--grouped {
+    padding-left: 2rem;
+}

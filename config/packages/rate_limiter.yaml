@@ -41,3 +41,9 @@ framework:
             policy: sliding_window
             limit: 10
             interval: '1 minute'
+
+        # Rate limiter for onboarding (org/etab creation)
+        onboarding:
+            policy: sliding_window
+            limit: 50
+            interval: '1 hour'
