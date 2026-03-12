@@ -10,7 +10,9 @@ use App\Entity\Fournisseur;
 use App\Entity\LigneBonLivraison;
 use App\Entity\Unite;
 use App\Enum\MatchConfidence;
+use App\Enum\StatutBonLivraison;
 use App\Enum\TypeUnite;
+use App\Repository\BonLivraisonRepository;
 use App\Repository\FournisseurRepository;
 use App\Repository\ProduitFournisseurRepository;
 use App\Repository\UniteRepository;
@@ -135,6 +137,7 @@ class BonLivraisonExtractorService
         private readonly EntityManagerInterface $entityManager,
         private readonly ProduitFournisseurRepository $produitFournisseurRepository,
         private readonly FournisseurRepository $fournisseurRepository,
+        private readonly BonLivraisonRepository $bonLivraisonRepository,
         private readonly UniteRepository $uniteRepository,
         private readonly OcrMatchingService $ocrMatchingService,
         private readonly ExtractionValidator $extractionValidator,
@@ -197,6 +200,38 @@ class BonLivraisonExtractorService
 
             // 6. Mettre à jour les infos du BL
             $this->updateBonLivraisonInfo($bl, $data);
+
+            // 6b. Vérification anti-doublon (fournisseur + numéro BL)
+            if ($bl->getNumeroBl() !== null && $bl->getFournisseur() !== null && $bl->getEtablissement() !== null) {
+                $doublon = $this->bonLivraisonRepository->findDuplicate(
+                    $bl->getEtablissement(),
+                    $bl->getFournisseur(),
+                    $bl->getNumeroBl(),
+                    $bl->getId(),
+                );
+
+                if ($doublon !== null) {
+                    $bl->setStatut(StatutBonLivraison::DOUBLON);
+                    $bl->setNotes('Doublon détecté : BL #' . $doublon->getId() . ' (même fournisseur et numéro ' . $bl->getNumeroBl() . ')');
+                    $this->logger->warning('BL doublon détecté', [
+                        'bl_id' => $bl->getId(),
+                        'doublon_id' => $doublon->getId(),
+                        'numero_bl' => $bl->getNumeroBl(),
+                        'fournisseur' => $bl->getFournisseur()->getNom(),
+                    ]);
+                    $this->entityManager->flush();
+
+                    return new ExtractionResult(
+                        success: true,
+                        lignes: [],
+                        warnings: ['Ce bon de livraison est un doublon du BL #' . $doublon->getId() . ' (' . $bl->getNumeroBl() . ')'],
+                        confiance: 'haute',
+                        produitsNonMatches: [],
+                        tempsExtraction: round(microtime(true) - $startTime, 2),
+                        donneesBrutes: $data,
+                    );
+                }
+            }
 
             // 7. Mapper les lignes
             $lignes = $this->mapLignes($data, $bl, $produitsNonMatches);
