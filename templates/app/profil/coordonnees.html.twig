@@ -17,10 +17,25 @@
 <div class="hub-content">
     <h1 class="hub-title"><i class="fas fa-id-card"></i> Mes coordonnees</h1>
 
+    {% for message in app.flashes('success') %}
+        <div class="profil-form__flash profil-form__flash--success">
+            <i class="fas fa-check-circle"></i> {{ message }}
+        </div>
+    {% endfor %}
+
+    {% for message in app.flashes('error') %}
+        <div class="profil-form__flash profil-form__flash--error">
+            <i class="fas fa-exclamation-circle"></i> {{ message }}
+        </div>
+    {% endfor %}
+
     {# Mon compte #}
     <div class="profil-section">
         <div class="profil-section__header">
             <i class="fas fa-user"></i> Mon compte
+            <a href="{{ path('app_profil_edit') }}" class="profil-section__header-link">
+                <i class="fas fa-pen"></i> Modifier
+            </a>
         </div>
         <div class="profil-info-grid">
             <div class="profil-info-grid__item">
@@ -113,13 +128,15 @@
         </div>
     </div>
 
-    {# Mot de passe — placeholder #}
+    {# Securite #}
     <div class="profil-section">
         <div class="profil-section__header">
             <i class="fas fa-lock"></i> Securite
         </div>
         <div class="profil-section__body">
-            <p class="profil-section__muted">La modification du mot de passe sera disponible prochainement.</p>
+            <a href="{{ path('app_profil_password') }}" class="profil-section__password-link">
+                <i class="fas fa-key"></i> Modifier le mot de passe
+            </a>
         </div>
     </div>
 

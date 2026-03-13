@@ -1,0 +1,67 @@
+{% extends 'admin/hub/layout.html.twig' %}
+
+{% set hub_title = 'Modifier mes coordonnees' %}
+{% set hub_breadcrumbs = [
+    { label: 'Profil', url: path('app_profil_hub') },
+    { label: 'Mes coordonnees', url: path('app_profil_coordonnees') },
+    { label: 'Modifier' }
+] %}
+
+{% block title %}Modifier mes coordonnees — Mercuriale.io{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/profil.css') }}">
+{% endblock %}
+
+{% block hub_content %}
+<div class="hub-content">
+    <h1 class="hub-title"><i class="fas fa-pen"></i> Modifier mes coordonnees</h1>
+
+    {% for message in app.flashes('success') %}
+        <div class="profil-form__flash profil-form__flash--success">
+            <i class="fas fa-check-circle"></i> {{ message }}
+        </div>
+    {% endfor %}
+
+    {% for message in app.flashes('error') %}
+        <div class="profil-form__flash profil-form__flash--error">
+            <i class="fas fa-exclamation-circle"></i> {{ message }}
+        </div>
+    {% endfor %}
+
+    {{ form_start(form, {attr: {class: 'profil-form'}}) }}
+
+        <div class="profil-form__row">
+            <div class="profil-form__field">
+                {{ form_label(form.prenom, null, {label_attr: {class: 'profil-form__label'}}) }}
+                {{ form_widget(form.prenom, {attr: {class: 'profil-form__input'}}) }}
+                {{ form_errors(form.prenom) }}
+            </div>
+            <div class="profil-form__field">
+                {{ form_label(form.nom, null, {label_attr: {class: 'profil-form__label'}}) }}
+                {{ form_widget(form.nom, {attr: {class: 'profil-form__input'}}) }}
+                {{ form_errors(form.nom) }}
+            </div>
+        </div>
+
+        <div class="profil-form__field">
+            {{ form_label(form.email, null, {label_attr: {class: 'profil-form__label'}}) }}
+            {{ form_widget(form.email, {attr: {class: 'profil-form__input'}}) }}
+            {{ form_errors(form.email) }}
+        </div>
+
+        {{ form_rest(form) }}
+
+        <div class="profil-form__actions">
+            <button type="submit" class="btn btn--primary">
+                <i class="fas fa-save"></i> Enregistrer
+            </button>
+            <a href="{{ path('app_profil_coordonnees') }}" class="btn btn--secondary">
+                <i class="fas fa-times"></i> Annuler
+            </a>
+        </div>
+
+    {{ form_end(form) }}
+</div>
+{% endblock %}
