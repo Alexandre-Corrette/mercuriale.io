@@ -166,9 +166,17 @@
     transition: border-color 0.3s, background-color 0.3s;
 }
 
-.mi-dropzone:hover {
+.mi-dropzone:hover,
+.mi-dropzone--active {
     border-color: var(--mercuriale-coral);
     background-color: rgba(240, 117, 96, 0.05);
+    transform: scale(1.01);
+}
+
+.mi-dropzone--has-files {
+    border-style: solid;
+    border-color: var(--color-success);
+    background-color: rgba(34, 197, 94, 0.05);
 }
 
 .mi-dropzone__icon {
@@ -600,4 +608,162 @@
 /* ── Overflow wrapper ── */
 .mi-overflow-x {
     overflow-x: auto;
+}
+
+/* ── File Item (JS-generated) ── */
+.mi-file-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    background: #fff;
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.mi-file-item + .mi-file-item {
+    margin-top: 0.5rem;
+}
+
+.mi-file-item__thumb {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    background-color: #f3f4f6;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mi-file-item__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.mi-file-item__icon {
+    font-size: 1.5rem;
+}
+
+.mi-file-item__icon--pdf {
+    color: #ef4444;
+}
+
+.mi-file-item__icon--excel {
+    color: #16a34a;
+}
+
+.mi-file-item__icon--csv {
+    color: #3b82f6;
+}
+
+.mi-file-item__icon--default {
+    color: #9ca3af;
+}
+
+.mi-file-item__info {
+    flex: 1;
+    min-width: 0;
+}
+
+.mi-file-item__name {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #111827;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mi-file-item__size {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+.mi-file-item__status {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+}
+
+.mi-file-item__status--ok {
+    color: var(--color-success);
+}
+
+.mi-file-item__status--error {
+    color: var(--color-danger);
+}
+
+.mi-file-item__remove {
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f3f4f6;
+    border: none;
+    border-radius: 0.5rem;
+    color: #6b7280;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+    flex-shrink: 0;
+}
+
+.mi-file-item__remove:hover {
+    background-color: var(--color-danger-bg);
+    color: var(--color-danger);
+}
+
+/* ── Alerts (JS-generated) ── */
+.mi-alert {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid;
+    border-radius: 0.75rem;
+    font-size: 0.9375rem;
+}
+
+.mi-alert--danger {
+    background-color: var(--color-danger-bg);
+    color: #991b1b;
+    border-color: #fca5a5;
+}
+
+.mi-alert--info {
+    background-color: #eff6ff;
+    color: #1e40af;
+    border-color: #bfdbfe;
+}
+
+.mi-alert__close {
+    margin-left: auto;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: inherit;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.mi-alert__close:hover {
+    opacity: 1;
+}
+
+.mi-alert__link {
+    margin-left: auto;
+    font-weight: 600;
+    color: inherit;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.mi-alert__link:hover {
+    text-decoration: underline;
 }
