@@ -78,3 +78,6 @@ deploy-prod.sh
 
 # OS
 .DS_Store
+
+.env.docker
+
