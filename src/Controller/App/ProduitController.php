@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace App\Controller\App;
 
+use App\Entity\CategorieProduit;
 use App\Entity\ProduitFournisseur;
 use App\Entity\Utilisateur;
+use App\Form\CategorieProduitType;
 use App\Repository\CategorieProduitRepository;
 use App\Repository\FournisseurRepository;
 use App\Repository\LigneBonLivraisonRepository;
 use App\Repository\ProduitFournisseurRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -101,6 +104,57 @@ class ProduitController extends AbstractController
             'total' => $result['total'],
             'page' => $page,
             'pages' => $pages,
+        ]);
+    }
+
+    #[Route('/categories', name: 'app_produits_categories', methods: ['GET', 'POST'])]
+    public function categories(Request $request, EntityManagerInterface $em): Response
+    {
+        /** @var Utilisateur $user */
+        $user = $this->getUser();
+        $org = $user->getOrganisation();
+
+        $categorie = new CategorieProduit();
+        $form = $this->createForm(CategorieProduitType::class, $categorie);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $em->persist($categorie);
+            $em->flush();
+
+            $this->addFlash('success', 'Categorie "' . $categorie->getNom() . '" creee.');
+
+            return $this->redirectToRoute('app_produits_categories');
+        }
+
+        return $this->render('app/produit/categories.html.twig', [
+            'categories' => $this->categorieRepo->findAllWithProductCount($org),
+            'form' => $form,
+        ]);
+    }
+
+    #[Route('/categories/{id}', name: 'app_produits_categorie_show', methods: ['GET'])]
+    public function categorieShow(CategorieProduit $categorie): Response
+    {
+        /** @var Utilisateur $user */
+        $user = $this->getUser();
+        $org = $user->getOrganisation();
+
+        $categories = $this->categorieRepo->findAllWithProductCount($org);
+        $productCount = 0;
+        foreach ($categories as $c) {
+            if ($c['categorie']->getId() === $categorie->getId()) {
+                $productCount = $c['productCount'];
+                break;
+            }
+        }
+
+        $units = $this->categorieRepo->findDistinctUnitsForCategory($categorie, $org);
+
+        return $this->render('app/produit/categorie_show.html.twig', [
+            'categorie' => $categorie,
+            'productCount' => $productCount,
+            'units' => $units,
         ]);
     }
 

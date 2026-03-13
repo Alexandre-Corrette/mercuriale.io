@@ -6,11 +6,21 @@ export default class extends Controller {
 
     connect() {
         this._debounceTimer = null;
-        this._currentFournisseur = null;
-        this._currentCategorie = null;
         this._currentPage = 1;
         this._onRowClick = this._handleRowClick.bind(this);
         this.resultsTarget.addEventListener('click', this._onRowClick);
+
+        // Pre-select filters from URL query params
+        const urlParams = new URLSearchParams(window.location.search);
+        this._currentFournisseur = urlParams.get('fournisseur') ? parseInt(urlParams.get('fournisseur')) : null;
+        this._currentCategorie = urlParams.get('categorie') ? parseInt(urlParams.get('categorie')) : null;
+
+        if (this._currentFournisseur && this.hasFournisseurFilterTarget) {
+            this.fournisseurFilterTarget.value = this._currentFournisseur;
+        }
+        if (this._currentCategorie && this.hasCategorieFilterTarget) {
+            this.categorieFilterTarget.value = this._currentCategorie;
+        }
 
         this.fetchProducts();
     }

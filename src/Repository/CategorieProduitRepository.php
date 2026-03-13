@@ -6,6 +6,7 @@ namespace App\Repository;
 
 use App\Entity\CategorieProduit;
 use App\Entity\Organisation;
+use App\Entity\Unite;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -62,5 +63,52 @@ class CategorieProduitRepository extends ServiceEntityRepository
             'categorie' => $row[0],
             'productCount' => (int) $row['productCount'],
         ], $rows);
+    }
+
+    /**
+     * @return array<array{categorie: CategorieProduit, productCount: int}>
+     */
+    public function findAllWithProductCount(Organisation $org): array
+    {
+        $em = $this->getEntityManager();
+
+        // Categories with products
+        $withProducts = $this->findWithProductCountForOrganisation($org);
+        $foundIds = array_map(fn (array $row) => $row['categorie']->getId(), $withProducts);
+
+        // All categories (including empty ones)
+        $allCategories = $this->findBy([], ['ordre' => 'ASC']);
+
+        $result = $withProducts;
+        foreach ($allCategories as $cat) {
+            if (!in_array($cat->getId(), $foundIds, true)) {
+                $result[] = ['categorie' => $cat, 'productCount' => 0];
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * @return Unite[]
+     */
+    public function findDistinctUnitsForCategory(CategorieProduit $categorie, Organisation $org): array
+    {
+        return $this->getEntityManager()->createQueryBuilder()
+            ->select('DISTINCT u')
+            ->from(Unite::class, 'u')
+            ->innerJoin('App\Entity\Produit', 'p', 'WITH', 'p.uniteBase = u')
+            ->innerJoin('p.produitsFournisseur', 'pf')
+            ->innerJoin('pf.fournisseur', 'f')
+            ->innerJoin('f.organisationFournisseurs', 'orgf')
+            ->where('p.categorie = :cat')
+            ->andWhere('orgf.organisation = :org')
+            ->andWhere('orgf.actif = true')
+            ->andWhere('pf.actif = true')
+            ->setParameter('cat', $categorie)
+            ->setParameter('org', $org)
+            ->orderBy('u.code', 'ASC')
+            ->getQuery()
+            ->getResult();
     }
 }
