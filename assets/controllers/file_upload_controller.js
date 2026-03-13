@@ -77,13 +77,11 @@ export default class extends Controller {
     }
 
     highlightDropZone() {
-        this.dropZoneTarget.classList.add('border-coral', 'bg-coral/10', 'scale-[1.01]');
-        this.dropZoneTarget.classList.remove('border-gray-300', 'bg-gray-50');
+        this.dropZoneTarget.classList.add('mi-dropzone--active');
     }
 
     unhighlightDropZone() {
-        this.dropZoneTarget.classList.remove('border-coral', 'bg-coral/10', 'scale-[1.01]');
-        this.dropZoneTarget.classList.add('border-gray-300', 'bg-gray-50');
+        this.dropZoneTarget.classList.remove('mi-dropzone--active');
     }
 
     browse(event) {
@@ -178,20 +176,18 @@ export default class extends Controller {
         // Show/hide preview section
         if (this.hasPreviewTarget) {
             if (this.selectedFiles.length > 0) {
-                this.previewTarget.classList.remove('hidden');
+                this.previewTarget.classList.add('mi-file-preview--visible');
                 if (this.hasDropZoneTarget) {
                     if (this.modeValue === 'single') {
                         this.dropZoneTarget.classList.add('hidden');
                     } else {
-                        this.dropZoneTarget.classList.add('border-green-500', 'border-solid', 'bg-green-50/50');
-                        this.dropZoneTarget.classList.remove('border-dashed', 'border-gray-300');
+                        this.dropZoneTarget.classList.add('mi-dropzone--has-files');
                     }
                 }
             } else {
-                this.previewTarget.classList.add('hidden');
+                this.previewTarget.classList.remove('mi-file-preview--visible');
                 if (this.hasDropZoneTarget) {
-                    this.dropZoneTarget.classList.remove('hidden', 'border-green-500', 'border-solid', 'bg-green-50/50');
-                    this.dropZoneTarget.classList.add('border-dashed', 'border-gray-300');
+                    this.dropZoneTarget.classList.remove('hidden', 'mi-dropzone--has-files');
                 }
             }
         }
@@ -218,39 +214,39 @@ export default class extends Controller {
 
     createFileItem(item, index) {
         const fileItem = document.createElement('div');
-        fileItem.className = 'flex items-center gap-4 p-3 bg-white rounded-xl shadow-sm';
+        fileItem.className = 'mi-file-item';
 
         // Preview thumbnail
         const preview = document.createElement('div');
-        preview.className = 'w-14 h-14 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0 flex items-center justify-center';
+        preview.className = 'mi-file-item__thumb';
 
         if (item.file.type === 'application/pdf') {
-            preview.innerHTML = '<i class="fas fa-file-pdf text-2xl text-red-500"></i>';
+            preview.innerHTML = '<i class="fas fa-file-pdf mi-file-item__icon mi-file-item__icon--pdf"></i>';
         } else if (item.file.name.endsWith('.xlsx') || item.file.name.endsWith('.xls')) {
-            preview.innerHTML = '<i class="fas fa-file-excel text-2xl text-green-600"></i>';
+            preview.innerHTML = '<i class="fas fa-file-excel mi-file-item__icon mi-file-item__icon--excel"></i>';
         } else if (item.file.name.endsWith('.csv')) {
-            preview.innerHTML = '<i class="fas fa-file-csv text-2xl text-blue-500"></i>';
+            preview.innerHTML = '<i class="fas fa-file-csv mi-file-item__icon mi-file-item__icon--csv"></i>';
         } else if (item.file.type.startsWith('image/')) {
             const img = document.createElement('img');
-            img.className = 'w-full h-full object-cover';
+            img.className = 'mi-file-item__img';
             const reader = new FileReader();
             reader.onload = (e) => img.src = e.target.result;
             reader.readAsDataURL(item.file);
             preview.appendChild(img);
         } else {
-            preview.innerHTML = '<i class="fas fa-file text-2xl text-gray-400"></i>';
+            preview.innerHTML = '<i class="fas fa-file mi-file-item__icon mi-file-item__icon--default"></i>';
         }
 
         // File info
         const info = document.createElement('div');
-        info.className = 'flex-1 min-w-0';
+        info.className = 'mi-file-item__info';
 
         const name = document.createElement('div');
-        name.className = 'font-semibold text-gray-900 text-sm truncate';
+        name.className = 'mi-file-item__name';
         name.textContent = item.file.name;
 
         const size = document.createElement('div');
-        size.className = 'text-xs text-gray-500';
+        size.className = 'mi-file-item__size';
         size.textContent = this.formatFileSize(item.file.size);
 
         info.appendChild(name);
@@ -258,20 +254,20 @@ export default class extends Controller {
 
         // Status
         const status = document.createElement('div');
-        status.className = 'flex items-center gap-1 text-xs flex-shrink-0';
+        status.className = 'mi-file-item__status';
 
         if (item.valid) {
-            status.className += ' text-green-600';
+            status.classList.add('mi-file-item__status--ok');
             status.innerHTML = '<i class="fas fa-check-circle"></i><span>OK</span>';
         } else {
-            status.className += ' text-red-600';
+            status.classList.add('mi-file-item__status--error');
             status.innerHTML = `<i class="fas fa-times-circle"></i><span>${item.error}</span>`;
         }
 
         // Remove button
         const removeBtn = document.createElement('button');
         removeBtn.type = 'button';
-        removeBtn.className = 'w-8 h-8 flex items-center justify-center bg-gray-100 rounded-lg text-gray-500 hover:bg-red-100 hover:text-red-600 transition-all flex-shrink-0';
+        removeBtn.className = 'mi-file-item__remove';
         removeBtn.innerHTML = '<i class="fas fa-times"></i>';
         removeBtn.dataset.action = 'file-upload#removeFile';
         removeBtn.dataset.fileUploadIndexParam = index;
@@ -385,11 +381,11 @@ export default class extends Controller {
 
     showError(message) {
         const alert = document.createElement('div');
-        alert.className = 'flex items-center gap-3 p-4 mb-4 bg-red-50 text-red-800 border border-red-200 rounded-xl';
+        alert.className = 'mi-alert mi-alert--danger';
         alert.innerHTML = `
             <i class="fas fa-exclamation-circle"></i>
             <span>${message}</span>
-            <button type="button" class="ml-auto text-red-600 hover:text-red-800" onclick="this.parentElement.remove()">
+            <button type="button" class="mi-alert__close" onclick="this.parentElement.remove()">
                 <i class="fas fa-times"></i>
             </button>
         `;
@@ -403,11 +399,11 @@ export default class extends Controller {
             : `${count} photos enregistrées localement — seront envoyées dès que le réseau sera disponible`;
 
         const alert = document.createElement('div');
-        alert.className = 'flex items-center gap-3 p-4 mb-4 bg-blue-50 text-blue-800 border border-blue-200 rounded-xl';
+        alert.className = 'mi-alert mi-alert--info';
         alert.innerHTML = `
             <i class="fas fa-cloud-upload-alt"></i>
             <span>${message}</span>
-            <a href="/app/pending" class="ml-auto text-blue-600 hover:text-blue-800 font-medium">
+            <a href="/app/pending" class="mi-alert__link">
                 Voir les BL en attente →
             </a>
         `;
