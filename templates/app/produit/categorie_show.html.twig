@@ -1,0 +1,44 @@
+{% extends 'layouts/app.html.twig' %}
+
+{% block title %}{{ categorie.nom }} — Categories — Mercuriale.io{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/categorie.css') }}">
+{% endblock %}
+
+{% block breadcrumb %}
+    {% include 'components/_breadcrumb.html.twig' with { breadcrumbs: [
+        { label: 'Produits', url: path('app_produits_hub') },
+        { label: 'Categories', url: path('app_produits_categories') },
+        { label: categorie.nom }
+    ] } %}
+{% endblock %}
+
+{% block content %}
+<div class="cat-show">
+    <div class="cat-show__header">
+        <h1 class="cat-show__title">{{ categorie.nom }}</h1>
+        <span class="cat-show__count">{{ productCount }} produit{{ productCount > 1 ? 's' : '' }}</span>
+    </div>
+
+    {% if units|length > 0 %}
+    <div class="cat-show__section">
+        <h2 class="cat-show__subtitle">Unites utilisees</h2>
+        <div class="cat-show__units">
+            {% for unite in units %}
+                <span class="cat-unit">{{ unite.code }}{% if unite.nom != unite.code %} — {{ unite.nom }}{% endif %}</span>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="cat-show__actions">
+        <a href="{{ path('app_produits_liste', {categorie: categorie.id}) }}"
+           class="btn btn--primary btn--lg">
+            <i class="fas fa-list"></i>
+            Voir les produits {{ categorie.nom }}
+        </a>
+    </div>
+</div>
+{% endblock %}

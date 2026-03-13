@@ -1,0 +1,67 @@
+{% extends 'layouts/app.html.twig' %}
+
+{% set hub_title = 'Categories' %}
+
+{% block title %}Categories produits — Mercuriale.io{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/admin-dashboard.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/categorie.css') }}">
+{% endblock %}
+
+{% block breadcrumb %}
+    {% include 'components/_breadcrumb.html.twig' with { breadcrumbs: [
+        { label: 'Produits', url: path('app_produits_hub') },
+        { label: 'Categories' }
+    ] } %}
+{% endblock %}
+
+{% block content %}
+<div class="cat-hub" data-controller="category-modal">
+    <h1 class="cat-hub__title">Categories produits</h1>
+
+    <div class="cat-hub__grid">
+        {% set colors = ['navy', 'coral', 'gold', 'green', 'orange', 'purple', 'blue', 'forest', 'crimson', 'cyan', 'olive'] %}
+        {% for item in categories %}
+            <a href="{{ path('app_produits_categorie_show', {id: item.categorie.id}) }}"
+               class="cat-label cat-label--{{ colors[loop.index0 % colors|length] }}">
+                <span class="cat-label__name">{{ item.categorie.nom }}</span>
+                <span class="cat-label__count">{{ item.productCount }}</span>
+            </a>
+        {% endfor %}
+
+        <button type="button"
+                class="cat-label cat-label--add"
+                data-action="click->category-modal#open">
+            <i class="fas fa-plus"></i>
+            <span>Ajouter</span>
+        </button>
+    </div>
+
+    <div class="cat-modal" data-category-modal-target="modal" hidden>
+        <div class="cat-modal__backdrop" data-action="click->category-modal#close"></div>
+        <div class="cat-modal__content">
+            <div class="cat-modal__header">
+                <h2 class="cat-modal__title">Nouvelle categorie</h2>
+                <button type="button" class="cat-modal__close" data-action="click->category-modal#close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            {{ form_start(form, {attr: {class: 'cat-modal__form'}}) }}
+                <div class="cat-modal__field">
+                    {{ form_label(form.nom, null, {label_attr: {class: 'cat-modal__label'}}) }}
+                    {{ form_widget(form.nom, {attr: {class: 'cat-modal__input'}}) }}
+                    {{ form_errors(form.nom) }}
+                </div>
+                <div class="cat-modal__field">
+                    {{ form_label(form.code, null, {label_attr: {class: 'cat-modal__label'}}) }}
+                    {{ form_widget(form.code, {attr: {class: 'cat-modal__input'}}) }}
+                    {{ form_errors(form.code) }}
+                </div>
+                <button type="submit" class="btn btn--secondary btn--full">Creer la categorie</button>
+            {{ form_end(form) }}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,278 @@
+/* =============================================
+   Categorie Hub & Show — Mercuriale.io
+   Label-style colored cards for product categories.
+   ============================================= */
+
+/* ── Hub ── */
+.cat-hub {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: var(--space-lg);
+}
+
+.cat-hub__title {
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    color: var(--mercuriale-navy);
+    margin-bottom: var(--space-xl);
+}
+
+.cat-hub__grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-md);
+}
+
+/* ── Label Card ── */
+.cat-label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-full, 9999px);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: #fff;
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform var(--transition-fast),
+                box-shadow var(--transition-normal);
+    min-height: var(--touch-target-min);
+    border: none;
+    font-family: var(--font-family-base);
+}
+
+.cat-label:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    text-decoration: none;
+    color: #fff;
+}
+
+.cat-label:active {
+    transform: translateY(0);
+}
+
+.cat-label__name {
+    text-transform: capitalize;
+}
+
+.cat-label__count {
+    background-color: rgba(255, 255, 255, 0.25);
+    padding: 0.1rem 0.5rem;
+    border-radius: var(--radius-full, 9999px);
+    font-size: 0.75rem;
+    font-weight: 700;
+    min-width: 1.5rem;
+    text-align: center;
+}
+
+/* ── Add Button ── */
+.cat-label--add {
+    background-color: #fff;
+    color: var(--mercuriale-navy);
+    border: 2px dashed var(--mercuriale-cream-dark);
+}
+
+.cat-label--add:hover {
+    border-color: var(--mercuriale-navy);
+    color: var(--mercuriale-navy);
+    background-color: var(--mercuriale-cream);
+}
+
+/* ── Color Variants ── */
+.cat-label--navy {
+    background: linear-gradient(135deg, var(--mercuriale-navy) 0%, var(--mercuriale-navy-light) 100%);
+}
+
+.cat-label--coral {
+    background: linear-gradient(135deg, var(--mercuriale-coral) 0%, var(--mercuriale-coral-light) 100%);
+}
+
+.cat-label--gold {
+    background: linear-gradient(135deg, var(--mercuriale-gold) 0%, var(--mercuriale-gold-light) 100%);
+}
+
+.cat-label--green {
+    background: linear-gradient(135deg, #2d6a4f 0%, #40916c 100%);
+}
+
+.cat-label--orange {
+    background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
+}
+
+.cat-label--purple {
+    background: linear-gradient(135deg, #2e1760 0%, #3d2475 100%);
+}
+
+.cat-label--blue {
+    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+}
+
+.cat-label--forest {
+    background: linear-gradient(135deg, #2d5a2d 0%, #3d6e3d 100%);
+}
+
+.cat-label--crimson {
+    background: linear-gradient(135deg, #b42a2a 0%, #c43c3c 100%);
+}
+
+.cat-label--cyan {
+    background: linear-gradient(135deg, #4da8c4 0%, #64b8d0 100%);
+}
+
+.cat-label--olive {
+    background: linear-gradient(135deg, #7b7b55 0%, #8f8f6a 100%);
+}
+
+/* ── Modal ── */
+.cat-modal {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-modal, 1080);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cat-modal[hidden] {
+    display: none;
+}
+
+.cat-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.cat-modal__content {
+    position: relative;
+    background: #fff;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+    padding: var(--space-xl);
+    width: 90%;
+    max-width: 420px;
+}
+
+.cat-modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-lg);
+}
+
+.cat-modal__title {
+    font-size: var(--text-xl);
+    font-weight: 700;
+    color: var(--mercuriale-navy);
+}
+
+.cat-modal__close {
+    background: none;
+    border: none;
+    font-size: var(--text-xl);
+    color: #666;
+    cursor: pointer;
+    padding: var(--space-xs);
+    min-width: var(--touch-target-min);
+    min-height: var(--touch-target-min);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cat-modal__close:hover {
+    color: var(--mercuriale-navy);
+}
+
+.cat-modal__form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.cat-modal__field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.cat-modal__label {
+    font-weight: 600;
+    color: var(--mercuriale-navy);
+    font-size: var(--text-sm);
+}
+
+.cat-modal__input {
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--mercuriale-cream-dark);
+    border-radius: var(--radius-md);
+    font-family: inherit;
+    font-size: var(--text-base);
+    min-height: var(--touch-target-min);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.cat-modal__input:focus {
+    outline: none;
+    border-color: var(--mercuriale-navy);
+    box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.1);
+}
+
+/* ── Show Page ── */
+.cat-show {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: var(--space-lg);
+}
+
+.cat-show__header {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-md);
+    margin-bottom: var(--space-xl);
+}
+
+.cat-show__title {
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    color: var(--mercuriale-navy);
+}
+
+.cat-show__count {
+    font-size: var(--text-sm);
+    color: #666;
+    font-weight: 500;
+}
+
+.cat-show__section {
+    margin-bottom: var(--space-xl);
+}
+
+.cat-show__subtitle {
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--mercuriale-navy);
+    margin-bottom: var(--space-md);
+}
+
+.cat-show__units {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+}
+
+.cat-unit {
+    display: inline-block;
+    padding: 0.375rem 0.75rem;
+    background-color: var(--mercuriale-cream);
+    color: var(--mercuriale-navy);
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    font-weight: 600;
+}
+
+.cat-show__actions {
+    margin-top: var(--space-xl);
+}

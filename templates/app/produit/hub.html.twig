@@ -37,7 +37,7 @@
         {# Row 2 #}
         {% include 'components/_dashboard_tile.html.twig' with {
             label: 'Categories', icon: 'fa-tags',
-            color: 'purple', disabled: true
+            url: path('app_produits_categories'), color: 'purple'
         } only %}
 
         {% include 'components/_dashboard_tile.html.twig' with {
