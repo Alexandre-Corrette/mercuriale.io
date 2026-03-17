@@ -92,7 +92,7 @@ class RegistrationController extends AbstractController
                 return $this->render('security/register.html.twig', [
                     'errors' => $errors,
                     'form_data' => $request->request->all(),
-                ]);
+                ], new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY));
             }
 
             // Extract SIREN from SIRET (first 9 digits)
@@ -143,7 +143,7 @@ class RegistrationController extends AbstractController
                     return $this->render('security/register.html.twig', [
                         'errors' => $allErrors,
                         'form_data' => $request->request->all(),
-                    ]);
+                    ], new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY));
                 }
 
                 $em->flush();
@@ -165,7 +165,7 @@ class RegistrationController extends AbstractController
                 return $this->render('security/register.html.twig', [
                     'errors' => [$e->getMessage()],
                     'form_data' => $request->request->all(),
-                ]);
+                ], new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY));
             } catch (\Exception $e) {
                 $em->rollback();
                 $logger->error('Erreur inscription', ['error' => $e->getMessage()]);
@@ -173,7 +173,7 @@ class RegistrationController extends AbstractController
                 return $this->render('security/register.html.twig', [
                     'errors' => ['Une erreur est survenue lors de la creation du compte.'],
                     'form_data' => $request->request->all(),
-                ]);
+                ], new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY));
             }
         }
 
@@ -225,7 +225,7 @@ class RegistrationController extends AbstractController
                 return $this->render('security/register_step3.html.twig', [
                     'errors' => $errors,
                     'form_data' => $request->request->all(),
-                ]);
+                ], new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY));
             }
 
             $em->beginTransaction();
@@ -254,7 +254,7 @@ class RegistrationController extends AbstractController
                     return $this->render('security/register_step3.html.twig', [
                         'errors' => $validationErrors,
                         'form_data' => $request->request->all(),
-                    ]);
+                    ], new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY));
                 }
 
                 $em->flush();
@@ -274,7 +274,7 @@ class RegistrationController extends AbstractController
                 return $this->render('security/register_step3.html.twig', [
                     'errors' => [$e->getMessage()],
                     'form_data' => $request->request->all(),
-                ]);
+                ], new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY));
             } catch (\Exception $e) {
                 $em->rollback();
                 $logger->error('Erreur ajout etablissement', ['error' => $e->getMessage()]);
@@ -282,7 +282,7 @@ class RegistrationController extends AbstractController
                 return $this->render('security/register_step3.html.twig', [
                     'errors' => ['Une erreur est survenue.'],
                     'form_data' => $request->request->all(),
-                ]);
+                ], new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY));
             }
         }
 

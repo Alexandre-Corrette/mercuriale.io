@@ -82,7 +82,7 @@ class ProfilController extends AbstractController
 
                 return $this->render('app/profil/password.html.twig', [
                     'form' => $form,
-                ]);
+                ], new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY));
             }
 
             $newPassword = $form->get('newPassword')->getData();
