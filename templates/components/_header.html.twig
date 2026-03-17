@@ -35,7 +35,7 @@
                         Mon profil
                     </a>
                     <div class="m-header__user-separator"></div>
-                    <form method="post" action="{{ path('app_logout') }}">
+                    <form method="post" action="{{ path('app_logout') }}" data-turbo="false">
                         <input type="hidden" name="_csrf_token" value="{{ csrf_token('logout') }}">
                         <button type="submit" class="m-header__user-option m-header__user-option--danger" role="menuitem">
                             <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
