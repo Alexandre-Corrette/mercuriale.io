@@ -1,3 +1,4 @@
+
 name: Deploy Mercuriale.io
 
 on:
@@ -10,11 +11,17 @@ on:
         description: 'Environnement cible'
         required: true
         default: 'preprod'
+        type: choice
+        options:
+          - preprod
+          - production
 
 jobs:
-  deploy:
-    name: Deploy to VPS
+  deploy-preprod:
+    name: Deploy Preprod
     runs-on: ubuntu-latest
+    environment: preprod
+    if: github.ref == 'refs/heads/develop' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'preprod')
 
     steps:
       - name: Checkout code
@@ -28,20 +35,35 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             cd ~/mercuriale
-
-            # Pull dernière version
             git pull origin develop
-
-            # Install dépendances PHP
             docker compose --env-file .env.docker exec -T php composer install --no-interaction
-
-            # Migrations
             docker compose --env-file .env.docker exec -T php php bin/console doctrine:migrations:migrate --no-interaction
-
-            # Build Tailwind
             docker compose --env-file .env.docker exec -T php php bin/console tailwind:build
-
-            # Vider le cache
             docker compose --env-file .env.docker exec -T php php bin/console cache:clear
+            echo "✅ Deploy preprod terminé"
 
-            echo "✅ Deploy terminé"
+  deploy-production:
+    name: Deploy Production
+    runs-on: ubuntu-latest
+    environment: production
+    if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd ~/mercuriale
+            git pull origin main
+            docker compose --env-file .env.docker exec -T php composer install --no-interaction --no-dev --optimize-autoloader
+            docker compose --env-file .env.docker exec -T php php bin/console doctrine:migrations:migrate --no-interaction
+            docker compose --env-file .env.docker exec -T php php bin/console tailwind:build
+            docker compose --env-file .env.docker exec -T php php bin/console cache:clear --env=prod
+            docker compose --env-file .env.docker exec -T php php bin/console cache:warmup --env=prod
+            echo "✅ Deploy production terminé"
