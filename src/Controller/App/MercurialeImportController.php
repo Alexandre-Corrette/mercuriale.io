@@ -1,0 +1,401 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Controller\App;
+
+use App\DTO\Import\ColumnMappingConfig;
+use App\DTO\Import\ImportResult;
+use App\Entity\Etablissement;
+use App\Entity\MercurialeImport;
+use App\Entity\Utilisateur;
+use App\Enum\StatutImport;
+use App\Exception\Import\ImportException;
+use App\Form\MercurialeColumnMappingType;
+use App\Form\MercurialeImportUploadType;
+use App\Repository\MercurialeImportRepository;
+use App\Service\Import\MercurialeBulkImporter;
+use App\Service\Import\MercurialeFileParser;
+use App\Service\Mercuriale\ExecuteImportService;
+use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+
+/**
+ * Mercuriale import: upload, column mapping, preview, confirm, result, cancel.
+ */
+#[IsGranted('ROLE_USER')]
+class MercurialeImportController extends AbstractController
+{
+    public function __construct(
+        private readonly MercurialeFileParser $fileParser,
+        private readonly MercurialeBulkImporter $bulkImporter,
+        private readonly ExecuteImportService $executeImportService,
+        private readonly MercurialeImportRepository $importRepository,
+        private readonly EntityManagerInterface $entityManager,
+        private readonly LoggerInterface $logger,
+        private readonly RateLimiterFactory $mercurialeImportLimiter,
+    ) {
+    }
+
+    #[Route('/app/mercuriale/import', name: 'app_mercuriale_import', methods: ['GET', 'POST'])]
+    public function mercurialeImport(Request $request): Response
+    {
+        /** @var Utilisateur $user */
+        $user = $this->getUser();
+
+        $form = $this->createForm(MercurialeImportUploadType::class, null, [
+            'user' => $user,
+        ]);
+
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $limiter = $this->mercurialeImportLimiter->create($user->getUserIdentifier());
+            if (!$limiter->consume(1)->isAccepted()) {
+                $this->addFlash('error', 'Trop d\'imports recents. Veuillez patienter une heure.');
+
+                return $this->redirectToRoute('app_mercuriale_import');
+            }
+
+            $fournisseur = $form->get('fournisseur')->getData();
+            /** @var Etablissement[] $etablissements */
+            $etablissements = $form->get('etablissements')->getData();
+            /** @var \Symfony\Component\HttpFoundation\File\UploadedFile $file */
+            $file = $form->get('file')->getData();
+
+            if (!$this->isGranted('VIEW', $fournisseur)) {
+                $this->logger->warning('Tentative d\'import non autorisee', [
+                    'user_id' => $user->getId(),
+                    'fournisseur_id' => $fournisseur->getId(),
+                ]);
+                throw $this->createAccessDeniedException('Vous n\'avez pas acces a ce fournisseur.');
+            }
+
+            foreach ($etablissements as $etablissement) {
+                if (!$this->isGranted('VIEW', $etablissement)) {
+                    throw $this->createAccessDeniedException('Vous n\'avez pas acces a cet etablissement.');
+                }
+            }
+
+            try {
+                $parsedData = $this->fileParser->parse($file);
+                $detectedMapping = $this->fileParser->detectColumnMapping($parsedData['headers']);
+
+                $import = new MercurialeImport();
+                $import->setFournisseur($fournisseur);
+                foreach ($etablissements as $etablissement) {
+                    $import->addEtablissement($etablissement);
+                }
+                $import->setCreatedBy($user);
+                $import->setOriginalFilename($file->getClientOriginalName());
+                $import->setParsedData($parsedData);
+                $import->setTotalRows($parsedData['totalRows']);
+                $import->setDetectedHeaders($parsedData['headers']);
+                $import->setStatus(StatutImport::MAPPING);
+
+                $initialMapping = [];
+                foreach ($detectedMapping as $field => $columnIndex) {
+                    $initialMapping[$columnIndex] = $field;
+                }
+                $import->setColumnMapping([
+                    'mapping' => $initialMapping,
+                    'hasHeaderRow' => true,
+                    'defaultUnite' => null,
+                    'defaultDateDebut' => (new \DateTimeImmutable())->format('Y-m-d'),
+                ]);
+
+                $this->entityManager->persist($import);
+                $this->entityManager->flush();
+
+                $this->logger->info('Fichier mercuriale uploade', [
+                    'importId' => $import->getIdAsString(),
+                    'filename' => $file->getClientOriginalName(),
+                    'totalRows' => $parsedData['totalRows'],
+                    'detectedColumns' => array_keys($detectedMapping),
+                ]);
+
+                return $this->redirectToRoute('app_mercuriale_import_mapping', [
+                    'importId' => $import->getIdAsString(),
+                ]);
+            } catch (ImportException $e) {
+                $this->addFlash('error', $e->getMessage());
+
+                return $this->redirectToRoute('app_mercuriale_import');
+            } catch (\Exception $e) {
+                $this->logger->error('Erreur upload mercuriale', [
+                    'error' => $e->getMessage(),
+                ]);
+                $this->addFlash('error', 'Une erreur est survenue lors du traitement du fichier.');
+
+                return $this->redirectToRoute('app_mercuriale_import');
+            }
+        }
+
+        $pendingImports = $this->importRepository->findPendingByUser($user);
+
+        return $this->render('app/mercuriale_import/index.html.twig', [
+            'form' => $form,
+            'pendingImports' => $pendingImports,
+        ]);
+    }
+
+    #[Route('/app/mercuriale/import/mapping/{importId}', name: 'app_mercuriale_import_mapping', methods: ['GET', 'POST'])]
+    public function mercurialeMapping(string $importId, Request $request): Response
+    {
+        $import = $this->getValidImport($importId);
+
+        /** @var Utilisateur $user */
+        $user = $this->getUser();
+
+        if ($import->getCreatedBy() !== $user) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $parsedData = $import->getParsedData();
+        $headers = $parsedData['headers'] ?? [];
+        $currentMapping = $import->getColumnMapping();
+
+        $form = $this->createForm(MercurialeColumnMappingType::class, null, [
+            'headers' => $headers,
+        ]);
+
+        if ($currentMapping !== null) {
+            $config = ColumnMappingConfig::fromArray($currentMapping);
+            foreach ($config->mapping as $columnIndex => $field) {
+                $fieldName = 'mapping_' . $field;
+                if ($form->has($fieldName)) {
+                    $form->get($fieldName)->setData((string) $columnIndex);
+                }
+            }
+            if ($form->has('hasHeaderRow')) {
+                $form->get('hasHeaderRow')->setData($config->hasHeaderRow);
+            }
+        }
+
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $mapping = [];
+
+            $fields = [
+                'code_fournisseur',
+                'designation',
+                'prix',
+                'unite',
+                'conditionnement',
+                'date_debut',
+                'date_fin',
+            ];
+
+            foreach ($fields as $field) {
+                $columnIndex = $form->get('mapping_' . $field)->getData();
+                if ($columnIndex !== null && $columnIndex !== ColumnMappingConfig::FIELD_IGNORE) {
+                    $mapping[(int) $columnIndex] = $field;
+                }
+            }
+
+            $config = new ColumnMappingConfig(
+                mapping: $mapping,
+                hasHeaderRow: $form->get('hasHeaderRow')->getData() ?? true,
+                defaultUnite: $form->get('defaultUnite')->getData()?->getCode(),
+                defaultDateDebut: $form->get('defaultDateDebut')->getData()
+                    ? \DateTimeImmutable::createFromMutable($form->get('defaultDateDebut')->getData())
+                    : null,
+            );
+
+            if (!$config->hasRequiredFields()) {
+                $missing = $config->getMissingRequiredFields();
+                $this->addFlash('error', sprintf(
+                    'Colonnes obligatoires non mappees : %s',
+                    implode(', ', $missing),
+                ));
+
+                return $this->render('app/mercuriale_import/mapping.html.twig', [
+                    'form' => $form,
+                    'import' => $import,
+                    'headers' => $headers,
+                    'previewRows' => \array_slice($parsedData['rows'] ?? [], 0, 5),
+                ]);
+            }
+
+            $import->setColumnMapping($config->toArray());
+            $import->extendExpiration();
+            $this->entityManager->flush();
+
+            return $this->redirectToRoute('app_mercuriale_import_preview', [
+                'importId' => $import->getIdAsString(),
+            ]);
+        }
+
+        return $this->render('app/mercuriale_import/mapping.html.twig', [
+            'form' => $form,
+            'import' => $import,
+            'headers' => $headers,
+            'previewRows' => \array_slice($parsedData['rows'] ?? [], 0, 5),
+        ]);
+    }
+
+    #[Route('/app/mercuriale/import/preview/{importId}', name: 'app_mercuriale_import_preview', methods: ['GET', 'POST'])]
+    public function mercurialePreview(string $importId, Request $request): Response
+    {
+        $import = $this->getValidImport($importId);
+
+        /** @var Utilisateur $user */
+        $user = $this->getUser();
+
+        if ($import->getCreatedBy() !== $user) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $preview = null;
+        $error = null;
+
+        try {
+            $preview = $this->bulkImporter->preview($import);
+        } catch (ImportException $e) {
+            $error = $e->getMessage();
+        } catch (\Exception $e) {
+            $this->logger->error('Erreur preview import', [
+                'importId' => $importId,
+                'error' => $e->getMessage(),
+            ]);
+            $error = 'Une erreur est survenue lors de l\'analyse du fichier.';
+        }
+
+        if ($request->isMethod('POST') && $preview !== null && $preview->canProceed()) {
+            if (!$this->isCsrfTokenValid('confirm_import_' . $importId, $request->request->getString('_token'))) {
+                $this->addFlash('error', 'Token de securite invalide.');
+
+                return $this->redirectToRoute('app_mercuriale_import_preview', ['importId' => $importId]);
+            }
+
+            return $this->redirectToRoute('app_mercuriale_import_confirm', ['importId' => $importId]);
+        }
+
+        return $this->render('app/mercuriale_import/preview.html.twig', [
+            'import' => $import,
+            'preview' => $preview,
+            'error' => $error,
+        ]);
+    }
+
+    #[Route('/app/mercuriale/import/confirm/{importId}', name: 'app_mercuriale_import_confirm', methods: ['POST'])]
+    public function mercurialeConfirm(string $importId, Request $request): Response
+    {
+        $import = $this->getValidImport($importId);
+
+        /** @var Utilisateur $user */
+        $user = $this->getUser();
+
+        if ($import->getCreatedBy() !== $user) {
+            throw $this->createAccessDeniedException();
+        }
+
+        if (!$this->isCsrfTokenValid('confirm_import_' . $importId, $request->request->getString('_token'))) {
+            $this->addFlash('error', 'Token de securite invalide.');
+
+            return $this->redirectToRoute('app_mercuriale_import_preview', ['importId' => $importId]);
+        }
+
+        try {
+            $this->executeImportService->execute($import, $user);
+
+            return $this->redirectToRoute('app_mercuriale_import_result', ['importId' => $importId]);
+        } catch (ImportException $e) {
+            $this->addFlash('error', $e->getMessage());
+
+            return $this->redirectToRoute('app_mercuriale_import_preview', ['importId' => $importId]);
+        } catch (\Exception $e) {
+            $this->logger->error('Erreur import mercuriale', [
+                'importId' => $importId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'previous' => $e->getPrevious() ? $e->getPrevious()->getMessage() : null,
+            ]);
+            $this->addFlash('error', 'Une erreur est survenue lors de l\'import.');
+
+            return $this->redirectToRoute('app_mercuriale_import_preview', ['importId' => $importId]);
+        }
+    }
+
+    #[Route('/app/mercuriale/import/result/{importId}', name: 'app_mercuriale_import_result', methods: ['GET'])]
+    public function mercurialeResult(string $importId): Response
+    {
+        $import = $this->importRepository->findByUuid($importId);
+
+        if ($import === null) {
+            throw $this->createNotFoundException('Import non trouve.');
+        }
+
+        /** @var Utilisateur $user */
+        $user = $this->getUser();
+
+        if ($import->getCreatedBy() !== $user) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $resultData = $import->getImportResult();
+        $result = $resultData !== null ? ImportResult::fromArray($resultData) : null;
+
+        return $this->render('app/mercuriale_import/result.html.twig', [
+            'import' => $import,
+            'result' => $result,
+        ]);
+    }
+
+    #[Route('/app/mercuriale/import/cancel/{importId}', name: 'app_mercuriale_import_cancel', methods: ['POST'])]
+    public function mercurialeCancel(string $importId, Request $request): Response
+    {
+        $import = $this->importRepository->findByUuid($importId);
+
+        if ($import === null) {
+            throw $this->createNotFoundException('Import non trouve.');
+        }
+
+        /** @var Utilisateur $user */
+        $user = $this->getUser();
+
+        if ($import->getCreatedBy() !== $user) {
+            throw $this->createAccessDeniedException();
+        }
+
+        if (!$this->isCsrfTokenValid('cancel_import_' . $importId, $request->request->getString('_token'))) {
+            $this->addFlash('error', 'Token de securite invalide.');
+
+            return $this->redirectToRoute('app_mercuriale_import');
+        }
+
+        if (\in_array($import->getStatus(), [StatutImport::PENDING, StatutImport::MAPPING, StatutImport::PREVIEWED], true)) {
+            $this->entityManager->remove($import);
+            $this->entityManager->flush();
+            $this->addFlash('success', 'Import annule.');
+        }
+
+        return $this->redirectToRoute('app_mercuriale_import');
+    }
+
+    // ─── Helpers ────────────────────────────────────────────────
+
+    private function getValidImport(string $importId): MercurialeImport
+    {
+        $import = $this->importRepository->findByUuid($importId);
+
+        if ($import === null) {
+            throw $this->createNotFoundException('Import non trouve.');
+        }
+
+        if ($import->isExpired()) {
+            $import->setStatus(StatutImport::EXPIRED);
+            $this->entityManager->flush();
+            throw $this->createNotFoundException('Cet import a expire. Veuillez recommencer.');
+        }
+
+        return $import;
+    }
+}
