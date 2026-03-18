@@ -6,6 +6,7 @@ namespace App\Controller\Admin;
 
 use App\Entity\Utilisateur;
 use App\Repository\AlerteControleRepository;
+use App\Twig\Extension\AppLayoutExtension;
 use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminDashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
@@ -21,17 +22,19 @@ class DashboardController extends AbstractDashboardController
 {
     public function __construct(
         private readonly AlerteControleRepository $alerteRepo,
+        private readonly AppLayoutExtension $layoutExtension,
     ) {
     }
 
     public function index(): Response
     {
-        /** @var Utilisateur $user */
-        $user = $this->getUser();
-        $org = $user->getOrganisation();
+        $etablissement = $this->layoutExtension->getSelectedEtablissement();
+        $alerteCount = $etablissement !== null
+            ? $this->alerteRepo->countNonTraiteesForEtablissement($etablissement)
+            : 0;
 
         return $this->render('admin/dashboard.html.twig', [
-            'alerte_count' => $this->alerteRepo->countNonTraiteesForOrganisation($org),
+            'alerte_count' => $alerteCount,
         ]);
     }
 
