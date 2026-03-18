@@ -141,7 +141,7 @@ class MercurialeFileParser
     }
 
     /**
-     * @return array{headers: array<string>, rows: array<array<string>>, totalRows: int, detectedDelimiter: null}
+     * @return array{headers: array<string>, rows: array<array<string>>, totalRows: int, detectedDelimiter: ?string}
      */
     private function parseXlsx(string $path): array
     {

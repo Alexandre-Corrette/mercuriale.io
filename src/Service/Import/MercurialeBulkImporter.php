@@ -31,7 +31,6 @@ use Psr\Log\LoggerInterface;
 
 class MercurialeBulkImporter
 {
-    private const BATCH_SIZE = 100;
     private const TIMEOUT_SECONDS = 60;
 
     /**
@@ -175,7 +174,7 @@ class MercurialeBulkImporter
         }
 
         // Collect warnings (non-blocking)
-        foreach ($validation['warnings'] ?? [] as $warning) {
+        foreach ($validation['warnings'] as $warning) {
             $warnings[] = new ImportWarning(
                 row: $rowNumber,
                 column: $warning['field'],
@@ -489,7 +488,9 @@ class MercurialeBulkImporter
 
             // Reset EntityManager if closed
             if (!$this->entityManager->isOpen()) {
-                $this->entityManager = $this->managerRegistry->resetManager();
+                /** @var EntityManagerInterface $em */
+                $em = $this->managerRegistry->resetManager();
+                $this->entityManager = $em;
                 $this->logger->warning('EntityManager was reset, import status may not be saved');
             }
 

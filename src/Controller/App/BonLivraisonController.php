@@ -34,14 +34,16 @@ class BonLivraisonController extends AbstractController
     public function hub(
         BonLivraisonRepository $blRepo,
         AlerteControleRepository $alerteRepo,
+        AppLayoutExtension $layoutExtension,
     ): Response {
-        /** @var Utilisateur $user */
-        $user = $this->getUser();
-        $org = $user->getOrganisation();
+        $etablissement = $layoutExtension->getSelectedEtablissement();
+        if (!$etablissement) {
+            throw $this->createAccessDeniedException();
+        }
 
         return $this->render('app/bon_livraison/hub.html.twig', [
-            'pending_count' => $blRepo->countAnomalieForOrganisation($org),
-            'alerte_count' => $alerteRepo->countNonTraiteesForOrganisation($org),
+            'pending_count' => $blRepo->countAnomalieForEtablissement($etablissement),
+            'alerte_count' => $alerteRepo->countNonTraiteesForEtablissement($etablissement),
         ]);
     }
 

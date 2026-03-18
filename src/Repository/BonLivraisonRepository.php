@@ -246,7 +246,7 @@ class BonLivraisonRepository extends ServiceEntityRepository
             ->leftJoin('l.alertes', 'a')
             ->where('bl.etablissement = :etablissement')
             ->setParameter('etablissement', $etablissement)
-            ->groupBy('bl.id')
+            ->groupBy('bl.id, f.id')
             ->orderBy('bl.dateLivraison', 'DESC')
             ->setMaxResults($limit)
             ->getQuery()
@@ -273,7 +273,7 @@ class BonLivraisonRepository extends ServiceEntityRepository
             ->andWhere('bl.statut = :statut')
             ->setParameter('etablissement', $etablissement)
             ->setParameter('statut', StatutBonLivraison::VALIDE)
-            ->groupBy('bl.id')
+            ->groupBy('bl.id, f.id')
             ->orderBy('bl.dateLivraison', 'DESC')
             ->setMaxResults($limit)
             ->getQuery()
@@ -300,7 +300,7 @@ class BonLivraisonRepository extends ServiceEntityRepository
             ->andWhere('bl.statut = :statut')
             ->setParameter('etablissement', $etablissement)
             ->setParameter('statut', StatutBonLivraison::ANOMALIE)
-            ->groupBy('bl.id')
+            ->groupBy('bl.id, f.id')
             ->orderBy('bl.dateLivraison', 'DESC')
             ->setMaxResults($limit)
             ->getQuery()
@@ -340,6 +340,18 @@ class BonLivraisonRepository extends ServiceEntityRepository
             ->orderBy('bl.dateLivraison', 'DESC')
             ->getQuery()
             ->getResult();
+    }
+
+    public function countAnomalieForEtablissement(Etablissement $etablissement): int
+    {
+        return (int) $this->createQueryBuilder('bl')
+            ->select('COUNT(bl.id)')
+            ->where('bl.statut = :statut')
+            ->andWhere('bl.etablissement = :etablissement')
+            ->setParameter('statut', StatutBonLivraison::ANOMALIE)
+            ->setParameter('etablissement', $etablissement)
+            ->getQuery()
+            ->getSingleScalarResult();
     }
 
     public function countAnomalieForOrganisation(Organisation $org): int
@@ -382,7 +394,7 @@ class BonLivraisonRepository extends ServiceEntityRepository
             ->andWhere('e.actif = :actif')
             ->setParameter('org', $org)
             ->setParameter('actif', true)
-            ->groupBy('bl.id')
+            ->groupBy('bl.id, f.id, e.id')
             ->orderBy('bl.createdAt', 'DESC')
             ->setMaxResults($limit)
             ->getQuery()
