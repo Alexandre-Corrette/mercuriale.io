@@ -18,16 +18,18 @@ use App\Entity\ProduitFournisseur;
 use App\Entity\Unite;
 use App\Entity\Utilisateur;
 use App\Entity\UtilisateurEtablissement;
+use App\Entity\UtilisateurOrganisation;
 use App\Enum\StatutBonLivraison;
 use App\Enum\StatutControle;
 use App\Enum\TypeAlerte;
 use App\Enum\TypeUnite;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Bundle\FixturesBundle\FixtureGroupInterface;
+use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
-class MercurialeFixtures extends Fixture implements FixtureGroupInterface
+class MercurialeFixtures extends Fixture implements FixtureGroupInterface, DependentFixtureInterface
 {
     private ObjectManager $manager;
 
@@ -47,100 +49,67 @@ class MercurialeFixtures extends Fixture implements FixtureGroupInterface
 
     public static function getGroups(): array
     {
-        return ['mercuriale'];
+        return ['demo'];
+    }
+
+    public function getDependencies(): array
+    {
+        return [AppFixtures::class];
     }
 
     public function load(ObjectManager $manager): void
     {
         $this->manager = $manager;
 
-        // 1. Base: organisation, établissement, admin
-        $org = $this->findOrCreateOrganisation();
-        $etab = $this->findOrCreateEtablissement($org);
-        $admin = $this->findOrCreateAdmin($org, $etab);
+        // Get entities from AppFixtures references
+        /** @var Organisation $org */
+        $org = $this->getReference('org-escale', Organisation::class);
+        /** @var Etablissement $etab */
+        $etab = $this->getReference('etab-guinguette', Etablissement::class);
+        /** @var Utilisateur $admin */
+        $admin = $this->getReference('user-admin-escale', Utilisateur::class);
 
-        // 2. Unités
+        // Unités & catégories (ensure extras needed for mercuriale)
         $this->ensureUnites();
-
-        // 3. Catégories
         $this->ensureCategories();
 
-        // 4. Fournisseurs + catalogues + mercuriale
+        // Fournisseurs + catalogues + mercuriale
         $terraAzur = $this->createTerreAzur($org, $etab, $admin);
         $leBihan = $this->createLeBihan($org, $etab, $admin);
 
         $manager->flush();
 
-        // 5. BL + lignes + alertes
+        // BL + lignes + alertes
         $this->createBL1TerreAzur($etab, $terraAzur, $admin);
         $this->createBL2TerreAzur($etab, $terraAzur, $admin);
         $this->createBL3TerreAzur($etab, $terraAzur, $admin);
         $this->createBL4LeBihan($etab, $leBihan, $admin);
         $this->createBL5LeBihan($etab, $leBihan, $admin);
 
-        $manager->flush();
-    }
+        // Compte demo — gérant Guinguette uniquement
+        $demo = new Utilisateur();
+        $demo->setOrganisation($org);
+        $demo->setEmail('demo@mercuriale.io');
+        $demo->setNom('Demo');
+        $demo->setPrenom('Utilisateur');
+        $demo->setRoles(['ROLE_GERANT']);
+        $demo->setPassword($this->passwordHasher->hashPassword($demo, 'demo2026'));
+        $demo->setActif(true);
+        $manager->persist($demo);
 
-    // ─── Base entities ──────────────────────────────────────────
-
-    private function findOrCreateOrganisation(): Organisation
-    {
-        $org = $this->manager->getRepository(Organisation::class)->findOneBy(['nom' => 'Escale sur la Plage']);
-        if ($org) {
-            return $org;
-        }
-
-        $org = new Organisation();
-        $org->setNom('Escale sur la Plage');
-        $org->setSiret('82345678900012');
-        $this->manager->persist($org);
-
-        return $org;
-    }
-
-    private function findOrCreateEtablissement(Organisation $org): Etablissement
-    {
-        $etab = $this->manager->getRepository(Etablissement::class)->findOneBy(['nom' => 'Guinguette du Château']);
-        if ($etab) {
-            return $etab;
-        }
-
-        $etab = new Etablissement();
-        $etab->setOrganisation($org);
-        $etab->setNom('Guinguette du Château');
-        $etab->setAdresse('Lieu dit Laubrade');
-        $etab->setCodePostal('33230');
-        $etab->setVille('Abzac');
-        $etab->setActif(true);
-        $this->manager->persist($etab);
-
-        return $etab;
-    }
-
-    private function findOrCreateAdmin(Organisation $org, Etablissement $etab): Utilisateur
-    {
-        $admin = $this->manager->getRepository(Utilisateur::class)->findOneBy(['email' => 'admin@guinguette.fr']);
-        if ($admin) {
-            return $admin;
-        }
-
-        $admin = new Utilisateur();
-        $admin->setOrganisation($org);
-        $admin->setEmail('admin@guinguette.fr');
-        $admin->setNom('Corrette');
-        $admin->setPrenom('Alexandre');
-        $admin->setRoles(['ROLE_ADMIN', 'ROLE_GERANT']);
-        $admin->setPassword($this->passwordHasher->hashPassword($admin, 'password'));
-        $admin->setActif(true);
-        $this->manager->persist($admin);
+        $uo = new UtilisateurOrganisation();
+        $uo->setUtilisateur($demo);
+        $uo->setOrganisation($org);
+        $uo->setRole('member');
+        $manager->persist($uo);
 
         $ue = new UtilisateurEtablissement();
-        $ue->setUtilisateur($admin);
+        $ue->setUtilisateur($demo);
         $ue->setEtablissement($etab);
-        $ue->setRole('ROLE_ADMIN');
-        $this->manager->persist($ue);
+        $ue->setRole('ROLE_GERANT');
+        $manager->persist($ue);
 
-        return $admin;
+        $manager->flush();
     }
 
     // ─── Unités ─────────────────────────────────────────────────
@@ -229,7 +198,6 @@ class MercurialeFixtures extends Fixture implements FixtureGroupInterface
         $this->ensureOrganisationFournisseur($org, $f, '379212');
         $f->addEtablissement($etab);
 
-        // Catalogue TerreAzur — [code, designation, unite, prix, tva, categorie]
         $catalogue = [
             ['103634', 'Salade jeunes pousses mélangées provençal ½ 500g x2 100% FR', 'KG', '7.1100', '5.5', 'SALADES'],
             ['104884', 'Pomme de terre Agata grenaille ct 12,5K c1 FR', 'KG', '2.6100', '5.5', 'LEGUMES'],
@@ -290,7 +258,6 @@ class MercurialeFixtures extends Fixture implements FixtureGroupInterface
         $this->ensureOrganisationFournisseur($org, $f, '072575');
         $f->addEtablissement($etab);
 
-        // Catalogue Le Bihan — [code, designation, unite, prix (null=inconnu), tva, categorie]
         $catalogue = [
             ['012992', 'FUT 20L Eguzki Blanche', 'FUT', '4.1160', '20', 'BIERES'],
             ['016724', 'FUT 30L Tigre Bock 5°', 'FUT', '2.9190', '20', 'BIERES'],
@@ -350,7 +317,6 @@ class MercurialeFixtures extends Fixture implements FixtureGroupInterface
         ];
 
         $this->addLignes($bl, $f, $lignes);
-        // BL1: Aubergine at 3.60 = mercuriale price → no alert
     }
 
     // ─── BL 2 — TerreAzur 05/09/2025 ───────────────────────────
@@ -517,7 +483,6 @@ class MercurialeFixtures extends Fixture implements FixtureGroupInterface
         $unite = $this->unites[$uniteCode];
         $categorie = $this->categories[$categorieCode] ?? null;
 
-        // Create Produit
         $produit = new Produit();
         $produit->setNom($designation);
         $produit->setCodeInterne($code);
@@ -526,7 +491,6 @@ class MercurialeFixtures extends Fixture implements FixtureGroupInterface
         $produit->setActif(true);
         $this->manager->persist($produit);
 
-        // Create ProduitFournisseur
         $pf = new ProduitFournisseur();
         $pf->setFournisseur($f);
         $pf->setProduit($produit);
@@ -536,11 +500,9 @@ class MercurialeFixtures extends Fixture implements FixtureGroupInterface
         $pf->setActif(true);
         $this->manager->persist($pf);
 
-        // Store for BL line linking
         $key = $f->getSiret() . '_' . $code;
         $this->produitsFournisseur[$key] = $pf;
 
-        // Create Mercuriale entry (prix de référence)
         $merc = new Mercuriale();
         $merc->setProduitFournisseur($pf);
         $merc->setEtablissement($etab);
@@ -574,7 +536,6 @@ class MercurialeFixtures extends Fixture implements FixtureGroupInterface
 
     /**
      * @param list<array{0: string, 1: string, 2: string, 3: string, 4: string, 5: string}> $lignesData
-     *        [codeProduit, designation, quantite, unite, prixUnitaire, totalLigne]
      */
     private function addLignes(BonLivraison $bl, Fournisseur $f, array $lignesData): void
     {
@@ -597,7 +558,6 @@ class MercurialeFixtures extends Fixture implements FixtureGroupInterface
             $ligne->setOrdre($ordre++);
             $ligne->setProduitFournisseur($pf);
 
-            // Check price variance against mercuriale
             if ($pf) {
                 $this->checkPriceAndCreateAlert($ligne, $pf, $pu);
             }
@@ -606,13 +566,11 @@ class MercurialeFixtures extends Fixture implements FixtureGroupInterface
             $this->manager->persist($ligne);
         }
 
-        // Recalculate total HT
         $bl->setTotalHt($bl->calculerTotalHt());
     }
 
     private function checkPriceAndCreateAlert(LigneBonLivraison $ligne, ProduitFournisseur $pf, string $puLivre): void
     {
-        // Find active mercuriale price
         $mercuriales = $this->manager->getRepository(Mercuriale::class)->findBy([
             'produitFournisseur' => $pf,
         ]);
