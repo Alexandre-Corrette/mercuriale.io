@@ -40,7 +40,7 @@ final readonly class ColumnMappingConfig
     ];
 
     public function __construct(
-        /** @var array<string, string|null> Column index => field name mapping */
+        /** @var array<int, string> Column index => field name mapping */
         public array $mapping,
         public bool $hasHeaderRow = true,
         public ?string $defaultUnite = null,
@@ -54,9 +54,13 @@ final readonly class ColumnMappingConfig
 
     public function getColumnForField(string $field): ?int
     {
-        $flipped = array_flip($this->mapping);
+        foreach ($this->mapping as $columnIndex => $fieldName) {
+            if ($fieldName === $field) {
+                return $columnIndex;
+            }
+        }
 
-        return $flipped[$field] ?? null;
+        return null;
     }
 
     public function hasRequiredFields(): bool

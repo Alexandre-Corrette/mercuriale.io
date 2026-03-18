@@ -138,10 +138,10 @@ class AnthropicClient
 
         $this->logger->error('Anthropic API call failed after all retries', [
             'attempts' => self::MAX_RETRIES,
-            'last_error' => $lastException?->getMessage(),
+            'last_error' => $lastException->getMessage(),
         ]);
 
-        throw $lastException ?? new AnthropicApiException('Échec de l\'appel API après plusieurs tentatives');
+        throw $lastException;
     }
 
     /**

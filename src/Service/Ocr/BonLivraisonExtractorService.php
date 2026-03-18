@@ -14,128 +14,16 @@ use App\Enum\StatutBonLivraison;
 use App\Enum\TypeUnite;
 use App\Repository\BonLivraisonRepository;
 use App\Repository\FournisseurRepository;
-use App\Repository\ProduitFournisseurRepository;
 use App\Repository\UniteRepository;
+use App\Service\Unit\UnitNormalizer;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 
 class BonLivraisonExtractorService
 {
-    private const UNITE_MAPPING = [
-        // Poids
-        'kg' => 'KG',
-        'kilo' => 'KG',
-        'kilogramme' => 'KG',
-        'kilogrammes' => 'KG',
-        'g' => 'KG',
-        'gr' => 'KG',
-        'gramme' => 'KG',
-        'grammes' => 'KG',
-        'mg' => 'KG',
-        'milligramme' => 'KG',
-        'tonne' => 'KG',
-        't' => 'KG',
-        // Volume
-        'l' => 'L',
-        'litre' => 'L',
-        'litres' => 'L',
-        'cl' => 'L',
-        'centilitre' => 'L',
-        'centilitres' => 'L',
-        'ml' => 'L',
-        'millilitre' => 'L',
-        'millilitres' => 'L',
-        'dl' => 'L',
-        'décilitre' => 'L',
-        'decilitre' => 'L',
-        'hl' => 'L',
-        'hectolitre' => 'L',
-        // Pièce / unité
-        'p' => 'PU',
-        'pc' => 'PU',
-        'pce' => 'PU',
-        'piece' => 'PU',
-        'pièce' => 'PU',
-        'pieces' => 'PU',
-        'pièces' => 'PU',
-        'u' => 'UNI',
-        'pu' => 'PU',
-        'uni' => 'UNI',
-        'unite' => 'UNI',
-        'unité' => 'UNI',
-        'unites' => 'UNI',
-        'unités' => 'UNI',
-        'uvc' => 'PU',
-        'uvp' => 'PU',
-        'lot' => 'PU',
-        'lots' => 'PU',
-        'dz' => 'PU',
-        'douzaine' => 'PU',
-        'pqt' => 'PU',
-        'paquet' => 'PU',
-        'paquets' => 'PU',
-        // Conditionnements
-        'bq' => 'BQT',
-        'bqt' => 'BQT',
-        'barquette' => 'BQT',
-        'barquettes' => 'BQT',
-        'bt' => 'BOT',
-        'bot' => 'BOT',
-        'btl' => 'BOT',
-        'bouteille' => 'BOT',
-        'bouteilles' => 'BOT',
-        'flacon' => 'BOT',
-        'flacons' => 'BOT',
-        'fl' => 'BOT',
-        'ct' => 'CAR',
-        'carton' => 'CAR',
-        'cartons' => 'CAR',
-        'crt' => 'CAR',
-        'car' => 'CAR',
-        'caisse' => 'CAR',
-        'caisses' => 'CAR',
-        'col' => 'COL',
-        'colis' => 'COL',
-        'flt' => 'COL',
-        'filet' => 'COL',
-        'sac' => 'SAC',
-        'sacs' => 'SAC',
-        'sachet' => 'SAC',
-        'sachets' => 'SAC',
-        'bag' => 'SAC',
-        'fut' => 'FUT',
-        'fût' => 'FUT',
-        'futs' => 'FUT',
-        'bte' => 'BTE',
-        'boite' => 'BTE',
-        'boîte' => 'BTE',
-        'boites' => 'BTE',
-        'boîtes' => 'BTE',
-        'pck' => 'PCK',
-        'pack' => 'PCK',
-        'packs' => 'PCK',
-        'pal' => 'PAL',
-        'palette' => 'PAL',
-        'palettes' => 'PAL',
-        'plt' => 'PLT',
-        'plateau' => 'PLT',
-        'plateaux' => 'PLT',
-        'bdn' => 'BDN',
-        'bidon' => 'BDN',
-        'bidons' => 'BDN',
-        'jer' => 'JER',
-        'jerrycan' => 'JER',
-        'bac' => 'PU',
-        'bacs' => 'PU',
-        'rouleau' => 'PU',
-        'rouleaux' => 'PU',
-        'rlx' => 'PU',
-    ];
-
     public function __construct(
         private readonly AnthropicClient $anthropicClient,
         private readonly EntityManagerInterface $entityManager,
-        private readonly ProduitFournisseurRepository $produitFournisseurRepository,
         private readonly FournisseurRepository $fournisseurRepository,
         private readonly BonLivraisonRepository $bonLivraisonRepository,
         private readonly UniteRepository $uniteRepository,
@@ -693,7 +581,7 @@ CTX;
 
         }
 
-        if (empty($data['lignes']) || !is_array($data['lignes'])) {
+        if (!isset($data['lignes']) || !\is_array($data['lignes']) || $data['lignes'] === []) {
             $warnings[] = 'Aucune ligne de produit détectée';
 
             return $warnings;
@@ -728,7 +616,7 @@ CTX;
         }
 
         $totalHt = $data['totaux']['total_ht'] ?? $data['total_ht'] ?? null;
-        if ($totalHt !== null && !empty($data['lignes'])) {
+        if ($totalHt !== null) {
             $calculatedTotal = array_sum(array_map(
                 fn ($l) => $l['total_ht_ligne'] ?? $l['total_ligne'] ?? 0,
                 $data['lignes']
@@ -987,10 +875,11 @@ CTX;
      */
     private function resolveUnite(string $uniteStr): Unite
     {
-        $uniteStr = strtolower(trim($uniteStr));
-
-        // Mapper vers le code standard (DB codes are uppercase)
-        $code = self::UNITE_MAPPING[$uniteStr] ?? 'PU';
+        // Normalize via UnitNormalizer (canonical uppercase codes)
+        $code = UnitNormalizer::normalize($uniteStr);
+        if ($code === '') {
+            $code = 'PU';
+        }
 
         // Retourner depuis le cache si déjà résolu
         if (isset($this->uniteCache[$code])) {

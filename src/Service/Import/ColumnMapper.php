@@ -12,76 +12,6 @@ use Psr\Log\LoggerInterface;
 
 class ColumnMapper
 {
-    /**
-     * Mapping of common unit strings to database codes.
-     * Database codes are: kg, g, L, cL, mL, p, bq, bt, ct, lot
-     */
-    private const UNITE_MAPPING = [
-        // Kilogramme (code: kg)
-        'kg' => 'kg',
-        'kilo' => 'kg',
-        'kilogramme' => 'kg',
-        'kilogrammes' => 'kg',
-
-        // Gramme (code: g)
-        'g' => 'g',
-        'gr' => 'g',
-        'gramme' => 'g',
-        'grammes' => 'g',
-
-        // Litre (code: L)
-        'l' => 'L',
-        'litre' => 'L',
-        'litres' => 'L',
-        'lt' => 'L',
-
-        // Centilitre (code: cL)
-        'cl' => 'cL',
-        'centilitre' => 'cL',
-        'centilitres' => 'cL',
-
-        // Millilitre (code: mL)
-        'ml' => 'mL',
-        'millilitre' => 'mL',
-        'millilitres' => 'mL',
-
-        // Pièce (code: p)
-        'p' => 'p',
-        'pc' => 'p',
-        'pce' => 'p',
-        'piece' => 'p',
-        'pièce' => 'p',
-        'pieces' => 'p',
-        'pièces' => 'p',
-        'u' => 'p',
-        'unite' => 'p',
-        'unité' => 'p',
-        'unites' => 'p',
-        'unités' => 'p',
-
-        // Carton (code: ct)
-        'ct' => 'ct',
-        'crt' => 'ct',
-        'carton' => 'ct',
-        'cartons' => 'ct',
-
-        // Bouteille (code: bt)
-        'bt' => 'bt',
-        'bte' => 'bt',
-        'btl' => 'bt',
-        'bouteille' => 'bt',
-        'bouteilles' => 'bt',
-
-        // Barquette (code: bq)
-        'bq' => 'bq',
-        'barquette' => 'bq',
-        'barquettes' => 'bq',
-
-        // Lot (code: lot)
-        'lot' => 'lot',
-        'lots' => 'lot',
-    ];
-
     /** @var array<string, Unite>|null */
     private ?array $uniteCache = null;
 
@@ -116,7 +46,7 @@ class ColumnMapper
         ];
 
         foreach ($config->mapping as $columnIndex => $fieldName) {
-            if ($fieldName === ColumnMappingConfig::FIELD_IGNORE || $fieldName === null) {
+            if ($fieldName === ColumnMappingConfig::FIELD_IGNORE) {
                 continue;
             }
 
