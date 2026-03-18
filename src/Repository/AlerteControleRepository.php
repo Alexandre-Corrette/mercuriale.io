@@ -90,6 +90,22 @@ class AlerteControleRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    public function countNonTraiteesForEtablissement(Etablissement $etablissement): int
+    {
+        return (int) $this->createQueryBuilder('a')
+            ->select('COUNT(a.id)')
+            ->join('a.ligneBl', 'l')
+            ->join('l.bonLivraison', 'bl')
+            ->where('a.statut = :statut')
+            ->andWhere('bl.statut = :blStatut')
+            ->andWhere('bl.etablissement = :etablissement')
+            ->setParameter('statut', StatutAlerte::NOUVELLE)
+            ->setParameter('blStatut', \App\Enum\StatutBonLivraison::ANOMALIE)
+            ->setParameter('etablissement', $etablissement)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
     public function countNonTraiteesForOrganisation(Organisation $org): int
     {
         return (int) $this->createQueryBuilder('a')

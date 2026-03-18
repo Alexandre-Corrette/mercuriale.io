@@ -342,6 +342,18 @@ class BonLivraisonRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    public function countAnomalieForEtablissement(Etablissement $etablissement): int
+    {
+        return (int) $this->createQueryBuilder('bl')
+            ->select('COUNT(bl.id)')
+            ->where('bl.statut = :statut')
+            ->andWhere('bl.etablissement = :etablissement')
+            ->setParameter('statut', StatutBonLivraison::ANOMALIE)
+            ->setParameter('etablissement', $etablissement)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
     public function countAnomalieForOrganisation(Organisation $org): int
     {
         return (int) $this->createQueryBuilder('bl')
