@@ -23,7 +23,7 @@ class AvoirFixtures extends Fixture implements FixtureGroupInterface, DependentF
 {
     public static function getGroups(): array
     {
-        return ['mercuriale'];
+        return ['demo'];
     }
 
     public function getDependencies(): array
@@ -34,7 +34,7 @@ class AvoirFixtures extends Fixture implements FixtureGroupInterface, DependentF
     public function load(ObjectManager $manager): void
     {
         // Find existing entities from MercurialeFixtures
-        $admin = $manager->getRepository(Utilisateur::class)->findOneBy(['email' => 'admin@guinguette.fr']);
+        $admin = $manager->getRepository(Utilisateur::class)->findOneBy(['email' => 'admin@escale.fr']);
         $etab = $manager->getRepository(Etablissement::class)->findOneBy(['nom' => 'Guinguette du Château']);
         $terraAzur = $manager->getRepository(Fournisseur::class)->findOneBy(['code' => '3010614324970']);
         $leBihan = $manager->getRepository(Fournisseur::class)->findOneBy(['code' => 'BIHAN']);
