@@ -14,7 +14,7 @@ services:
     networks:
       - mercuriale
     environment:
-      APP_ENV: dev
+      APP_ENV: ${APP_ENV:-dev}
       APP_SECRET: ${APP_SECRET}
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:5432/${POSTGRES_DB}?serverVersion=16&charset=utf8
       REDIS_URL: redis://redis:6379
@@ -35,7 +35,7 @@ services:
     networks:
       - mercuriale
     environment:
-      APP_ENV: dev
+      APP_ENV: ${APP_ENV:-dev}
       APP_SECRET: ${APP_SECRET}
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:5432/${POSTGRES_DB}?serverVersion=16&charset=utf8
       REDIS_URL: redis://redis:6379
@@ -50,7 +50,8 @@ services:
       - "443:443"
     volumes:
       - .:/var/www/html
-      - ./docker/nginx/default.dev.conf:/etc/nginx/conf.d/default.conf
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - php
     networks:
