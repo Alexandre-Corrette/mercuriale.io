@@ -371,8 +371,8 @@ class UploadController extends AbstractController
             return new JsonResponse(['error' => 'Fournisseur non trouve'], Response::HTTP_NOT_FOUND);
         }
 
-        // Verify fournisseur belongs to same organisation
-        if (!$this->isGranted('VIEW', $fournisseur)) {
+        // Verify fournisseur belongs to same organisation as the BL (IDOR protection)
+        if (!$this->isGranted('ASSIGN_TO_BL', [$fournisseur, $bonLivraison])) {
             return new JsonResponse(['error' => 'Acces refuse'], Response::HTTP_FORBIDDEN);
         }
 

@@ -10,6 +10,7 @@ use App\DTO\Import\ImportPreview;
 use App\DTO\Import\ImportPreviewLine;
 use App\DTO\Import\ImportResult;
 use App\DTO\Import\ImportWarning;
+use App\DTO\Import\RowValidationResult;
 use App\Entity\Etablissement;
 use App\Entity\Fournisseur;
 use App\Entity\Mercuriale;
@@ -279,7 +280,46 @@ class MercurialeBulkImporter
     }
 
     /**
+     * Validate a single row without any persist() — pure data validation.
+     */
+    private function validateRow(
+        array $row,
+        int $rowNumber,
+        ColumnMappingConfig $config,
+    ): RowValidationResult {
+        $mappedData = $this->columnMapper->mapRow($row, $config);
+        $validation = $this->columnMapper->validateMappedRow($mappedData);
+
+        $errors = [];
+        if (!$validation['valid']) {
+            foreach ($validation['errors'] as $error) {
+                $errors[] = new ImportError(
+                    row: $rowNumber,
+                    column: $error['field'],
+                    message: $error['message'],
+                    value: $mappedData[$error['field']] ?? null,
+                );
+            }
+        }
+
+        // Generate code from designation if missing (for mapping completeness)
+        if (empty($mappedData['code_fournisseur']) && !empty($mappedData['designation'])) {
+            $mappedData['code_fournisseur'] = $this->generateCodeFromDesignation($mappedData['designation']);
+        }
+
+        return new RowValidationResult(
+            rowNumber: $rowNumber,
+            mappedData: $mappedData,
+            errors: $errors,
+        );
+    }
+
+    /**
      * Execute the import with database transaction.
+     *
+     * Uses a two-phase approach:
+     * 1. Validate all rows (no persist, no entity creation)
+     * 2. Process only valid rows in a single atomic transaction
      */
     public function execute(MercurialeImport $import, Utilisateur $user): ImportResult
     {
@@ -304,30 +344,49 @@ class MercurialeBulkImporter
         $rows = $parsedData['rows'] ?? [];
 
         $startTime = microtime(true);
-        $deadline = time() + self::TIMEOUT_SECONDS;
 
+        // ── Phase 1: Validate all rows (no persist, no entity creation) ──
+        /** @var RowValidationResult[] $validRows */
+        $validRows = [];
+        $errors = [];
+        $failed = 0;
+
+        foreach ($rows as $index => $row) {
+            $rowNumber = $index + 2;
+            $validation = $this->validateRow($row, $rowNumber, $config);
+
+            if ($validation->isValid()) {
+                $validRows[] = $validation;
+            } else {
+                ++$failed;
+                array_push($errors, ...$validation->errors);
+
+                $this->logger->warning('Row validation failed', [
+                    'row' => $rowNumber,
+                    'errors' => array_map(fn (ImportError $e) => $e->message, $validation->errors),
+                ]);
+            }
+        }
+
+        // ── Phase 2: Process valid rows in a single atomic transaction ──
         $productsCreated = 0;
         $productsUpdated = 0;
         $mercurialesCreated = 0;
         $mercurialesUpdated = 0;
         $skipped = 0;
-        $failed = 0;
-        $errors = [];
+
+        $deadline = time() + self::TIMEOUT_SECONDS;
 
         $this->entityManager->beginTransaction();
 
         try {
-            // Get default unit (code 'p' for Pièce)
             $defaultUnit = $this->uniteRepository->findOneBy(['code' => 'p']);
 
             $etablissements = $import->getEtablissements();
-            // If no etablissement selected → prix groupe (null), process once
             /** @var array<int, ?Etablissement> $etablissementList */
             $etablissementList = $etablissements->isEmpty() ? [null] : $etablissements->toArray();
 
-            $batchCount = 0;
-
-            foreach ($rows as $index => $row) {
+            foreach ($validRows as $validated) {
                 if (time() > $deadline) {
                     throw new ImportException(
                         ImportException::ERROR_IMPORT_FAILED,
@@ -335,86 +394,52 @@ class MercurialeBulkImporter
                     );
                 }
 
-                $rowNumber = $index + 2;
+                $firstEtab = $etablissementList[0] ?? null;
+                $result = $this->processRow(
+                    $validated->mappedData,
+                    $validated->rowNumber,
+                    $config,
+                    $import->getFournisseur(),
+                    $firstEtab,
+                    $user,
+                    $defaultUnit,
+                    useMappedData: true,
+                );
 
-                try {
-                    // Process the product once (first etablissement determines action)
-                    $firstEtab = $etablissementList[0] ?? null;
-                    $result = $this->processRow(
-                        $row,
-                        $rowNumber,
-                        $config,
-                        $import->getFournisseur(),
-                        $firstEtab,
-                        $user,
-                        $defaultUnit,
-                    );
+                match ($result['action']) {
+                    'product_created' => ++$productsCreated,
+                    'product_updated' => ++$productsUpdated,
+                    default => null,
+                };
 
-                    match ($result['action']) {
-                        'product_created' => ++$productsCreated,
-                        'product_updated' => ++$productsUpdated,
-                        default => null,
-                    };
+                match ($result['mercuriale_action'] ?? null) {
+                    'created' => ++$mercurialesCreated,
+                    'updated' => ++$mercurialesUpdated,
+                    default => null,
+                };
 
-                    match ($result['mercuriale_action'] ?? null) {
-                        'created' => ++$mercurialesCreated,
-                        'updated' => ++$mercurialesUpdated,
-                        default => null,
-                    };
-
-                    if ($result['action'] === 'skipped') {
-                        ++$skipped;
-                    }
-
-                    // For additional etablissements, create mercuriale rows
-                    // (product already created/updated above)
-                    if (\count($etablissementList) > 1 && $result['product'] !== null) {
-                        for ($i = 1, $count = \count($etablissementList); $i < $count; ++$i) {
-                            $extraResult = $this->processExtraMercuriale(
-                                $row,
-                                $config,
-                                $result['product'],
-                                $etablissementList[$i],
-                                $user,
-                            );
-
-                            match ($extraResult) {
-                                'created' => ++$mercurialesCreated,
-                                'updated' => ++$mercurialesUpdated,
-                                default => null,
-                            };
-                        }
-                    }
-                } catch (\Exception $e) {
-                    ++$failed;
-                    $errors[] = new ImportError(
-                        row: $rowNumber,
-                        column: 'general',
-                        message: $e->getMessage(),
-                    );
-
-                    $this->logger->error('Failed to import row', [
-                        'row' => $rowNumber,
-                        'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString(),
-                        'rowData' => $row,
-                    ]);
-
-                    // If EntityManager is closed, abort the import
-                    if (!$this->entityManager->isOpen()) {
-                        $this->logger->error('EntityManager closed during import, aborting');
-                        throw new ImportException(
-                            ImportException::ERROR_IMPORT_FAILED,
-                            sprintf('Import interrompu à la ligne %d : %s', $rowNumber, $e->getMessage()),
-                            $e,
-                        );
-                    }
+                if ($result['action'] === 'skipped') {
+                    ++$skipped;
                 }
 
-                ++$batchCount;
-                if ($batchCount >= self::BATCH_SIZE) {
-                    $this->entityManager->flush();
-                    $batchCount = 0;
+                // For additional etablissements, create mercuriale rows
+                if (\count($etablissementList) > 1 && $result['product'] !== null) {
+                    for ($i = 1, $count = \count($etablissementList); $i < $count; ++$i) {
+                        $extraResult = $this->processExtraMercuriale(
+                            $validated->mappedData,
+                            $config,
+                            $result['product'],
+                            $etablissementList[$i],
+                            $user,
+                            useMappedData: true,
+                        );
+
+                        match ($extraResult) {
+                            'created' => ++$mercurialesCreated,
+                            'updated' => ++$mercurialesUpdated,
+                            default => null,
+                        };
+                    }
                 }
             }
 
@@ -445,6 +470,7 @@ class MercurialeBulkImporter
                 'importId' => $import->getIdAsString(),
                 'productsCreated' => $productsCreated,
                 'mercurialesCreated' => $mercurialesCreated,
+                'failed' => $failed,
                 'executionTime' => round($executionTime, 2),
             ]);
 
@@ -464,20 +490,16 @@ class MercurialeBulkImporter
             // Reset EntityManager if closed
             if (!$this->entityManager->isOpen()) {
                 $this->entityManager = $this->managerRegistry->resetManager();
-                // Note: import entity is now detached but we only need to save status
-                // so we'll just log the error and let the import remain in its current state
                 $this->logger->warning('EntityManager was reset, import status may not be saved');
             }
 
             // Try to save the failed status
             try {
-                if ($import !== null) {
-                    $import->setStatus(StatutImport::FAILED);
-                    $import->setImportResult([
-                        'error' => $e->getMessage(),
-                    ]);
-                    $this->entityManager->flush();
-                }
+                $import->setStatus(StatutImport::FAILED);
+                $import->setImportResult([
+                    'error' => $e->getMessage(),
+                ]);
+                $this->entityManager->flush();
             } catch (\Exception $statusException) {
                 $this->logger->warning('Could not save failed import status', [
                     'error' => $statusException->getMessage(),
@@ -485,7 +507,7 @@ class MercurialeBulkImporter
             }
 
             $this->logger->error('Import failed', [
-                'importId' => $import?->getIdAsString() ?? 'unknown',
+                'importId' => $import->getIdAsString(),
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
@@ -509,21 +531,27 @@ class MercurialeBulkImporter
         ?Etablissement $etablissement,
         Utilisateur $user,
         ?\App\Entity\Unite $defaultUnit,
+        bool $useMappedData = false,
     ): array {
-        $mappedData = $this->columnMapper->mapRow($row, $config);
+        // If called from execute() with pre-validated data, $row IS the mapped data
+        if ($useMappedData) {
+            $mappedData = $row;
+        } else {
+            $mappedData = $this->columnMapper->mapRow($row, $config);
 
-        // Validate - only check for blocking errors
-        $validation = $this->columnMapper->validateMappedRow($mappedData);
-        if (!$validation['valid']) {
-            throw new \RuntimeException(implode(', ', array_map(
-                fn ($e) => $e['message'],
-                $validation['errors'],
-            )));
-        }
+            // Validate - only check for blocking errors
+            $validation = $this->columnMapper->validateMappedRow($mappedData);
+            if (!$validation['valid']) {
+                throw new \RuntimeException(implode(', ', array_map(
+                    fn ($e) => $e['message'],
+                    $validation['errors'],
+                )));
+            }
 
-        // Generate code from designation if missing
-        if (empty($mappedData['code_fournisseur']) && !empty($mappedData['designation'])) {
-            $mappedData['code_fournisseur'] = $this->generateCodeFromDesignation($mappedData['designation']);
+            // Generate code from designation if missing
+            if (empty($mappedData['code_fournisseur']) && !empty($mappedData['designation'])) {
+                $mappedData['code_fournisseur'] = $this->generateCodeFromDesignation($mappedData['designation']);
+            }
         }
 
         // Find or create product
@@ -651,8 +679,9 @@ class MercurialeBulkImporter
         ProduitFournisseur $product,
         ?Etablissement $etablissement,
         Utilisateur $user,
+        bool $useMappedData = false,
     ): ?string {
-        $mappedData = $this->columnMapper->mapRow($row, $config);
+        $mappedData = $useMappedData ? $row : $this->columnMapper->mapRow($row, $config);
 
         $hasValidPrice = !empty($mappedData['prix'])
             && is_numeric($mappedData['prix'])

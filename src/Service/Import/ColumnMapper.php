@@ -7,6 +7,7 @@ namespace App\Service\Import;
 use App\DTO\Import\ColumnMappingConfig;
 use App\Entity\Unite;
 use App\Repository\UniteRepository;
+use App\Service\Unit\UnitNormalizer;
 use Psr\Log\LoggerInterface;
 
 class ColumnMapper
@@ -211,32 +212,32 @@ class ColumnMapper
     }
 
     /**
-     * Normalize unit string to standard code.
+     * Normalize unit string to standard DB code via UnitNormalizer.
      */
     public function normalizeUnite(string $value): ?string
     {
-        $normalized = strtolower(trim($value));
-
-        // Direct match in mapping
-        if (isset(self::UNITE_MAPPING[$normalized])) {
-            return self::UNITE_MAPPING[$normalized];
+        $trimmed = trim($value);
+        if ($trimmed === '') {
+            return null;
         }
 
-        // Check if it's already a valid unit code (exact match)
-        $trimmedValue = trim($value);
+        $canonical = UnitNormalizer::normalize($trimmed);
+
+        // Convert to DB code and check if it exists in the database
+        $dbCode = UnitNormalizer::toDbCode($canonical);
         $units = $this->getUnitesCache();
 
-        if (isset($units[$trimmedValue])) {
-            return $trimmedValue;
+        if (isset($units[$dbCode])) {
+            return $dbCode;
         }
 
-        // Try lowercase version
-        if (isset($units[$normalized])) {
-            return $normalized;
+        // Try canonical code directly (some DB codes match canonical)
+        if (isset($units[$canonical])) {
+            return $canonical;
         }
 
-        // Return as-is, will be validated later
-        return $trimmedValue;
+        // Fallback: return DB code, will be validated later by resolveUnite()
+        return $dbCode;
     }
 
     /**
