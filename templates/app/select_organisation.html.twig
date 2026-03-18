@@ -1,0 +1,47 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Sélectionner une société — Mercuriale.io{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/org-switcher.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="org-select">
+    <div class="org-select__header">
+        <img src="{{ asset('images/logo-mercuriale-rectangulaire.png') }}" alt="Mercuriale.io" class="org-select__logo">
+        <h1 class="org-select__title">Sélectionnez une société</h1>
+        <p class="org-select__subtitle">Vous êtes membre de plusieurs sociétés. Choisissez celle sur laquelle vous souhaitez travailler.</p>
+    </div>
+
+    <div class="org-select__grid">
+        {% for org in organisations %}
+            {% set first_etab = org.etablissements|first %}
+            <form method="post" action="{{ path('app_switch_context') }}" class="org-select__card-form" data-turbo="false">
+                <input type="hidden" name="_token" value="{{ csrf_token('switch_context') }}">
+                <input type="hidden" name="organisation_id" value="{{ org.id }}">
+                <input type="hidden" name="etablissement_id" value="{{ first_etab ? first_etab.id : '' }}">
+                <button type="submit" class="org-select__card">
+                    <div class="org-select__card-icon">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <div class="org-select__card-body">
+                        <h2 class="org-select__card-name">{{ org.nom }}</h2>
+                        {% if org.siren %}
+                            <p class="org-select__card-siren">SIREN {{ org.siren[:3] }} {{ org.siren[3:3] }} {{ org.siren[6:3] }}</p>
+                        {% endif %}
+                        <p class="org-select__card-count">
+                            <i class="fas fa-store"></i>
+                            {{ org.etablissements|length }} établissement{{ org.etablissements|length > 1 ? 's' : '' }}
+                        </p>
+                    </div>
+                    <div class="org-select__card-arrow">
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                </button>
+            </form>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
