@@ -4,15 +4,19 @@ declare(strict_types=1);
 
 namespace App\DataFixtures;
 
+use App\Entity\Abonnement;
 use App\Entity\CategorieProduit;
 use App\Entity\ConversionUnite;
 use App\Entity\Etablissement;
 use App\Entity\Fournisseur;
 use App\Entity\Organisation;
 use App\Entity\OrganisationFournisseur;
+use App\Entity\PlanType;
 use App\Entity\Unite;
 use App\Entity\Utilisateur;
 use App\Entity\UtilisateurEtablissement;
+use App\Entity\UtilisateurOrganisation;
+use App\Enum\TypeEtablissement;
 use App\Enum\TypeUnite;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
@@ -27,34 +31,278 @@ class AppFixtures extends Fixture
 
     public function load(ObjectManager $manager): void
     {
-        // 1. Organisation
-        $organisation = new Organisation();
-        $organisation->setNom('Groupe Horao');
-        $organisation->setSiret('12345678901234');
-        $manager->persist($organisation);
-
-        // 2. Unités
+        // 1. Unités
         $unites = $this->createUnites($manager);
 
-        // 3. Conversions d'unités
+        // 2. Conversions d'unités
         $this->createConversions($manager, $unites);
 
-        // 4. Catégories de produits
+        // 3. Catégories de produits
         $this->createCategories($manager);
 
-        // 5. Établissements
-        $etablissements = $this->createEtablissements($manager, $organisation);
+        // ──────────────────────────────────────────────────────────────
+        // Organisation 1 — Escale sur la Plage (multi-établissement, plan MULTI)
+        // ──────────────────────────────────────────────────────────────
+        $escale = new Organisation();
+        $escale->setNom('Escale sur la Plage');
+        $escale->setSiren('123456789');
+        $escale->setSiret('12345678901234');
+        $escale->setVerifiedAt(new \DateTimeImmutable('2025-06-01'));
+        $escale->setTrialEndsAt(new \DateTimeImmutable('2025-07-01'));
+        $manager->persist($escale);
 
-        // 6. Fournisseurs (indépendants)
+        $aboEscale = new Abonnement();
+        $aboEscale->setOrganisation($escale);
+        $aboEscale->setPlan(PlanType::MULTI);
+        $aboEscale->setStartsAt(new \DateTimeImmutable('2025-07-01'));
+        $aboEscale->setStripeSubscriptionId('sub_escale_multi_fake');
+        $aboEscale->setActive(true);
+        $manager->persist($aboEscale);
+
+        $escaleParmentier = $this->createEtablissement($manager, $escale, [
+            'nom' => 'Escale Parmentier',
+            'siret' => '12345678901234',
+            'adresse' => '62 rue Jean-Pierre Timbaud',
+            'codePostal' => '75011',
+            'ville' => 'Paris',
+            'type' => TypeEtablissement::RESTAURANT,
+            'codeNaf' => '56.10A',
+            'isPrimary' => true,
+        ]);
+
+        $guinguette = $this->createEtablissement($manager, $escale, [
+            'nom' => 'Guinguette du Château',
+            'siret' => '12345678902345',
+            'adresse' => 'Lieu dit Laubrade',
+            'codePostal' => '33230',
+            'ville' => 'Abzac',
+            'type' => TypeEtablissement::RESTAURANT,
+            'codeNaf' => '56.10A',
+            'isPrimary' => false,
+        ]);
+
+        $prieure = $this->createEtablissement($manager, $escale, [
+            'nom' => 'Le Prieuré',
+            'siret' => '12345678903456',
+            'adresse' => '1 place du Prieuré',
+            'codePostal' => '33230',
+            'ville' => 'Abzac',
+            'type' => TypeEtablissement::RESTAURANT,
+            'codeNaf' => '56.10A',
+            'isPrimary' => false,
+        ]);
+
+        $escaleEtabs = [$escaleParmentier, $guinguette, $prieure];
+
+        // Admin Escale — accès à tous les établissements
+        $adminEscale = $this->createUser($manager, $escale, [
+            'email' => 'admin@escale.fr',
+            'nom' => 'Corrette',
+            'prenom' => 'Alexandre',
+            'roles' => ['ROLE_ADMIN'],
+            'password' => 'admin123',
+        ]);
+        $this->linkUserToOrganisation($manager, $adminEscale, $escale, 'owner');
+        foreach ($escaleEtabs as $etab) {
+            $this->linkUserToEtablissement($manager, $adminEscale, $etab, 'ROLE_ADMIN');
+        }
+
+        // Gérant Escale — accès uniquement à Escale Parmentier
+        $gerant = $this->createUser($manager, $escale, [
+            'email' => 'gerant@escale.fr',
+            'nom' => 'Martin',
+            'prenom' => 'Sophie',
+            'roles' => ['ROLE_GERANT'],
+            'password' => 'gerant123',
+        ]);
+        $this->linkUserToOrganisation($manager, $gerant, $escale, 'member');
+        $this->linkUserToEtablissement($manager, $gerant, $escaleParmentier, 'ROLE_GERANT');
+
+        // Cuisinier Escale — consultation uniquement
+        $cuisinier = $this->createUser($manager, $escale, [
+            'email' => 'cuisinier@escale.fr',
+            'nom' => 'Dupont',
+            'prenom' => 'Pierre',
+            'roles' => ['ROLE_CUISINIER'],
+            'password' => 'cuisinier123',
+        ]);
+        $this->linkUserToOrganisation($manager, $cuisinier, $escale, 'member');
+        $this->linkUserToEtablissement($manager, $cuisinier, $escaleParmentier, 'ROLE_CUISINIER');
+
+        // Fournisseurs Escale
         $fournisseurs = $this->createFournisseurs($manager);
+        $this->createOrganisationFournisseurs($manager, $escale, $fournisseurs);
 
-        // 7. Associations Organisation-Fournisseur
-        $this->createOrganisationFournisseurs($manager, $organisation, $fournisseurs);
+        // Associer les fournisseurs aux établissements Escale
+        foreach ($fournisseurs as $fournisseur) {
+            foreach ($escaleEtabs as $etab) {
+                $fournisseur->addEtablissement($etab);
+            }
+        }
 
-        // 8. Utilisateur admin
-        $admin = $this->createAdmin($manager, $organisation, $etablissements);
+        // ──────────────────────────────────────────────────────────────
+        // Organisation 2 — Le Zinc d'Arthur (bar, plan SINGLE)
+        // ──────────────────────────────────────────────────────────────
+        $zincOrg = new Organisation();
+        $zincOrg->setNom('Le Zinc d\'Arthur SARL');
+        $zincOrg->setSiren('987654321');
+        $zincOrg->setSiret('98765432100012');
+        $zincOrg->setVerifiedAt(new \DateTimeImmutable('2025-09-15'));
+        $zincOrg->setTrialEndsAt(new \DateTimeImmutable('2025-10-15'));
+        $manager->persist($zincOrg);
+
+        $aboZinc = new Abonnement();
+        $aboZinc->setOrganisation($zincOrg);
+        $aboZinc->setPlan(PlanType::SINGLE);
+        $aboZinc->setStartsAt(new \DateTimeImmutable('2025-10-15'));
+        $aboZinc->setStripeSubscriptionId('sub_zinc_single_fake');
+        $aboZinc->setActive(true);
+        $manager->persist($aboZinc);
+
+        $zincEtab = $this->createEtablissement($manager, $zincOrg, [
+            'nom' => 'Le Zinc d\'Arthur',
+            'siret' => '98765432100012',
+            'adresse' => '15 rue de la Soif',
+            'codePostal' => '33000',
+            'ville' => 'Bordeaux',
+            'type' => TypeEtablissement::BAR,
+            'codeNaf' => '56.30Z',
+            'isPrimary' => true,
+        ]);
+
+        $arthur = $this->createUser($manager, $zincOrg, [
+            'email' => 'arthur@lezinc.fr',
+            'nom' => 'Renaud',
+            'prenom' => 'Arthur',
+            'roles' => ['ROLE_ADMIN', 'ROLE_GERANT'],
+            'password' => 'arthur123',
+        ]);
+        $this->linkUserToOrganisation($manager, $arthur, $zincOrg, 'owner');
+        $this->linkUserToEtablissement($manager, $arthur, $zincEtab, 'ROLE_ADMIN');
+
+        // Fournisseur boissons pour le bar
+        $zincFournisseur = $this->findFournisseurByCode($fournisseurs, 'METRO');
+        if ($zincFournisseur) {
+            $ofZinc = new OrganisationFournisseur();
+            $ofZinc->setOrganisation($zincOrg);
+            $ofZinc->setFournisseur($zincFournisseur);
+            $ofZinc->setCodeClient('CLI-ZINC-001');
+            $ofZinc->setActif(true);
+            $manager->persist($ofZinc);
+            $zincFournisseur->addEtablissement($zincEtab);
+        }
+
+        // ──────────────────────────────────────────────────────────────
+        // Organisation 3 — Chez Marie (trial, fraîchement inscrit)
+        // ──────────────────────────────────────────────────────────────
+        $marieOrg = new Organisation();
+        $marieOrg->setNom('Chez Marie');
+        $marieOrg->setSiren('456789123');
+        $marieOrg->setSiret('45678912300018');
+        $marieOrg->setTrialEndsAt(new \DateTimeImmutable('+14 days'));
+        $manager->persist($marieOrg);
+
+        $aboMarie = new Abonnement();
+        $aboMarie->setOrganisation($marieOrg);
+        $aboMarie->setPlan(PlanType::TRIAL);
+        $aboMarie->setStartsAt(new \DateTimeImmutable());
+        $aboMarie->setActive(true);
+        $manager->persist($aboMarie);
+
+        $marieEtab = $this->createEtablissement($manager, $marieOrg, [
+            'nom' => 'Chez Marie',
+            'siret' => '45678912300018',
+            'adresse' => '8 place du Marché',
+            'codePostal' => '33500',
+            'ville' => 'Libourne',
+            'type' => TypeEtablissement::RESTAURANT,
+            'codeNaf' => '56.10A',
+            'isPrimary' => true,
+        ]);
+
+        $marie = $this->createUser($manager, $marieOrg, [
+            'email' => 'marie@chezmarie.fr',
+            'nom' => 'Lefebvre',
+            'prenom' => 'Marie',
+            'roles' => ['ROLE_ADMIN'],
+            'password' => 'marie123',
+        ]);
+        $this->linkUserToOrganisation($manager, $marie, $marieOrg, 'owner');
+        $this->linkUserToEtablissement($manager, $marie, $marieEtab, 'ROLE_ADMIN');
+
+        // Store references for dependent fixtures
+        $this->addReference('org-escale', $escale);
+        $this->addReference('org-zinc', $zincOrg);
+        $this->addReference('org-marie', $marieOrg);
+        $this->addReference('etab-escale', $escaleParmentier);
+        $this->addReference('etab-guinguette', $guinguette);
+        $this->addReference('etab-prieure', $prieure);
+        $this->addReference('etab-zinc', $zincEtab);
+        $this->addReference('etab-marie', $marieEtab);
+        $this->addReference('user-admin-escale', $adminEscale);
+        $this->addReference('user-arthur', $arthur);
+        $this->addReference('user-marie', $marie);
 
         $manager->flush();
+    }
+
+    // ─── Helpers ──────────────────────────────────────────────────
+
+    /**
+     * @param array{nom: string, siret?: string, adresse?: string|null, codePostal?: string|null, ville?: string|null, type?: TypeEtablissement, codeNaf?: string, isPrimary?: bool} $data
+     */
+    private function createEtablissement(ObjectManager $manager, Organisation $org, array $data): Etablissement
+    {
+        $etab = new Etablissement();
+        $etab->setOrganisation($org);
+        $etab->setNom($data['nom']);
+        $etab->setSiret($data['siret'] ?? null);
+        $etab->setAdresse($data['adresse'] ?? null);
+        $etab->setCodePostal($data['codePostal'] ?? null);
+        $etab->setVille($data['ville'] ?? null);
+        $etab->setTypeEtablissement($data['type'] ?? null);
+        $etab->setCodeNaf($data['codeNaf'] ?? null);
+        $etab->setIsPrimary($data['isPrimary'] ?? false);
+        $etab->setActif(true);
+        $manager->persist($etab);
+
+        return $etab;
+    }
+
+    /**
+     * @param array{email: string, nom: string, prenom: string, roles: string[], password: string} $data
+     */
+    private function createUser(ObjectManager $manager, Organisation $org, array $data): Utilisateur
+    {
+        $user = new Utilisateur();
+        $user->setOrganisation($org);
+        $user->setEmail($data['email']);
+        $user->setNom($data['nom']);
+        $user->setPrenom($data['prenom']);
+        $user->setRoles($data['roles']);
+        $user->setPassword($this->passwordHasher->hashPassword($user, $data['password']));
+        $user->setActif(true);
+        $manager->persist($user);
+
+        return $user;
+    }
+
+    private function linkUserToOrganisation(ObjectManager $manager, Utilisateur $user, Organisation $org, string $role): void
+    {
+        $uo = new UtilisateurOrganisation();
+        $uo->setUtilisateur($user);
+        $uo->setOrganisation($org);
+        $uo->setRole($role);
+        $manager->persist($uo);
+    }
+
+    private function linkUserToEtablissement(ObjectManager $manager, Utilisateur $user, Etablissement $etab, string $role): void
+    {
+        $ue = new UtilisateurEtablissement();
+        $ue->setUtilisateur($user);
+        $ue->setEtablissement($etab);
+        $ue->setRole($role);
+        $manager->persist($ue);
     }
 
     /**
@@ -63,14 +311,11 @@ class AppFixtures extends Fixture
     private function createUnites(ObjectManager $manager): array
     {
         $unitesData = [
-            // Poids
             ['nom' => 'Kilogramme', 'code' => 'kg', 'type' => TypeUnite::POIDS, 'ordre' => 1],
             ['nom' => 'Gramme', 'code' => 'g', 'type' => TypeUnite::POIDS, 'ordre' => 2],
-            // Volume
             ['nom' => 'Litre', 'code' => 'L', 'type' => TypeUnite::VOLUME, 'ordre' => 3],
             ['nom' => 'Centilitre', 'code' => 'cL', 'type' => TypeUnite::VOLUME, 'ordre' => 4],
             ['nom' => 'Millilitre', 'code' => 'mL', 'type' => TypeUnite::VOLUME, 'ordre' => 5],
-            // Quantité
             ['nom' => 'Pièce', 'code' => 'p', 'type' => TypeUnite::QUANTITE, 'ordre' => 6],
             ['nom' => 'Barquette', 'code' => 'bq', 'type' => TypeUnite::QUANTITE, 'ordre' => 7],
             ['nom' => 'Bouteille', 'code' => 'bt', 'type' => TypeUnite::QUANTITE, 'ordre' => 8],
@@ -98,16 +343,12 @@ class AppFixtures extends Fixture
     private function createConversions(ObjectManager $manager, array $unites): void
     {
         $conversionsData = [
-            // kg <-> g
             ['source' => 'kg', 'cible' => 'g', 'facteur' => '1000.000000'],
             ['source' => 'g', 'cible' => 'kg', 'facteur' => '0.001000'],
-            // L <-> cL
             ['source' => 'L', 'cible' => 'cL', 'facteur' => '100.000000'],
             ['source' => 'cL', 'cible' => 'L', 'facteur' => '0.010000'],
-            // L <-> mL
             ['source' => 'L', 'cible' => 'mL', 'facteur' => '1000.000000'],
             ['source' => 'mL', 'cible' => 'L', 'facteur' => '0.001000'],
-            // cL <-> mL
             ['source' => 'cL', 'cible' => 'mL', 'facteur' => '10.000000'],
             ['source' => 'mL', 'cible' => 'cL', 'facteur' => '0.100000'],
         ];
@@ -141,54 +382,6 @@ class AppFixtures extends Fixture
             $categorie->setOrdre($data['ordre']);
             $manager->persist($categorie);
         }
-    }
-
-    /**
-     * @return Etablissement[]
-     */
-    private function createEtablissements(ObjectManager $manager, Organisation $organisation): array
-    {
-        $etablissementsData = [
-            [
-                'nom' => 'Escale Parmentier',
-                'adresse' => '62 rue Jean-Pierre Timbaud',
-                'codePostal' => '75011',
-                'ville' => 'Paris',
-            ],
-            [
-                'nom' => 'Escale sur la Plage',
-                'adresse' => null,
-                'codePostal' => null,
-                'ville' => null,
-            ],
-            [
-                'nom' => 'Guinguette du Château',
-                'adresse' => null,
-                'codePostal' => null,
-                'ville' => null,
-            ],
-            [
-                'nom' => 'Le Prieuré',
-                'adresse' => null,
-                'codePostal' => null,
-                'ville' => null,
-            ],
-        ];
-
-        $etablissements = [];
-        foreach ($etablissementsData as $data) {
-            $etablissement = new Etablissement();
-            $etablissement->setOrganisation($organisation);
-            $etablissement->setNom($data['nom']);
-            $etablissement->setAdresse($data['adresse']);
-            $etablissement->setCodePostal($data['codePostal']);
-            $etablissement->setVille($data['ville']);
-            $etablissement->setActif(true);
-            $manager->persist($etablissement);
-            $etablissements[] = $etablissement;
-        }
-
-        return $etablissements;
     }
 
     /**
@@ -255,9 +448,8 @@ class AppFixtures extends Fixture
             $orgFournisseur->setFournisseur($fournisseur);
             $orgFournisseur->setActif(true);
 
-            // Add some sample data for the first fournisseur
             if ($fournisseur->getCode() === 'FOODFLOW') {
-                $orgFournisseur->setCodeClient('CLI-HORAO-001');
+                $orgFournisseur->setCodeClient('CLI-ESCALE-001');
                 $orgFournisseur->setContactCommercial('Jean Dupont');
                 $orgFournisseur->setEmailCommande('commandes@foodflow.fr');
             }
@@ -267,29 +459,16 @@ class AppFixtures extends Fixture
     }
 
     /**
-     * @param Etablissement[] $etablissements
+     * @param Fournisseur[] $fournisseurs
      */
-    private function createAdmin(ObjectManager $manager, Organisation $organisation, array $etablissements): Utilisateur
+    private function findFournisseurByCode(array $fournisseurs, string $code): ?Fournisseur
     {
-        $admin = new Utilisateur();
-        $admin->setOrganisation($organisation);
-        $admin->setEmail('admin@mercuriale.io');
-        $admin->setNom('Admin');
-        $admin->setPrenom('Super');
-        $admin->setRoles(['ROLE_ADMIN']);
-        $admin->setPassword($this->passwordHasher->hashPassword($admin, 'admin123'));
-        $admin->setActif(true);
-        $manager->persist($admin);
-
-        // Associer l'admin à tous les établissements
-        foreach ($etablissements as $etablissement) {
-            $ue = new UtilisateurEtablissement();
-            $ue->setUtilisateur($admin);
-            $ue->setEtablissement($etablissement);
-            $ue->setRole('ROLE_ADMIN');
-            $manager->persist($ue);
+        foreach ($fournisseurs as $f) {
+            if ($f->getCode() === $code) {
+                return $f;
+            }
         }
 
-        return $admin;
+        return null;
     }
 }

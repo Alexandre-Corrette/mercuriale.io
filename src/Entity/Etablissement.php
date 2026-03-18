@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Entity\Trait\TimestampableTrait;
+use App\Enum\TypeEtablissement;
 use App\Repository\EtablissementRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -62,6 +63,12 @@ class Etablissement
 
     #[ORM\Column(options: ['default' => false])]
     private bool $isPrimary = false;
+
+    #[ORM\Column(length: 20, nullable: true, enumType: TypeEtablissement::class)]
+    private ?TypeEtablissement $typeEtablissement = null;
+
+    #[ORM\Column(length: 10, nullable: true)]
+    private ?string $codeNaf = null;
 
     #[ORM\Column(options: ['default' => true])]
     private bool $actif = true;
@@ -203,6 +210,30 @@ class Etablissement
     public function setIsPrimary(bool $isPrimary): static
     {
         $this->isPrimary = $isPrimary;
+
+        return $this;
+    }
+
+    public function getTypeEtablissement(): ?TypeEtablissement
+    {
+        return $this->typeEtablissement;
+    }
+
+    public function setTypeEtablissement(?TypeEtablissement $typeEtablissement): static
+    {
+        $this->typeEtablissement = $typeEtablissement;
+
+        return $this;
+    }
+
+    public function getCodeNaf(): ?string
+    {
+        return $this->codeNaf;
+    }
+
+    public function setCodeNaf(?string $codeNaf): static
+    {
+        $this->codeNaf = $codeNaf;
 
         return $this;
     }
