@@ -84,7 +84,7 @@ class MercurialeBulkImporterTest extends TestCase
             ];
         });
 
-        $this->columnMapper->method('validateMappedRow')->willReturn(['valid' => true, 'errors' => []]);
+        $this->columnMapper->method('validateMappedRow')->willReturn(['valid' => true, 'errors' => [], 'warnings' => []]);
         $this->columnMapper->method('resolveUnite')->willReturn($this->createMock(Unite::class));
 
         $this->entityManager->method('flush');
@@ -121,7 +121,7 @@ class MercurialeBulkImporterTest extends TestCase
             'date_debut' => null,
             'date_fin' => null,
         ]);
-        $this->columnMapper->method('validateMappedRow')->willReturn(['valid' => true, 'errors' => []]);
+        $this->columnMapper->method('validateMappedRow')->willReturn(['valid' => true, 'errors' => [], 'warnings' => []]);
         $this->columnMapper->method('resolveUnite')->willReturn($this->createMock(Unite::class));
 
         $this->entityManager->method('flush');

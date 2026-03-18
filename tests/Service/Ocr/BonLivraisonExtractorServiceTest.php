@@ -11,11 +11,12 @@ use App\Entity\Fournisseur;
 use App\Entity\ProduitFournisseur;
 use App\Entity\Unite;
 use App\Enum\MatchConfidence;
+use App\Repository\BonLivraisonRepository;
 use App\Repository\FournisseurRepository;
-use App\Repository\ProduitFournisseurRepository;
 use App\Repository\UniteRepository;
 use App\Service\Ocr\AnthropicClient;
 use App\Service\Ocr\BonLivraisonExtractorService;
+use App\Service\Unit\UnitNormalizer;
 use App\Service\Ocr\ExtractionValidator;
 use App\Service\Ocr\OcrMatchingService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -28,8 +29,8 @@ class BonLivraisonExtractorServiceTest extends TestCase
 {
     private MockObject&AnthropicClient $anthropicClient;
     private MockObject&EntityManagerInterface $entityManager;
-    private MockObject&ProduitFournisseurRepository $produitFournisseurRepository;
     private MockObject&FournisseurRepository $fournisseurRepository;
+    private MockObject&BonLivraisonRepository $bonLivraisonRepository;
     private MockObject&UniteRepository $uniteRepository;
     private MockObject&OcrMatchingService $ocrMatchingService;
     private MockObject&ExtractionValidator $extractionValidator;
@@ -40,8 +41,8 @@ class BonLivraisonExtractorServiceTest extends TestCase
     {
         $this->anthropicClient = $this->createMock(AnthropicClient::class);
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
-        $this->produitFournisseurRepository = $this->createMock(ProduitFournisseurRepository::class);
         $this->fournisseurRepository = $this->createMock(FournisseurRepository::class);
+        $this->bonLivraisonRepository = $this->createMock(BonLivraisonRepository::class);
         $this->uniteRepository = $this->createMock(UniteRepository::class);
         $this->ocrMatchingService = $this->createMock(OcrMatchingService::class);
         $this->extractionValidator = $this->createMock(ExtractionValidator::class);
@@ -52,8 +53,8 @@ class BonLivraisonExtractorServiceTest extends TestCase
         $this->service = new BonLivraisonExtractorService(
             $this->anthropicClient,
             $this->entityManager,
-            $this->produitFournisseurRepository,
             $this->fournisseurRepository,
+            $this->bonLivraisonRepository,
             $this->uniteRepository,
             $this->ocrMatchingService,
             $this->extractionValidator,
@@ -381,12 +382,11 @@ class BonLivraisonExtractorServiceTest extends TestCase
     #[DataProvider('uniteMappingProvider')]
     public function testUniteMapping(string $input, string $expectedCode): void
     {
-        // Access UNITE_MAPPING via reflection
-        $reflection = new \ReflectionClass(BonLivraisonExtractorService::class);
-        $mapping = $reflection->getConstant('UNITE_MAPPING');
-
-        $normalizedInput = strtolower(trim($input));
-        $result = $mapping[$normalizedInput] ?? 'PU';
+        // UNITE_MAPPING moved to UnitNormalizer — test via the public API
+        $result = UnitNormalizer::normalize($input);
+        if ($result === '') {
+            $result = 'PU'; // fallback matches resolveUnite() behavior
+        }
 
         $this->assertSame($expectedCode, $result, "Unit '$input' should map to '$expectedCode'");
     }
@@ -428,8 +428,8 @@ class BonLivraisonExtractorServiceTest extends TestCase
         yield 'tonne' => ['tonne', 'KG'];
         yield 'fût accented' => ['fût', 'FUT'];
 
-        // Fallback
-        yield 'unknown unit' => ['bidule', 'PU'];
+        // Fallback — UnitNormalizer uppercases unknown inputs, resolveUnite() adds PU fallback
+        yield 'unknown unit' => ['bidule', 'BIDULE'];
     }
 
     private function getMockFoodFlowResponse(): array
