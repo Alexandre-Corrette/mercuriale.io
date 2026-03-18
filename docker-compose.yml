@@ -14,7 +14,7 @@ services:
     networks:
       - mercuriale
     environment:
-      APP_ENV: dev
+      APP_ENV: ${APP_ENV:-dev}
       APP_SECRET: ${APP_SECRET}
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:5432/${POSTGRES_DB}?serverVersion=16&charset=utf8
       REDIS_URL: redis://redis:6379
@@ -35,7 +35,7 @@ services:
     networks:
       - mercuriale
     environment:
-      APP_ENV: dev
+      APP_ENV: ${APP_ENV:-dev}
       APP_SECRET: ${APP_SECRET}
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:5432/${POSTGRES_DB}?serverVersion=16&charset=utf8
       REDIS_URL: redis://redis:6379
