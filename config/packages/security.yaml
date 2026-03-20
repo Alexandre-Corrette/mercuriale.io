@@ -38,6 +38,7 @@ security:
             remember_me:
                 secret: '%kernel.secret%'
                 lifetime: 604800 # 1 week
+                secure: true
             login_throttling:
                 max_attempts: 5
                 interval: '15 minutes'
@@ -49,11 +50,11 @@ security:
 
     # Access control rules
     access_control:
-        - { path: ^/admin, roles: ROLE_ADMIN }
-        - { path: ^/app, roles: ROLE_USER }
-        - { path: ^/api/token/refresh, roles: PUBLIC_ACCESS }
-        - { path: ^/api/docs, roles: PUBLIC_ACCESS }
-        - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/admin, roles: ROLE_ADMIN, requires_channel: https }
+        - { path: ^/app, roles: ROLE_USER, requires_channel: https }
+        - { path: ^/api/token/refresh, roles: PUBLIC_ACCESS, requires_channel: https }
+        - { path: ^/api/docs, roles: PUBLIC_ACCESS, requires_channel: https }
+        - { path: ^/api, roles: IS_AUTHENTICATED_FULLY, requires_channel: https }
         - { path: ^/login, roles: PUBLIC_ACCESS }
         - { path: ^/, roles: PUBLIC_ACCESS }
 
