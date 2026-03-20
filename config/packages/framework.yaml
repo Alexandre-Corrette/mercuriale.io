@@ -18,4 +18,4 @@ when@prod:
     framework:
         # Force HTTPS in production
         trusted_proxies: '%env(TRUSTED_PROXIES)%'
-        trusted_headers: ['x-forwarded-for', 'x-forwarded-proto']
+        trusted_headers: ['x-forwarded-for', 'x-forwarded-proto', 'x-forwarded-port']
