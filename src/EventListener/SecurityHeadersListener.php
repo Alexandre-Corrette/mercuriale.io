@@ -30,8 +30,15 @@ final class SecurityHeadersListener
         $response->headers->set('X-XSS-Protection', '1; mode=block');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
 
-        // Content Security Policy (adjust as needed)
+        // Production-only headers
         if ($this->environment === 'prod') {
+            // HSTS — force HTTPS for 1 year, including subdomains
+            $response->headers->set(
+                'Strict-Transport-Security',
+                'max-age=31536000; includeSubDomains'
+            );
+
+            // Content Security Policy
             $response->headers->set(
                 'Content-Security-Policy',
                 "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'self';"
