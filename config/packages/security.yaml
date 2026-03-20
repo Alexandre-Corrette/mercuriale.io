@@ -53,7 +53,7 @@ security:
         - { path: ^/admin, roles: ROLE_ADMIN, requires_channel: https }
         - { path: ^/app, roles: ROLE_USER, requires_channel: https }
         - { path: ^/api/token/refresh, roles: PUBLIC_ACCESS, requires_channel: https }
-        - { path: ^/api/docs, roles: PUBLIC_ACCESS, requires_channel: https }
+        - { path: ^/api/docs, roles: ROLE_ADMIN, requires_channel: https }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY, requires_channel: https }
         - { path: ^/login, roles: PUBLIC_ACCESS }
         - { path: ^/, roles: PUBLIC_ACCESS }
