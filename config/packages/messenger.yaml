@@ -7,8 +7,10 @@ framework:
             async:
                 dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
                 retry_strategy:
-                    max_retries: 3
-                    multiplier: 2
+                    max_retries: 5
+                    delay: 5000
+                    multiplier: 3
+                    max_delay: 60000
             failed: 'doctrine://default?queue_name=failed'
             # sync: 'sync://'
 
@@ -25,3 +27,4 @@ framework:
             # Route your messages to the transports
             'App\Message\FetchPendingInvoicesMessage': async
             'App\Message\ProcessFactureOcrMessage': async
+            'App\Message\ProcessBonLivraisonOcrMessage': async
