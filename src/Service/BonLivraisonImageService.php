@@ -6,6 +6,7 @@ namespace App\Service;
 
 use App\Entity\BonLivraison;
 use App\Service\Upload\BonLivraisonUploadService;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -14,6 +15,7 @@ class BonLivraisonImageService
 {
     public function __construct(
         private readonly BonLivraisonUploadService $uploadService,
+        private readonly LoggerInterface $logger,
     ) {
     }
 
@@ -47,5 +49,37 @@ class BonLivraisonImageService
         );
 
         return $response;
+    }
+
+    public function deleteImage(BonLivraison $bonLivraison): void
+    {
+        $imagePath = $bonLivraison->getImagePath();
+        if ($imagePath === null) {
+            $this->logger->warning('deleteImage appelé sur un BL sans image', [
+                'bl_id' => $bonLivraison->getId(),
+            ]);
+            return;
+        }
+
+        $uploadDir = realpath($this->uploadService->getUploadDirectory());
+        $fullPath = realpath($uploadDir . '/' . $imagePath);
+
+        if ($fullPath === false || !str_starts_with($fullPath, $uploadDir . '/')) {
+            $this->logger->critical('Tentative de suppression hors répertoire upload (path traversal)', [
+                'bl_id' => $bonLivraison->getId(),
+                'image_path' => $imagePath,
+            ]);
+            return;
+        }
+
+        if (!file_exists($fullPath)) {
+            $this->logger->warning('Image introuvable sur le filesystem', [
+                'bl_id' => $bonLivraison->getId(),
+                'path' => $fullPath,
+            ]);
+            return;
+        }
+
+        unlink($fullPath);
     }
 }
