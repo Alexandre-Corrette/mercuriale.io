@@ -9,7 +9,6 @@ use App\Entity\Utilisateur;
 use App\Exception\InvalidFileException;
 use App\Repository\BonLivraisonRepository;
 use App\Repository\EtablissementRepository;
-use App\Service\BonLivraisonImageService;
 use App\Service\Upload\BonLivraisonUploadService;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -26,7 +25,6 @@ class BonLivraisonApiController extends AbstractController
 {
     public function __construct(
         private readonly BonLivraisonRepository $bonLivraisonRepository,
-        private readonly BonLivraisonImageService $imageService,
         private readonly BonLivraisonUploadService $uploadService,
         private readonly EtablissementRepository $etablissementRepository,
         private readonly RateLimiterFactory $blReadLimiter,
@@ -164,22 +162,6 @@ class BonLivraisonApiController extends AbstractController
         }
     }
 
-    #[Route('/{id}/image', name: 'api_bons_livraison_image', methods: ['GET'])]
-    public function image(BonLivraison $bonLivraison): Response
-    {
-        if (!$this->isGranted('VIEW', $bonLivraison->getEtablissement())) {
-            return $this->json(
-                ['success' => false, 'error' => 'Accès non autorisé.'],
-                Response::HTTP_FORBIDDEN,
-            );
-        }
-
-        $response = $this->imageService->getImageResponse($bonLivraison);
-        $response->headers->set('Cache-Control', 'private, max-age=86400');
-
-        return $response;
-    }
-
     private function serializeBL(BonLivraison $bl): array
     {
         $lignes = [];
@@ -217,7 +199,6 @@ class BonLivraisonApiController extends AbstractController
             'dateLivraison' => $bl->getDateLivraison()->format('c'),
             'statut' => $bl->getStatut()->value,
             'totalHt' => $bl->getTotalHt(),
-            'hasImage' => $bl->getImagePath() !== null,
             'validatedAt' => $bl->getValidatedAt()?->format('c'),
             'fournisseur' => $bl->getFournisseur() ? [
                 'id' => $bl->getFournisseur()->getId(),

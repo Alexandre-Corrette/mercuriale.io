@@ -6,24 +6,23 @@ namespace App\Controller\App;
 
 use App\Entity\BonLivraison;
 use App\Entity\Utilisateur;
+use App\Enum\StatutBonLivraison;
+use App\Message\ProcessBonLivraisonOcrMessage;
 use App\Repository\FournisseurRepository;
-use App\Service\Ocr\BonLivraisonExtractorService;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-/**
- * OCR extraction endpoints: extraction page, trigger extraction, poll results.
- */
 #[IsGranted('ROLE_USER')]
 class BonLivraisonExtractionController extends AbstractController
 {
     public function __construct(
-        private readonly BonLivraisonExtractorService $extractorService,
+        private readonly MessageBusInterface $messageBus,
         private readonly LoggerInterface $logger,
         private readonly RateLimiterFactory $blUploadLimiter,
     ) {
@@ -68,43 +67,24 @@ class BonLivraisonExtractionController extends AbstractController
             ], Response::HTTP_TOO_MANY_REQUESTS);
         }
 
-        try {
-            $result = $this->extractorService->extract($bonLivraison);
-
-            if (!$result->success) {
-                return new JsonResponse([
-                    'success' => false,
-                    'errors' => $result->warnings,
-                ], Response::HTTP_UNPROCESSABLE_ENTITY);
-            }
-
-            return new JsonResponse([
-                'success' => true,
-                'confiance' => $result->confiance,
-                'nombreLignes' => $result->getNombreLignes(),
-                'produitsNonMatches' => $result->produitsNonMatches,
-                'warnings' => $result->warnings,
-                'tempsExtraction' => $result->tempsExtraction,
-                'redirectUrl' => $this->generateUrl('app_bl_extraction', ['id' => $bonLivraison->getId()]),
-            ]);
-        } catch (\RuntimeException $e) {
-            if (str_contains($e->getMessage(), 'Impossible de compresser')) {
-                return new JsonResponse([
-                    'success' => false,
-                    'errors' => ['L\'image est trop volumineuse. Veuillez prendre une photo en qualite standard (pas HDR/ProRAW).'],
-                ], Response::HTTP_UNPROCESSABLE_ENTITY);
-            }
-            throw $e;
-        } catch (\Exception $e) {
-            $this->logger->error('Erreur extraction BL', [
-                'bl_id' => $bonLivraison->getId(),
-                'error' => $e->getMessage(),
-            ]);
-
+        if ($bonLivraison->getStatut() === StatutBonLivraison::EN_COURS_OCR) {
             return new JsonResponse([
                 'success' => false,
-                'errors' => ['Erreur lors de l\'extraction: ' . $e->getMessage()],
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+                'errors' => ['Une extraction est déjà en cours pour ce bon de livraison.'],
+            ], Response::HTTP_CONFLICT);
         }
+
+        $this->messageBus->dispatch(new ProcessBonLivraisonOcrMessage($bonLivraison->getId()));
+
+        $this->logger->info('Extraction OCR async dispatchée', [
+            'bl_id' => $bonLivraison->getId(),
+            'user_id' => $user->getId(),
+        ]);
+
+        return new JsonResponse([
+            'success' => true,
+            'message' => 'Extraction lancée. Le traitement est en cours.',
+            'statut' => StatutBonLivraison::EN_COURS_OCR->value,
+        ], Response::HTTP_ACCEPTED);
     }
 }
