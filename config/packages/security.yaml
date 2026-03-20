@@ -15,6 +15,10 @@ security:
             pattern: ^/(_profiler|_wdt|assets|build)/
             security: false
 
+        api_token_refresh:
+            pattern: ^/api/token/refresh
+            stateless: true
+
         api:
             pattern: ^/api
             stateless: true
@@ -47,6 +51,7 @@ security:
     access_control:
         - { path: ^/admin, roles: ROLE_ADMIN }
         - { path: ^/app, roles: ROLE_USER }
+        - { path: ^/api/token/refresh, roles: PUBLIC_ACCESS }
         - { path: ^/api/docs, roles: PUBLIC_ACCESS }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/login, roles: PUBLIC_ACCESS }

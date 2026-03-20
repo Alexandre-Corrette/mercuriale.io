@@ -1,0 +1,5 @@
+gesdinet_jwt_refresh_token:
+    refresh_token_class: App\Entity\RefreshToken
+    ttl: 2592000        # 30 days
+    single_use: true    # token invalidated after each use (rotation)
+    ttl_update: true    # TTL renewed on each refresh
