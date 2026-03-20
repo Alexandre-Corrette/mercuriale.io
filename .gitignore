@@ -73,8 +73,10 @@ ocr_batch_report_*.json
 # IDE
 .idea/
 
-# Deploy scripts (contiennent des secrets)
+# Deploy scripts et secrets
 deploy-prod.sh
+deploy-preprod.sh
+.env.deploy.local
 
 # OS
 .DS_Store
