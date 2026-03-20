@@ -36,15 +36,18 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
-RUN echo "opcache.enable=0" >> /usr/local/etc/php/conf.d/opcache.ini
-RUN echo "display_errors=On" >> /usr/local/etc/php/conf.d/preprod.ini \
-    && echo "error_reporting=E_ALL" >> /usr/local/etc/php/conf.d/preprod.ini \
-    && echo "memory_limit=256M" >> /usr/local/etc/php/conf.d/preprod.ini \
-    && echo "upload_max_filesize=20M" >> /usr/local/etc/php/conf.d/preprod.ini \
-    && echo "post_max_size=20M" >> /usr/local/etc/php/conf.d/preprod.ini
+RUN echo "memory_limit=256M" >> /usr/local/etc/php/conf.d/mercuriale.ini \
+    && echo "upload_max_filesize=20M" >> /usr/local/etc/php/conf.d/mercuriale.ini \
+    && echo "post_max_size=25M" >> /usr/local/etc/php/conf.d/mercuriale.ini \
+    && echo "opcache.enable=1" >> /usr/local/etc/php/conf.d/mercuriale.ini \
+    && echo "opcache.validate_timestamps=1" >> /usr/local/etc/php/conf.d/mercuriale.ini \
+    && echo "display_errors=Off" >> /usr/local/etc/php/conf.d/mercuriale.ini \
+    && echo "expose_php=Off" >> /usr/local/etc/php/conf.d/mercuriale.ini
 
 WORKDIR /var/www/html
 
 RUN usermod -u 1000 www-data
+
+USER www-data
 
 CMD ["php-fpm"]
