@@ -42,7 +42,7 @@ class BonLivraisonExtractorService
         $startTime = microtime(true);
         $warnings = [];
         $produitsNonMatches = [];
-        $this->uniteCache = [];
+        // $uniteCache is now a local variable passed by reference into mapLignes/resolveUnite (see below)
 
         try {
             // 1. Récupérer l'image
@@ -78,6 +78,31 @@ class BonLivraisonExtractorService
                     'bl_id' => $bl->getId(),
                     'errors' => $businessErrors,
                 ]);
+
+                // Retry once on critical errors (missing lines, incoherent date) with a more explicit prompt
+                if ($this->extractionValidator->isCritical($businessErrors)) {
+                    $this->logger->info('Erreur critique détectée, nouvelle tentative d\'extraction', [
+                        'bl_id' => $bl->getId(),
+                        'errors' => $businessErrors,
+                    ]);
+                    $retryPrompt = $this->buildExtractionPrompt($bl) . "\n\nATTENTION : Une extraction précédente a retourné des erreurs critiques : " . implode(', ', $businessErrors) . ". Sois particulièrement attentif à lire TOUTES les lignes du tableau et à bien identifier la date du document.";
+                    $retryResponse = $this->anthropicClient->analyzeImage($imagePath, $retryPrompt);
+                    $retryData = $this->parseResponse($retryResponse['content']);
+                    if ($retryData !== null) {
+                        $retryErrors = $this->extractionValidator->validate($retryData);
+                        // Use retry result only if it's strictly better (fewer critical errors)
+                        if (count($retryErrors) < count($businessErrors)) {
+                            $this->logger->info('Retry extraction améliorée, utilisation du résultat de la seconde tentative', [
+                                'bl_id' => $bl->getId(),
+                                'initial_errors' => count($businessErrors),
+                                'retry_errors' => count($retryErrors),
+                            ]);
+                            $data = $retryData;
+                            $businessErrors = $retryErrors;
+                        }
+                    }
+                }
+
                 foreach ($businessErrors as $err) {
                     $warnings[] = 'Validation: ' . $err;
                 }
@@ -122,7 +147,8 @@ class BonLivraisonExtractorService
             }
 
             // 7. Mapper les lignes
-            $lignes = $this->mapLignes($data, $bl, $produitsNonMatches);
+            $uniteCache = [];
+            $lignes = $this->mapLignes($data, $bl, $produitsNonMatches, $uniteCache);
 
             // 8. Sauvegarder les données brutes
             $bl->setDonneesBrutes($data);
@@ -252,7 +278,7 @@ PROMPT;
     private const SUPPLIER_KEYWORDS = [
         'terreazur' => 'getTerreAzurContext',
         'terre azur' => 'getTerreAzurContext',
-        'pomona' => 'getTerreAzurContext',
+        'pomona' => 'getTerreAzurContext',   // Pomona is the parent group of TerreAzur — same BL format
         'bihan' => 'getLeBihanContext',
         'tmeg' => 'getLeBihanContext',
         'brake' => 'getBrakeContext',
@@ -526,9 +552,10 @@ CTX;
      */
     private function parseResponse(string $jsonResponse): ?array
     {
-        $this->logger->info('Réponse brute OCR (full)', [
+        // Log only at debug level to avoid persisting potentially sensitive OCR content (product names, prices) in production log aggregators.
+        $this->logger->debug('Réponse brute OCR (full)', [
             'length' => strlen($jsonResponse),
-            'content' => $jsonResponse,
+            'content' => mb_substr($jsonResponse, 0, 500) . (strlen($jsonResponse) > 500 ? '…[truncated]' : ''),
         ]);
 
         // Nettoyer la réponse (enlever les backticks markdown si présents)
@@ -707,19 +734,23 @@ CTX;
         }
 
         $fournisseurs = $this->fournisseurRepository->findByOrganisation($organisation);
-        $nomExtrait = mb_strtolower(trim($nomExtrait));
 
-        // Exact match first
+        // Use normalizeName() for consistent accent/punctuation stripping (same as prompt context selection)
+        $nomExtraitNorm = self::normalizeName($nomExtrait);
+
+        // Exact match first (normalized)
         foreach ($fournisseurs as $fournisseur) {
-            if (mb_strtolower($fournisseur->getNom()) === $nomExtrait) {
+            if (self::normalizeName($fournisseur->getNom()) === $nomExtraitNorm) {
                 return $fournisseur;
             }
         }
 
-        // Partial match: OCR name contains DB name or vice versa
+        // Partial match: OCR name contains DB name or vice versa.
+        // Guard against very short DB names (< 4 chars) to avoid false positives
+        // e.g. "Metro" matching inside "Métropole Distribution SARL".
         foreach ($fournisseurs as $fournisseur) {
-            $nomDb = mb_strtolower($fournisseur->getNom());
-            if (str_contains($nomExtrait, $nomDb) || str_contains($nomDb, $nomExtrait)) {
+            $nomDbNorm = self::normalizeName($fournisseur->getNom());
+            if (strlen($nomDbNorm) >= 4 && (str_contains($nomExtraitNorm, $nomDbNorm) || str_contains($nomDbNorm, $nomExtraitNorm))) {
                 return $fournisseur;
             }
         }
@@ -774,10 +805,11 @@ CTX;
      * - unite              ← resolveUnite(unite_facturation) — c'est l'unité de FACTURATION qui compte pour la mercuriale
      *
      * @param array[] $produitsNonMatches
+     * @param array<string, Unite> $uniteCache
      *
      * @return LigneBonLivraison[]
      */
-    private function mapLignes(array $data, BonLivraison $bl, array &$produitsNonMatches): array
+    private function mapLignes(array $data, BonLivraison $bl, array &$produitsNonMatches, array &$uniteCache): array
     {
         $lignes = [];
 
@@ -818,7 +850,7 @@ CTX;
 
             // Unité de référence = unité de facturation (celle de la mercuriale)
             $uniteFactStr = $ligneData['unite_facturation'] ?? 'PU';
-            $unite = $this->resolveUnite($uniteFactStr);
+            $unite = $this->resolveUnite($uniteFactStr, $uniteCache);
             $ligne->setUnite($unite);
 
             // Prix
@@ -867,13 +899,14 @@ CTX;
         return $lignes;
     }
 
-    /** @var array<string, Unite> Cache des unités résolues pendant l'extraction */
-    private array $uniteCache = [];
-
     /**
      * Résout une unité depuis une chaîne extraite.
+     * Le cache est local à chaque appel de mapLignes (passé par référence) pour éviter
+     * tout état partagé entre extractions concurrentes dans les workers Messenger.
+     *
+     * @param array<string, Unite> $cache
      */
-    private function resolveUnite(string $uniteStr): Unite
+    private function resolveUnite(string $uniteStr, array &$cache): Unite
     {
         // Normalize via UnitNormalizer (canonical uppercase codes)
         $code = UnitNormalizer::normalize($uniteStr);
@@ -882,8 +915,8 @@ CTX;
         }
 
         // Retourner depuis le cache si déjà résolu
-        if (isset($this->uniteCache[$code])) {
-            return $this->uniteCache[$code];
+        if (isset($cache[$code])) {
+            return $cache[$code];
         }
 
         // Chercher l'unité en base (try lowercase then uppercase)
@@ -905,7 +938,7 @@ CTX;
             $this->entityManager->persist($unite);
         }
 
-        $this->uniteCache[$code] = $unite;
+        $cache[$code] = $unite;
 
         return $unite;
     }

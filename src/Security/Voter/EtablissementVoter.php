@@ -16,9 +16,9 @@ use Symfony\Component\Security\Core\Authorization\Voter\Voter;
  */
 class EtablissementVoter extends Voter
 {
-    public const VIEW = 'VIEW';
-    public const UPLOAD = 'UPLOAD';
-    public const MANAGE = 'MANAGE';
+    public const VIEW = 'ETAB_VIEW';
+    public const UPLOAD = 'ETAB_UPLOAD';
+    public const MANAGE = 'ETAB_MANAGE';
 
     public function __construct(
         private readonly UtilisateurEtablissementRepository $utilisateurEtablissementRepository,

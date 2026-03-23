@@ -10,6 +10,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use App\Security\Voter\EtablissementVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[IsGranted('ROLE_USER')]
@@ -23,7 +24,7 @@ class EtablissementSwitchController extends AbstractController
     #[Route('/app/etablissement/switch/{id}', name: 'app_etablissement_switch')]
     public function __invoke(Etablissement $etablissement, Request $request): Response
     {
-        $this->denyAccessUnlessGranted('VIEW', $etablissement);
+        $this->denyAccessUnlessGranted(EtablissementVoter::VIEW, $etablissement);
 
         // Switch both org and etab context atomically
         $orgId = $etablissement->getOrganisation()?->getId();

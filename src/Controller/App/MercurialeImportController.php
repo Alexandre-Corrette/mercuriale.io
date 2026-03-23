@@ -24,6 +24,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Routing\Attribute\Route;
+use App\Security\Voter\EtablissementVoter;
+use App\Security\Voter\FournisseurVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
@@ -69,7 +71,7 @@ class MercurialeImportController extends AbstractController
             /** @var \Symfony\Component\HttpFoundation\File\UploadedFile $file */
             $file = $form->get('file')->getData();
 
-            if (!$this->isGranted('VIEW', $fournisseur)) {
+            if (!$this->isGranted(FournisseurVoter::VIEW, $fournisseur)) {
                 $this->logger->warning('Tentative d\'import non autorisee', [
                     'user_id' => $user->getId(),
                     'fournisseur_id' => $fournisseur->getId(),
@@ -78,7 +80,7 @@ class MercurialeImportController extends AbstractController
             }
 
             foreach ($etablissements as $etablissement) {
-                if (!$this->isGranted('VIEW', $etablissement)) {
+                if (!$this->isGranted(EtablissementVoter::VIEW, $etablissement)) {
                     throw $this->createAccessDeniedException('Vous n\'avez pas acces a cet etablissement.');
                 }
             }

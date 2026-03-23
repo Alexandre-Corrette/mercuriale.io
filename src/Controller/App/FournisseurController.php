@@ -211,7 +211,7 @@ class FournisseurController extends AbstractController
         BonLivraisonRepository $blRepo,
         AvoirFournisseurRepository $avoirRepo,
     ): Response {
-        $this->denyAccessUnlessGranted('VIEW', $fournisseur);
+        $this->denyAccessUnlessGranted(FournisseurVoter::VIEW, $fournisseur);
 
         /** @var Utilisateur $user */
         $user = $this->getUser();

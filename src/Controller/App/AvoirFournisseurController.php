@@ -22,6 +22,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Routing\Attribute\Route;
+use App\Security\Voter\EtablissementVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/app/avoirs')]
@@ -60,7 +61,7 @@ class AvoirFournisseurController extends AbstractController
         if (!$etablissement) {
             throw $this->createAccessDeniedException();
         }
-        $this->denyAccessUnlessGranted('VIEW', $etablissement);
+        $this->denyAccessUnlessGranted(EtablissementVoter::VIEW, $etablissement);
 
         $statutFilter = $request->query->getString('statut');
         $statut = $statutFilter !== '' ? StatutAvoir::tryFrom($statutFilter) : null;
@@ -78,7 +79,7 @@ class AvoirFournisseurController extends AbstractController
     #[Route('/{id}', name: 'app_avoir_show', methods: ['GET'])]
     public function show(AvoirFournisseur $avoir): Response
     {
-        if (!$this->isGranted('VIEW', $avoir->getEtablissement())) {
+        if (!$this->isGranted(EtablissementVoter::VIEW, $avoir->getEtablissement())) {
             throw $this->createAccessDeniedException();
         }
 
@@ -90,7 +91,7 @@ class AvoirFournisseurController extends AbstractController
     #[Route('/{id}/enregistrer', name: 'app_avoir_enregistrer', methods: ['GET', 'POST'])]
     public function enregistrer(AvoirFournisseur $avoir, Request $request): Response
     {
-        if (!$this->isGranted('MANAGE', $avoir->getEtablissement())) {
+        if (!$this->isGranted(EtablissementVoter::MANAGE, $avoir->getEtablissement())) {
             throw $this->createAccessDeniedException();
         }
 
@@ -143,7 +144,7 @@ class AvoirFournisseurController extends AbstractController
     #[Route('/{id}/imputer', name: 'app_avoir_imputer', methods: ['POST'])]
     public function imputer(AvoirFournisseur $avoir, Request $request): Response
     {
-        if (!$this->isGranted('MANAGE', $avoir->getEtablissement())) {
+        if (!$this->isGranted(EtablissementVoter::MANAGE, $avoir->getEtablissement())) {
             throw $this->createAccessDeniedException();
         }
 
@@ -172,7 +173,7 @@ class AvoirFournisseurController extends AbstractController
     #[Route('/{id}/refuser', name: 'app_avoir_refuser', methods: ['POST'])]
     public function refuser(AvoirFournisseur $avoir, Request $request): Response
     {
-        if (!$this->isGranted('MANAGE', $avoir->getEtablissement())) {
+        if (!$this->isGranted(EtablissementVoter::MANAGE, $avoir->getEtablissement())) {
             throw $this->createAccessDeniedException();
         }
 
@@ -203,7 +204,7 @@ class AvoirFournisseurController extends AbstractController
     #[Route('/{id}/annuler', name: 'app_avoir_annuler', methods: ['POST'])]
     public function annuler(AvoirFournisseur $avoir, Request $request): Response
     {
-        if (!$this->isGranted('MANAGE', $avoir->getEtablissement())) {
+        if (!$this->isGranted(EtablissementVoter::MANAGE, $avoir->getEtablissement())) {
             throw $this->createAccessDeniedException();
         }
 
@@ -235,7 +236,7 @@ class AvoirFournisseurController extends AbstractController
     public function demande(BonLivraison $bonLivraison, Request $request): Response
     {
         // Vérifier accès à l'établissement
-        if (!$this->isGranted('MANAGE', $bonLivraison->getEtablissement())) {
+        if (!$this->isGranted(EtablissementVoter::MANAGE, $bonLivraison->getEtablissement())) {
             throw $this->createAccessDeniedException();
         }
 

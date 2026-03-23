@@ -16,6 +16,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Routing\Attribute\Route;
+use App\Security\Voter\EtablissementVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[IsGranted('ROLE_USER')]
@@ -31,7 +32,7 @@ class BonLivraisonExtractionController extends AbstractController
     #[Route('/app/bl/{id}/extraction', name: 'app_bl_extraction', methods: ['GET'])]
     public function extraction(BonLivraison $bonLivraison, FournisseurRepository $fournisseurRepository): Response
     {
-        if (!$this->isGranted('VIEW', $bonLivraison->getEtablissement())) {
+        if (!$this->isGranted(EtablissementVoter::VIEW, $bonLivraison->getEtablissement())) {
             throw $this->createAccessDeniedException();
         }
 
@@ -54,7 +55,7 @@ class BonLivraisonExtractionController extends AbstractController
     #[Route('/app/bl/{id}/extraire', name: 'app_bl_extraire', methods: ['POST'])]
     public function extraire(BonLivraison $bonLivraison): JsonResponse
     {
-        if (!$this->isGranted('VIEW', $bonLivraison->getEtablissement())) {
+        if (!$this->isGranted(EtablissementVoter::VIEW, $bonLivraison->getEtablissement())) {
             return new JsonResponse(['error' => 'Acces refuse'], Response::HTTP_FORBIDDEN);
         }
 

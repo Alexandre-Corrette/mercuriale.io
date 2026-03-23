@@ -17,6 +17,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Routing\Attribute\Route;
+use App\Security\Voter\EtablissementVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/api/bons-livraison')]
@@ -124,7 +125,7 @@ class BonLivraisonApiController extends AbstractController
             );
         }
 
-        if (!$this->isGranted('UPLOAD', $etablissement)) {
+        if (!$this->isGranted(EtablissementVoter::UPLOAD, $etablissement)) {
             return $this->json(
                 ['success' => false, 'error' => 'Accès non autorisé à cet établissement.'],
                 Response::HTTP_FORBIDDEN,

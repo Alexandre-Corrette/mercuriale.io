@@ -19,6 +19,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use App\Security\Voter\EtablissementVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/app/bl')]
@@ -56,7 +57,7 @@ class BonLivraisonController extends AbstractController
         if (!$etablissement) {
             throw $this->createAccessDeniedException();
         }
-        $this->denyAccessUnlessGranted('VIEW', $etablissement);
+        $this->denyAccessUnlessGranted(EtablissementVoter::VIEW, $etablissement);
 
         $blData = $blRepo->findValidatedByEtablissementWithAlertCount($etablissement);
 
@@ -76,7 +77,7 @@ class BonLivraisonController extends AbstractController
         if (!$etablissement) {
             throw $this->createAccessDeniedException();
         }
-        $this->denyAccessUnlessGranted('VIEW', $etablissement);
+        $this->denyAccessUnlessGranted(EtablissementVoter::VIEW, $etablissement);
 
         $alertes = $alerteRepo->findNonTraiteesForEtablissement($etablissement);
 
@@ -94,7 +95,7 @@ class BonLivraisonController extends AbstractController
         if (!$etablissement) {
             throw $this->createAccessDeniedException();
         }
-        $this->denyAccessUnlessGranted('VIEW', $etablissement);
+        $this->denyAccessUnlessGranted(EtablissementVoter::VIEW, $etablissement);
 
         $blData = $blRepo->findAnomalieByEtablissementWithAlertCount($etablissement);
 
@@ -118,7 +119,7 @@ class BonLivraisonController extends AbstractController
     #[Route('/{id}/pending-detail', name: 'app_bl_pending_detail', methods: ['GET'])]
     public function pendingDetail(BonLivraison $bonLivraison): Response
     {
-        if (!$this->isGranted('VIEW', $bonLivraison->getEtablissement())) {
+        if (!$this->isGranted(EtablissementVoter::VIEW, $bonLivraison->getEtablissement())) {
             throw $this->createAccessDeniedException();
         }
 
@@ -136,7 +137,7 @@ class BonLivraisonController extends AbstractController
     #[Route('/{id}/detail', name: 'app_bl_show', methods: ['GET'])]
     public function show(BonLivraison $bonLivraison): Response
     {
-        if (!$this->isGranted('VIEW', $bonLivraison->getEtablissement())) {
+        if (!$this->isGranted(EtablissementVoter::VIEW, $bonLivraison->getEtablissement())) {
             throw $this->createAccessDeniedException();
         }
 
@@ -154,7 +155,7 @@ class BonLivraisonController extends AbstractController
     #[Route('/{id}/image', name: 'app_bl_image', methods: ['GET'])]
     public function image(BonLivraison $bonLivraison): Response
     {
-        if (!$this->isGranted('VIEW', $bonLivraison->getEtablissement())) {
+        if (!$this->isGranted(EtablissementVoter::VIEW, $bonLivraison->getEtablissement())) {
             throw $this->createAccessDeniedException();
         }
 
@@ -169,7 +170,7 @@ class BonLivraisonController extends AbstractController
         ProduitFournisseurRepository $produitFournisseurRepo,
         LoggerInterface $logger,
     ): Response {
-        if (!$this->isGranted('MANAGE', $bonLivraison->getEtablissement())) {
+        if (!$this->isGranted(EtablissementVoter::MANAGE, $bonLivraison->getEtablissement())) {
             throw $this->createAccessDeniedException();
         }
 

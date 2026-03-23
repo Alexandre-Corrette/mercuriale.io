@@ -22,6 +22,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Routing\Attribute\Route;
+use App\Security\Voter\EtablissementVoter;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
@@ -58,7 +59,7 @@ class BonLivraisonUploadController extends AbstractController
             /** @var array<int, \Symfony\Component\HttpFoundation\File\UploadedFile> $files */
             $files = $form->get('files')->getData();
 
-            if (!$this->isGranted('UPLOAD', $etablissement)) {
+            if (!$this->isGranted(EtablissementVoter::UPLOAD, $etablissement)) {
                 $this->logger->warning('Tentative d\'upload non autorisee', [
                     'user_id' => $user->getId(),
                     'etablissement_id' => $etablissement->getId(),
@@ -95,7 +96,7 @@ class BonLivraisonUploadController extends AbstractController
     #[Route('/app/bl/{id}/validate', name: 'app_bl_validate', methods: ['GET'])]
     public function validate(BonLivraison $bonLivraison): Response
     {
-        if (!$this->isGranted('VIEW', $bonLivraison->getEtablissement())) {
+        if (!$this->isGranted(EtablissementVoter::VIEW, $bonLivraison->getEtablissement())) {
             throw $this->createAccessDeniedException();
         }
 
@@ -105,7 +106,7 @@ class BonLivraisonUploadController extends AbstractController
     #[Route('/app/bl/{id}/valider', name: 'app_bl_valider', methods: ['POST'])]
     public function valider(BonLivraison $bonLivraison, Request $request): Response
     {
-        if (!$this->isGranted('MANAGE', $bonLivraison->getEtablissement())) {
+        if (!$this->isGranted(EtablissementVoter::MANAGE, $bonLivraison->getEtablissement())) {
             throw $this->createAccessDeniedException();
         }
 
@@ -146,7 +147,7 @@ class BonLivraisonUploadController extends AbstractController
     #[Route('/app/bl/{id}/rejeter', name: 'app_bl_rejeter', methods: ['POST'])]
     public function rejeter(BonLivraison $bonLivraison, Request $request): Response
     {
-        if (!$this->isGranted('MANAGE', $bonLivraison->getEtablissement())) {
+        if (!$this->isGranted(EtablissementVoter::MANAGE, $bonLivraison->getEtablissement())) {
             throw $this->createAccessDeniedException();
         }
 
@@ -179,7 +180,7 @@ class BonLivraisonUploadController extends AbstractController
         int $ligneId,
         Request $request,
     ): JsonResponse {
-        if (!$this->isGranted('MANAGE', $bonLivraison->getEtablissement())) {
+        if (!$this->isGranted(EtablissementVoter::MANAGE, $bonLivraison->getEtablissement())) {
             return new JsonResponse(['error' => 'Acces refuse'], Response::HTTP_FORBIDDEN);
         }
 
@@ -247,7 +248,7 @@ class BonLivraisonUploadController extends AbstractController
         Request $request,
         FournisseurRepository $fournisseurRepository,
     ): JsonResponse {
-        if (!$this->isGranted('MANAGE', $bonLivraison->getEtablissement())) {
+        if (!$this->isGranted(EtablissementVoter::MANAGE, $bonLivraison->getEtablissement())) {
             return new JsonResponse(['error' => 'Acces refuse'], Response::HTTP_FORBIDDEN);
         }
 
@@ -315,7 +316,7 @@ class BonLivraisonUploadController extends AbstractController
 
         $accessibleBls = array_filter(
             $bonsLivraison,
-            fn (BonLivraison $bl) => $this->isGranted('VIEW', $bl->getEtablissement())
+            fn (BonLivraison $bl) => $this->isGranted(EtablissementVoter::VIEW, $bl->getEtablissement())
         );
 
         if (empty($accessibleBls)) {
