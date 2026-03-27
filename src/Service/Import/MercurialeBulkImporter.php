@@ -373,6 +373,8 @@ class MercurialeBulkImporter
         $mercurialesCreated = 0;
         $mercurialesUpdated = 0;
         $skipped = 0;
+        $unitsNormalized = 0;
+        $unitsFallback = 0;
 
         $deadline = time() + self::TIMEOUT_SECONDS;
 
@@ -421,6 +423,14 @@ class MercurialeBulkImporter
                     ++$skipped;
                 }
 
+                if (!empty($validated->mappedData['unite'])) {
+                    if ($result['unit_resolved'] ?? false) {
+                        ++$unitsNormalized;
+                    } else {
+                        ++$unitsFallback;
+                    }
+                }
+
                 // For additional etablissements, create mercuriale rows
                 if (\count($etablissementList) > 1 && $result['product'] !== null) {
                     for ($i = 1, $count = \count($etablissementList); $i < $count; ++$i) {
@@ -458,6 +468,8 @@ class MercurialeBulkImporter
                 failed: $failed,
                 errors: $errors,
                 executionTime: $executionTime,
+                unitsNormalized: $unitsNormalized,
+                unitsFallback: $unitsFallback,
             );
 
             // Update import status
@@ -578,8 +590,10 @@ class MercurialeBulkImporter
 
         // Set unit (use default if not found)
         $unit = null;
+        $unitResolved = false;
         if (!empty($mappedData['unite'])) {
             $unit = $this->columnMapper->resolveUnite($mappedData['unite']);
+            $unitResolved = ($unit !== null);
         }
         $product->setUniteAchat($unit ?? $defaultUnit);
 
@@ -614,6 +628,7 @@ class MercurialeBulkImporter
                 'action' => $productAction,
                 'mercuriale_action' => null,
                 'product' => $product,
+                'unit_resolved' => $unitResolved,
             ];
         }
 
@@ -639,7 +654,7 @@ class MercurialeBulkImporter
                 // Check if price is different
                 if (bccomp($existingMercuriale->getPrixNegocie(), $mappedData['prix'], 4) === 0) {
                     // Same price, skip
-                    return ['action' => 'skipped', 'mercuriale_action' => null, 'product' => $product];
+                    return ['action' => 'skipped', 'mercuriale_action' => null, 'product' => $product, 'unit_resolved' => $unitResolved];
                 }
 
                 // End the existing mercuriale
@@ -668,6 +683,7 @@ class MercurialeBulkImporter
             'action' => $productAction,
             'mercuriale_action' => $mercurialeAction,
             'product' => $product,
+            'unit_resolved' => $unitResolved,
         ];
     }
 

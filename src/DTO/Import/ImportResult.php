@@ -18,6 +18,8 @@ final readonly class ImportResult
         /** @var ImportError[] */
         public array $errors = [],
         public float $executionTime = 0.0,
+        public int $unitsNormalized = 0,
+        public int $unitsFallback = 0,
     ) {}
 
     public function isSuccess(): bool
@@ -52,6 +54,9 @@ final readonly class ImportResult
         if ($this->failed > 0) {
             $parts[] = sprintf('%d erreur(s)', $this->failed);
         }
+        if ($this->unitsFallback > 0) {
+            $parts[] = sprintf('%d unité(s) non reconnue(s)', $this->unitsFallback);
+        }
 
         return implode(', ', $parts) ?: 'Aucune modification';
     }
@@ -69,6 +74,8 @@ final readonly class ImportResult
             'failed' => $this->failed,
             'errors' => array_map(fn (ImportError $e) => $e->toArray(), $this->errors),
             'executionTime' => $this->executionTime,
+            'unitsNormalized' => $this->unitsNormalized,
+            'unitsFallback' => $this->unitsFallback,
         ];
     }
 
@@ -85,6 +92,8 @@ final readonly class ImportResult
             failed: $data['failed'],
             errors: array_map(fn (array $e) => ImportError::fromArray($e), $data['errors'] ?? []),
             executionTime: $data['executionTime'] ?? 0.0,
+            unitsNormalized: $data['unitsNormalized'] ?? 0,
+            unitsFallback: $data['unitsFallback'] ?? 0,
         );
     }
 

@@ -59,10 +59,37 @@ class UnitNormalizerTest extends TestCase
 
         // Whitespace
         yield 'trimmed kg' => ['  kg  ', 'KG'];
+        yield 'trimmed sachet' => ['  sachet  ', 'SCH'];
 
         // Already canonical
         yield 'PU already canonical' => ['PU', 'PU'];
         yield 'BOT already canonical' => ['BOT', 'BOT'];
+
+        // ── MERC-140: Nouveaux conditionnements ──
+        yield 'bocal' => ['bocal', 'BOC'];
+        yield 'bocaux' => ['bocaux', 'BOC'];
+        yield 'bombe' => ['bombe', 'BMB'];
+        yield 'etui' => ['etui', 'ETU'];
+        yield 'étui with accent' => ['étui', 'ETU'];
+        yield 'brick' => ['brick', 'BRK'];
+        yield 'poche' => ['poche', 'POC'];
+        yield 'pot' => ['pot', 'POT'];
+        yield 'seau' => ['seau', 'SEA'];
+        yield 'tube' => ['tube', 'TUB'];
+
+        // ── MERC-140: Remappings (précision accrue) ──
+        yield 'flacon → FLA' => ['flacon', 'FLA'];
+        yield 'rouleau → RLX' => ['rouleau', 'RLX'];
+        yield 'paquet → PQT' => ['paquet', 'PQT'];
+        yield 'sachet → SCH' => ['sachet', 'SCH'];
+
+        // ── MERC-140: Composite units ──
+        yield 'boite 4/4 → BTE' => ['BOITE 4/4', 'BTE'];
+        yield 'boite 5/1 → BTE' => ['boite 5/1', 'BTE'];
+
+        // ── MERC-140: Case insensitive ──
+        yield 'BOCAL uppercase' => ['BOCAL', 'BOC'];
+        yield 'Bombe mixed case' => ['Bombe', 'BMB'];
     }
 
     #[DataProvider('normalizeProvider')]

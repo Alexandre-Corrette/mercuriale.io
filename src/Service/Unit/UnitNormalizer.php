@@ -71,9 +71,6 @@ class UnitNormalizer
         'lots' => 'LOT',
         'dz' => 'PU',
         'douzaine' => 'PU',
-        'pqt' => 'PU',
-        'paquet' => 'PU',
-        'paquets' => 'PU',
 
         // ── Conditionnements ──
         'bq' => 'BQT',
@@ -86,9 +83,6 @@ class UnitNormalizer
         'btl' => 'BOT',
         'bouteille' => 'BOT',
         'bouteilles' => 'BOT',
-        'flacon' => 'BOT',
-        'flacons' => 'BOT',
-        'fl' => 'BOT',
         'ct' => 'CAR',
         'crt' => 'CAR',
         'car' => 'CAR',
@@ -102,8 +96,6 @@ class UnitNormalizer
         'filet' => 'COL',
         'sac' => 'SAC',
         'sacs' => 'SAC',
-        'sachet' => 'SAC',
-        'sachets' => 'SAC',
         'bag' => 'SAC',
         'fut' => 'FUT',
         'fût' => 'FUT',
@@ -129,9 +121,39 @@ class UnitNormalizer
         'jerrycan' => 'JER',
         'bac' => 'PU',
         'bacs' => 'PU',
-        'rouleau' => 'PU',
-        'rouleaux' => 'PU',
-        'rlx' => 'PU',
+
+        // ── Unités remappées (MERC-140 — précision accrue) ──
+        'flacon' => 'FLA',
+        'flacons' => 'FLA',
+        'fl' => 'FLA',
+        'rouleau' => 'RLX',
+        'rouleaux' => 'RLX',
+        'rlx' => 'RLX',
+        'pqt' => 'PQT',
+        'paquet' => 'PQT',
+        'paquets' => 'PQT',
+        'sachet' => 'SCH',
+        'sachets' => 'SCH',
+
+        // ── Nouveaux conditionnements (MERC-140) ──
+        'bocal' => 'BOC',
+        'bocaux' => 'BOC',
+        'bombe' => 'BMB',
+        'bombes' => 'BMB',
+        'etui' => 'ETU',
+        'étui' => 'ETU',
+        'etuis' => 'ETU',
+        'étuis' => 'ETU',
+        'brick' => 'BRK',
+        'bricks' => 'BRK',
+        'poche' => 'POC',
+        'poches' => 'POC',
+        'pot' => 'POT',
+        'pots' => 'POT',
+        'seau' => 'SEA',
+        'seaux' => 'SEA',
+        'tube' => 'TUB',
+        'tubes' => 'TUB',
     ];
 
     /**
@@ -158,6 +180,12 @@ class UnitNormalizer
 
         if (isset(self::MAPPING[$lower])) {
             return self::MAPPING[$lower];
+        }
+
+        // Strip trailing size qualifiers: "boite 4/4" → "boite", "boite 5/1" → "boite"
+        $stripped = preg_replace('/\s+\d+\/\d+$/', '', $lower);
+        if ($stripped !== $lower && isset(self::MAPPING[$stripped])) {
+            return self::MAPPING[$stripped];
         }
 
         // Check if already a valid canonical code (e.g. 'KG', 'COL')
