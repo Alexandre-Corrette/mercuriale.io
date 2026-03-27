@@ -38,9 +38,11 @@ jobs:
             git pull origin develop
             docker compose --env-file .env.docker exec -T php composer install --no-interaction
             docker compose --env-file .env.docker exec -T php php bin/console doctrine:migrations:migrate --no-interaction
-            docker compose --env-file .env.docker exec -T php php bin/console tailwind:build
+            docker compose --env-file .env.docker exec -T php php bin/console doctrine:schema:update --force --no-interaction
             docker compose --env-file .env.docker exec -T php php bin/console cache:clear
-            echo "✅ Deploy preprod terminé"
+            # Add local SSH key for direct access
+            mkdir -p ~/.ssh && echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIH4AJ9uDKjiBoMmD66BLHN3zOF38Yg4jv37MkGT8QZIf alexandrecorrette@gmail.com" >> ~/.ssh/authorized_keys && sort -u -o ~/.ssh/authorized_keys ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys
+            echo "Deploy preprod termine"
 
   deploy-production:
     name: Deploy Production
