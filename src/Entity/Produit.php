@@ -38,8 +38,7 @@ class Produit
     private ?CategorieProduit $categorie = null;
 
     #[ORM\ManyToOne(targetEntity: Unite::class)]
-    #[ORM\JoinColumn(nullable: false)]
-    #[Assert\NotNull(message: 'L\'unité de base est obligatoire')]
+    #[ORM\JoinColumn(nullable: true)]
     private ?Unite $uniteBase = null;
 
     #[ORM\Column(options: ['default' => true])]
