@@ -36,13 +36,8 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
-RUN echo "memory_limit=256M" >> /usr/local/etc/php/conf.d/mercuriale.ini \
-    && echo "upload_max_filesize=20M" >> /usr/local/etc/php/conf.d/mercuriale.ini \
-    && echo "post_max_size=25M" >> /usr/local/etc/php/conf.d/mercuriale.ini \
-    && echo "opcache.enable=1" >> /usr/local/etc/php/conf.d/mercuriale.ini \
-    && echo "opcache.validate_timestamps=1" >> /usr/local/etc/php/conf.d/mercuriale.ini \
-    && echo "display_errors=Off" >> /usr/local/etc/php/conf.d/mercuriale.ini \
-    && echo "expose_php=Off" >> /usr/local/etc/php/conf.d/mercuriale.ini
+ARG APP_ENV=prod
+COPY docker/php/php-${APP_ENV}.ini $PHP_INI_DIR/conf.d/mercuriale.ini
 
 WORKDIR /var/www/html
 

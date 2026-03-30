@@ -408,7 +408,9 @@ class BonLivraisonUploadService
                 'converted' => basename($newFilePath),
             ]);
 
-            return basename(dirname($newFilePath)) . '/' . basename($newFilePath);
+            $uploadDir = $this->getUploadDirectory();
+
+            return ltrim(str_replace($uploadDir, '', $newFilePath), '/');
         } catch (\ImagickException $e) {
             throw new InvalidFileException(
                 InvalidFileException::CONVERSION_ERROR,

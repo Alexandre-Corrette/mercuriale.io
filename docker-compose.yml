@@ -4,6 +4,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        APP_ENV: ${APP_ENV:-dev}
     container_name: mercuriale_php
     restart: unless-stopped
     volumes:
@@ -24,6 +26,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        APP_ENV: ${APP_ENV:-dev}
     container_name: mercuriale_worker
     restart: unless-stopped
     command: php bin/console messenger:consume async --time-limit=600 --memory-limit=256M -vv
