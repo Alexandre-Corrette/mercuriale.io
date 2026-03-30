@@ -47,8 +47,7 @@ class ProduitFournisseur
     private ?string $designationFournisseur = null;
 
     #[ORM\ManyToOne(targetEntity: Unite::class)]
-    #[ORM\JoinColumn(nullable: false)]
-    #[Assert\NotNull(message: 'L\'unité d\'achat est obligatoire')]
+    #[ORM\JoinColumn(nullable: true)]
     private ?Unite $uniteAchat = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 3, options: ['default' => '1.000'])]
