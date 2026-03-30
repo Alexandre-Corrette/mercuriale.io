@@ -19,10 +19,8 @@ final class Version20260318101024 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
-        $this->skipIf(
-            $schema->getTable('etablissement')->hasColumn('type_etablissement'),
-            'Columns already exist (migrated from MySQL to PostgreSQL)'
-        );
+        $columns = array_map(fn ($c) => $c->getName(), $this->connection->createSchemaManager()->listTableColumns('etablissement'));
+        $this->skipIf(in_array('type_etablissement', $columns, true), 'Columns already exist');
 
         // this up() migration is auto-generated, please modify it to your needs
         $this->addSql('ALTER TABLE etablissement ADD type_etablissement VARCHAR(20) DEFAULT NULL');

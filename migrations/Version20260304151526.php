@@ -7,9 +7,6 @@ namespace DoctrineMigrations;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 
-/**
- * Add e-invoicing fields to etablissement for B2Brouter PDP integration.
- */
 final class Version20260304151526 extends AbstractMigration
 {
     public function getDescription(): string
@@ -19,16 +16,22 @@ final class Version20260304151526 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
-        $this->skipIf(
-            !$schema->hasTable('etablissement') || $schema->getTable('etablissement')->hasColumn('pdp_account_id'),
-            'Table does not exist yet or columns already exist (migrated from MySQL to PostgreSQL)'
-        );
+        $sm = $this->connection->createSchemaManager();
+        $columns = array_map(fn ($c) => $c->getName(), $sm->listTableColumns('etablissement'));
 
-        $this->addSql('ALTER TABLE etablissement ADD pdp_account_id VARCHAR(100) DEFAULT NULL, ADD e_invoicing_enabled TINYINT DEFAULT 0 NOT NULL, ADD e_invoicing_enabled_at DATETIME DEFAULT NULL');
+        if (in_array('pdp_account_id', $columns, true)) {
+            $this->skipIf(true, 'Columns already exist');
+        }
+
+        $this->addSql('ALTER TABLE etablissement ADD COLUMN pdp_account_id VARCHAR(100) DEFAULT NULL');
+        $this->addSql('ALTER TABLE etablissement ADD COLUMN e_invoicing_enabled BOOLEAN DEFAULT false NOT NULL');
+        $this->addSql('ALTER TABLE etablissement ADD COLUMN e_invoicing_enabled_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NULL');
     }
 
     public function down(Schema $schema): void
     {
-        $this->addSql('ALTER TABLE etablissement DROP pdp_account_id, DROP e_invoicing_enabled, DROP e_invoicing_enabled_at');
+        $this->addSql('ALTER TABLE etablissement DROP COLUMN IF EXISTS pdp_account_id');
+        $this->addSql('ALTER TABLE etablissement DROP COLUMN IF EXISTS e_invoicing_enabled');
+        $this->addSql('ALTER TABLE etablissement DROP COLUMN IF EXISTS e_invoicing_enabled_at');
     }
 }
