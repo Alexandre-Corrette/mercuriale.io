@@ -19,6 +19,11 @@ final class Version20260306102008 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
+        $this->skipIf(
+            !$schema->hasTable('fournisseur') || $schema->getTable('fournisseur')->hasColumn('website_url'),
+            'Table does not exist yet or column already exists (migrated from MySQL to PostgreSQL)'
+        );
+
         $this->addSql('ALTER TABLE fournisseur ADD website_url VARCHAR(512) DEFAULT NULL');
     }
 

@@ -19,6 +19,11 @@ final class Version20260304151526 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
+        $this->skipIf(
+            !$schema->hasTable('etablissement') || $schema->getTable('etablissement')->hasColumn('pdp_account_id'),
+            'Table does not exist yet or columns already exist (migrated from MySQL to PostgreSQL)'
+        );
+
         $this->addSql('ALTER TABLE etablissement ADD pdp_account_id VARCHAR(100) DEFAULT NULL, ADD e_invoicing_enabled TINYINT DEFAULT 0 NOT NULL, ADD e_invoicing_enabled_at DATETIME DEFAULT NULL');
     }
 

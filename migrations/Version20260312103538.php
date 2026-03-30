@@ -16,6 +16,11 @@ final class Version20260312103538 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
+        $this->skipIf(
+            $schema->hasTable('abonnement'),
+            'Tables already exist (migrated from MySQL to PostgreSQL)'
+        );
+
         // Create abonnement table
         $this->addSql('CREATE TABLE abonnement (id INT AUTO_INCREMENT NOT NULL, plan VARCHAR(20) DEFAULT \'trial\' NOT NULL, starts_at DATETIME NOT NULL, ends_at DATETIME DEFAULT NULL, stripe_subscription_id VARCHAR(255) DEFAULT NULL, active TINYINT DEFAULT 1 NOT NULL, created_at DATETIME NOT NULL, updated_at DATETIME NOT NULL, organisation_id INT NOT NULL, UNIQUE INDEX UNIQ_351268BB9E6B1585 (organisation_id), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci`');
         $this->addSql('ALTER TABLE abonnement ADD CONSTRAINT FK_351268BB9E6B1585 FOREIGN KEY (organisation_id) REFERENCES organisation (id)');
