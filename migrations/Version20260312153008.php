@@ -16,6 +16,11 @@ final class Version20260312153008 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
+        $this->skipIf(
+            !$schema->hasTable('bon_livraison'),
+            'Table does not exist yet (migrated from MySQL to PostgreSQL)'
+        );
+
         $this->addSql('CREATE UNIQUE INDEX uniq_bl_etablissement_fournisseur_numero ON bon_livraison (etablissement_id, fournisseur_id, numero_bl)');
     }
 

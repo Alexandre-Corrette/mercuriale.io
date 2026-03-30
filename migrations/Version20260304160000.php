@@ -16,6 +16,11 @@ final class Version20260304160000 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
+        $this->skipIf(
+            !$schema->hasTable('facture_fournisseur') || $schema->getTable('facture_fournisseur')->hasColumn('rapproche_le'),
+            'Table does not exist yet or columns already exist (migrated from MySQL to PostgreSQL)'
+        );
+
         $this->addSql('ALTER TABLE facture_fournisseur ADD rapproche_le DATETIME DEFAULT NULL');
         $this->addSql('ALTER TABLE facture_fournisseur ADD ecart_montant_ht NUMERIC(12, 2) DEFAULT NULL');
         $this->addSql('ALTER TABLE facture_fournisseur ADD score_rapprochement INT DEFAULT NULL');

@@ -19,6 +19,11 @@ final class Version20260306161654 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
+        $this->skipIf(
+            !$schema->hasTable('organisation') || $schema->getTable('organisation')->hasColumn('verified_at'),
+            'Table does not exist yet or columns already exist (migrated from MySQL to PostgreSQL)'
+        );
+
         $this->addSql('ALTER TABLE organisation ADD verified_at DATETIME DEFAULT NULL, ADD trial_ends_at DATETIME DEFAULT NULL, ADD stripe_account_id VARCHAR(255) DEFAULT NULL, ADD stripe_verification_session_id VARCHAR(255) DEFAULT NULL');
     }
 

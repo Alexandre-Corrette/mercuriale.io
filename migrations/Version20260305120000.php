@@ -16,6 +16,11 @@ final class Version20260305120000 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
+        $this->skipIf(
+            $schema->hasTable('transition_facture'),
+            'Tables and columns already exist (migrated from MySQL to PostgreSQL)'
+        );
+
         // New columns on facture_fournisseur
         $this->addSql('ALTER TABLE facture_fournisseur ADD contestee_le DATETIME DEFAULT NULL');
         $this->addSql('ALTER TABLE facture_fournisseur ADD date_echeance DATE DEFAULT NULL');

@@ -16,6 +16,11 @@ final class Version20260305100000 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
+        $this->skipIf(
+            !$schema->hasTable('facture_fournisseur') || $schema->getTable('facture_fournisseur')->hasColumn('source'),
+            'Table does not exist yet or columns already exist (migrated from MySQL to PostgreSQL)'
+        );
+
         // New columns for OCR channel
         $this->addSql('ALTER TABLE facture_fournisseur ADD source VARCHAR(20) NOT NULL DEFAULT \'B2BROUTER\'');
         $this->addSql('ALTER TABLE facture_fournisseur ADD ocr_raw_data JSON DEFAULT NULL');
