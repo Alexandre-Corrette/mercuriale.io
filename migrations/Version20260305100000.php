@@ -16,26 +16,29 @@ final class Version20260305100000 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
-        $this->skipIf(
-            !$schema->hasTable('facture_fournisseur') || $schema->getTable('facture_fournisseur')->hasColumn('source'),
-            'Table does not exist yet or columns already exist (migrated from MySQL to PostgreSQL)'
-        );
+        $sm = $this->connection->createSchemaManager();
+        if (!$sm->tablesExist(['facture_fournisseur'])) {
+            $this->skipIf(true, 'Table facture_fournisseur does not exist yet');
+            return;
+        }
+        $columns = array_map(fn ($c) => $c->getName(), $sm->listTableColumns('facture_fournisseur'));
+        $this->skipIf(in_array('source', $columns, true), 'Columns already exist');
 
         // New columns for OCR channel
-        $this->addSql('ALTER TABLE facture_fournisseur ADD source VARCHAR(20) NOT NULL DEFAULT \'B2BROUTER\'');
-        $this->addSql('ALTER TABLE facture_fournisseur ADD ocr_raw_data JSON DEFAULT NULL');
-        $this->addSql('ALTER TABLE facture_fournisseur ADD ocr_processed_at DATETIME DEFAULT NULL');
-        $this->addSql('ALTER TABLE facture_fournisseur ADD fichier_original_nom VARCHAR(255) DEFAULT NULL');
-        $this->addSql('ALTER TABLE facture_fournisseur ADD created_by_id INT DEFAULT NULL');
+        $this->addSql('ALTER TABLE facture_fournisseur ADD COLUMN source VARCHAR(20) NOT NULL DEFAULT \'B2BROUTER\'');
+        $this->addSql('ALTER TABLE facture_fournisseur ADD COLUMN ocr_raw_data JSON DEFAULT NULL');
+        $this->addSql('ALTER TABLE facture_fournisseur ADD COLUMN ocr_processed_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NULL');
+        $this->addSql('ALTER TABLE facture_fournisseur ADD COLUMN fichier_original_nom VARCHAR(255) DEFAULT NULL');
+        $this->addSql('ALTER TABLE facture_fournisseur ADD COLUMN created_by_id INT DEFAULT NULL');
         $this->addSql('ALTER TABLE facture_fournisseur ADD CONSTRAINT FK_facture_created_by FOREIGN KEY (created_by_id) REFERENCES utilisateur (id) ON DELETE SET NULL');
         $this->addSql('CREATE INDEX idx_facture_created_by ON facture_fournisseur (created_by_id)');
 
-        // Make fields nullable for OCR uploads (data filled after OCR processing)
-        $this->addSql('ALTER TABLE facture_fournisseur MODIFY external_id VARCHAR(100) DEFAULT NULL');
-        $this->addSql('ALTER TABLE facture_fournisseur MODIFY numero_facture VARCHAR(100) DEFAULT NULL');
-        $this->addSql('ALTER TABLE facture_fournisseur MODIFY date_emission DATE DEFAULT NULL');
-        $this->addSql('ALTER TABLE facture_fournisseur MODIFY montant_ht NUMERIC(12, 2) DEFAULT NULL');
-        $this->addSql('ALTER TABLE facture_fournisseur MODIFY montant_ttc NUMERIC(12, 2) DEFAULT NULL');
+        // Make fields nullable for OCR uploads
+        $this->addSql('ALTER TABLE facture_fournisseur ALTER COLUMN external_id DROP NOT NULL');
+        $this->addSql('ALTER TABLE facture_fournisseur ALTER COLUMN numero_facture DROP NOT NULL');
+        $this->addSql('ALTER TABLE facture_fournisseur ALTER COLUMN date_emission DROP NOT NULL');
+        $this->addSql('ALTER TABLE facture_fournisseur ALTER COLUMN montant_ht DROP NOT NULL');
+        $this->addSql('ALTER TABLE facture_fournisseur ALTER COLUMN montant_ttc DROP NOT NULL');
 
         // Index on source for filtering
         $this->addSql('CREATE INDEX idx_facture_source ON facture_fournisseur (source)');
@@ -43,20 +46,12 @@ final class Version20260305100000 extends AbstractMigration
 
     public function down(Schema $schema): void
     {
-        $this->addSql('DROP INDEX idx_facture_source ON facture_fournisseur');
-
-        $this->addSql('ALTER TABLE facture_fournisseur DROP source');
-        $this->addSql('ALTER TABLE facture_fournisseur DROP ocr_raw_data');
-        $this->addSql('ALTER TABLE facture_fournisseur DROP ocr_processed_at');
-        $this->addSql('ALTER TABLE facture_fournisseur DROP fichier_original_nom');
-        $this->addSql('ALTER TABLE facture_fournisseur DROP FOREIGN KEY FK_facture_created_by');
-        $this->addSql('DROP INDEX idx_facture_created_by ON facture_fournisseur');
-        $this->addSql('ALTER TABLE facture_fournisseur DROP created_by_id');
-
-        $this->addSql('ALTER TABLE facture_fournisseur MODIFY external_id VARCHAR(100) NOT NULL');
-        $this->addSql('ALTER TABLE facture_fournisseur MODIFY numero_facture VARCHAR(100) NOT NULL');
-        $this->addSql('ALTER TABLE facture_fournisseur MODIFY date_emission DATE NOT NULL');
-        $this->addSql('ALTER TABLE facture_fournisseur MODIFY montant_ht NUMERIC(12, 2) NOT NULL');
-        $this->addSql('ALTER TABLE facture_fournisseur MODIFY montant_ttc NUMERIC(12, 2) NOT NULL');
+        $this->addSql('DROP INDEX IF EXISTS idx_facture_source');
+        $this->addSql('DROP INDEX IF EXISTS idx_facture_created_by');
+        $this->addSql('ALTER TABLE facture_fournisseur DROP COLUMN IF EXISTS source');
+        $this->addSql('ALTER TABLE facture_fournisseur DROP COLUMN IF EXISTS ocr_raw_data');
+        $this->addSql('ALTER TABLE facture_fournisseur DROP COLUMN IF EXISTS ocr_processed_at');
+        $this->addSql('ALTER TABLE facture_fournisseur DROP COLUMN IF EXISTS fichier_original_nom');
+        $this->addSql('ALTER TABLE facture_fournisseur DROP COLUMN IF EXISTS created_by_id');
     }
 }

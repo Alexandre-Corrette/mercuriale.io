@@ -20,7 +20,7 @@ final class Version20260313140311 extends AbstractMigration
     public function up(Schema $schema): void
     {
         $this->skipIf(
-            $schema->hasTable('produit'),
+            $this->connection->createSchemaManager()->tablesExist(['produit']),
             'Tables already exist (migrated from MySQL to PostgreSQL)'
         );
 
