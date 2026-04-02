@@ -18,6 +18,7 @@ class AnthropicClient
     public function __construct(
         private readonly HttpClientInterface $httpClient,
         private readonly ImageCompressor $imageCompressor,
+        private readonly PdfPreparer $pdfPreparer,
         private readonly LoggerInterface $logger,
         private readonly string $apiKey,
         private readonly string $model,
@@ -73,7 +74,81 @@ class AnthropicClient
     }
 
     /**
-     * Construit le payload pour l'API Anthropic.
+     * Envoie un PDF à Claude et retourne la réponse.
+     *
+     * @param string $pdfPath Chemin absolu vers le PDF
+     * @param string $prompt  Le prompt d'extraction
+     *
+     * @return array{content: string, usage: array{input_tokens: int, output_tokens: int}}
+     *
+     * @throws AnthropicApiException
+     */
+    public function analyzePdf(string $pdfPath, string $prompt): array
+    {
+        $startTime = microtime(true);
+
+        // 1. Préparer le PDF (validation + encodage base64)
+        $prepared = $this->pdfPreparer->prepareForApi($pdfPath);
+
+        $this->logger->info('[OCR] PDF préparé pour envoi', [
+            'size' => $prepared['originalSize'],
+        ]);
+
+        // 2. Construire le payload avec type "document"
+        $payload = $this->buildDocumentPayload($prepared['base64'], $prompt);
+
+        // 3. Appeler l'API avec retry
+        $response = $this->callApiWithRetry($payload);
+
+        // 4. Logger le succès
+        $duration = round(microtime(true) - $startTime, 2);
+        $this->logger->info('Anthropic API call successful', [
+            'duration_seconds' => $duration,
+            'input_tokens' => $response['usage']['input_tokens'] ?? 0,
+            'output_tokens' => $response['usage']['output_tokens'] ?? 0,
+            'model' => $this->model,
+            'file_type' => 'pdf',
+        ]);
+
+        // 5. Extraire et retourner le contenu
+        return [
+            'content' => $this->extractContent($response),
+            'usage' => $response['usage'] ?? ['input_tokens' => 0, 'output_tokens' => 0],
+        ];
+    }
+
+    /**
+     * Construit le payload pour l'API Anthropic (type "document" pour PDF).
+     */
+    private function buildDocumentPayload(string $base64Pdf, string $prompt): array
+    {
+        return [
+            'model' => $this->model,
+            'max_tokens' => $this->maxTokens,
+            'messages' => [
+                [
+                    'role' => 'user',
+                    'content' => [
+                        [
+                            'type' => 'document',
+                            'source' => [
+                                'type' => 'base64',
+                                'media_type' => 'application/pdf',
+                                'data' => $base64Pdf,
+                            ],
+                        ],
+                        [
+                            'type' => 'text',
+                            'text' => $prompt,
+                        ],
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * Construit le payload pour l'API Anthropic (type "image").
      */
     private function buildPayload(string $base64Image, string $mediaType, string $prompt): array
     {
