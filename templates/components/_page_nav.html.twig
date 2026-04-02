@@ -1,0 +1,27 @@
+{#
+  Variables attendues :
+    - back_url (string)      : URL absolue construite côté contrôleur via generateUrl()
+    - back_label (string)    : libellé du lien retour, défaut "Retour"
+    - breadcrumbs (array)    : [{ label: string, url: string|null }]
+                               le dernier élément a url = null (page courante)
+#}
+<div class="page-nav">
+    <a href="{{ back_url }}"
+       class="btn-back"
+       aria-label="{{ back_label|default('Retour') }}">
+        ← {{ back_label|default('Retour') }}
+    </a>
+
+    {% if breadcrumbs is defined and breadcrumbs|length > 0 %}
+    <nav class="breadcrumb" aria-label="Fil d'Ariane">
+        {% for crumb in breadcrumbs %}
+            {% if not loop.last %}
+                <a href="{{ crumb.url }}">{{ crumb.label }}</a>
+                <span class="breadcrumb-sep" aria-hidden="true">›</span>
+            {% else %}
+                <span class="breadcrumb-current" aria-current="page">{{ crumb.label }}</span>
+            {% endif %}
+        {% endfor %}
+    </nav>
+    {% endif %}
+</div>

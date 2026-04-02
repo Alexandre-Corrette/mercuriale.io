@@ -35,7 +35,7 @@
             {% endif %}
 
             <div class="ad-card__actions">
-                <a href="javascript:history.back()" class="btn btn--secondary btn--lg">
+                <a href="{{ path('admin') }}" class="btn btn--secondary btn--lg" onclick="if(window.history.length > 1){history.back();return false;}">
                     <i class="fas fa-arrow-left"></i> Retour
                 </a>
                 <a href="{{ path('admin') }}" class="btn btn--primary btn--lg">

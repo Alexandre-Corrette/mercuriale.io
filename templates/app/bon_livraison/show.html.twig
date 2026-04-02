@@ -5,6 +5,7 @@
     { label: 'Bons de livraison', url: path('app_bl_hub') },
     { label: bonLivraison.numeroBl ? 'BL ' ~ bonLivraison.numeroBl : 'BL #' ~ bonLivraison.id }
 ] %}
+{% set back_url = path('app_bl_hub') %}
 
 {% block title %}{{ bonLivraison.numeroBl ? 'BL ' ~ bonLivraison.numeroBl : 'BL #' ~ bonLivraison.id }} — Mercuriale.io{% endblock %}
 

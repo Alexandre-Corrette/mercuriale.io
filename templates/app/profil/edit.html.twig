@@ -6,6 +6,7 @@
     { label: 'Mes coordonnees', url: path('app_profil_coordonnees') },
     { label: 'Modifier' }
 ] %}
+{% set back_url = path('app_profil_coordonnees') %}
 
 {% block title %}Modifier mes coordonnees — Mercuriale.io{% endblock %}
 
@@ -30,7 +31,7 @@
         </div>
     {% endfor %}
 
-    {{ form_start(form, {attr: {class: 'profil-form'}}) }}
+    {{ form_start(form, {attr: {class: 'profil-form', 'data-leave-guard': ''}}) }}
 
         <div class="profil-form__row">
             <div class="profil-form__field">

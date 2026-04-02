@@ -1,0 +1,82 @@
+/* ============================================================
+   MERC-32 — Navigation retour + breadcrumb
+   Touch target min 44px (contexte restauration mobile)
+   ============================================================ */
+
+.page-nav {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.btn-back {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 1rem;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--mercuriale-navy, #1b2a4a);
+    background: transparent;
+    border: 1px solid var(--mercuriale-navy, #1b2a4a);
+    text-decoration: none;
+    transition: background 0.15s ease, color 0.15s ease;
+    white-space: nowrap;
+}
+
+.btn-back:hover,
+.btn-back:focus-visible {
+    background: var(--mercuriale-navy, #1b2a4a);
+    color: #fff;
+    outline: none;
+}
+
+.btn-back:focus-visible {
+    outline: 2px solid var(--mercuriale-navy, #1b2a4a);
+    outline-offset: 2px;
+}
+
+/* Breadcrumb */
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    font-size: 0.875rem;
+    color: var(--color-text-muted, #6b7280);
+}
+
+.breadcrumb a {
+    color: var(--mercuriale-navy, #1b2a4a);
+    text-decoration: none;
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.breadcrumb-sep {
+    color: var(--color-text-muted, #6b7280);
+}
+
+.breadcrumb-current {
+    color: var(--color-text-muted, #6b7280);
+    font-weight: 500;
+}
+
+/* Mobile — pleine largeur */
+@media (max-width: 480px) {
+    .page-nav {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .btn-back {
+        width: 100%;
+        justify-content: center;
+    }
+}
