@@ -43,9 +43,16 @@ class BonLivraisonExtractorService
                 );
             }
 
-            // 2. Appeler l'API Claude (la compression est gérée dans AnthropicClient)
+            // 2. Appeler l'API Claude (détection du type par magic bytes)
             $prompt = $this->buildExtractionPrompt($bl);
-            $response = $this->anthropicClient->analyzeImage($imagePath, $prompt);
+            $finfo = new \finfo(FILEINFO_MIME_TYPE);
+            $mime = $finfo->file($imagePath);
+
+            $response = match (true) {
+                $mime === 'application/pdf' => $this->anthropicClient->analyzePdf($imagePath, $prompt),
+                in_array($mime, ['image/jpeg', 'image/png', 'image/webp'], true) => $this->anthropicClient->analyzeImage($imagePath, $prompt),
+                default => throw new \InvalidArgumentException("Type de fichier non supporté pour OCR : {$mime}"),
+            };
 
             // 3. Parser la réponse JSON
             $data = $this->parseResponse($response['content']);
