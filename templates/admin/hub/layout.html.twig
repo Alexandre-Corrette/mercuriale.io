@@ -9,9 +9,17 @@
 {% endblock %}
 
 {% block breadcrumb %}
-    {% include 'components/_breadcrumb.html.twig' with {
-        breadcrumbs: hub_breadcrumbs|default([{ label: hub_title }])
-    } %}
+    {% if back_url is defined and back_url %}
+        {% include 'components/_page_nav.html.twig' with {
+            back_url: back_url,
+            back_label: back_label|default('Retour'),
+            breadcrumbs: hub_breadcrumbs|default([{ label: hub_title }])
+        } only %}
+    {% else %}
+        {% include 'components/_breadcrumb.html.twig' with {
+            breadcrumbs: hub_breadcrumbs|default([{ label: hub_title }])
+        } %}
+    {% endif %}
 {% endblock %}
 
 {% block content %}

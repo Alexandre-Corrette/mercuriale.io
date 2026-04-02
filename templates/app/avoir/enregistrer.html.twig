@@ -7,6 +7,7 @@
     { label: avoir.reference ?? 'Avoir #' ~ avoir.idAsString[:8], url: path('app_avoir_show', {id: avoir.idAsString}) },
     { label: 'Enregistrer' }
 ] %}
+{% set back_url = path('app_avoirs_hub') %}
 
 {% block title %}Enregistrer avoir — Mercuriale.io{% endblock %}
 

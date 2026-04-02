@@ -5,6 +5,7 @@
     { label: 'Bons de livraison', url: path('admin_hub_bl') },
     { label: 'Validation' }
 ] %}
+{% set back_url = path('app_bl_pending') %}
 
 {% block title %}Validation BL #{{ bonLivraison.id }} - Mercuriale.io{% endblock %}
 

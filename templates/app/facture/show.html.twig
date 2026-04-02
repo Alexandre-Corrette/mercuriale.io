@@ -6,6 +6,7 @@
     { label: 'Factures', url: path('app_factures_hub') },
     { label: facture.numeroFacture ?? 'En cours' }
 ] %}
+{% set back_url = path('app_factures_hub') %}
 
 {% block title %}Facture {{ facture.numeroFacture }} — Mercuriale.io{% endblock %}
 

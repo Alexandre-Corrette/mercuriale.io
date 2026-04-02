@@ -6,6 +6,7 @@
     { label: 'Liste fournisseurs', url: path('app_fournisseurs_liste') },
     { label: fournisseur.nom }
 ] %}
+{% set back_url = path('app_fournisseurs_liste') %}
 
 {% block title %}{{ fournisseur.nom }} — Mercuriale.io{% endblock %}
 

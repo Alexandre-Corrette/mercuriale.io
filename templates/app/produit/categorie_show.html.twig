@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="{{ asset('css/categorie.css') }}">
 {% endblock %}
 
+{% set back_url = path('app_produits_categories') %}
+
 {% block breadcrumb %}
     {% include 'components/_breadcrumb.html.twig' with { breadcrumbs: [
         { label: 'Produits', url: path('app_produits_hub') },
