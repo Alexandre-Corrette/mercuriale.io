@@ -7,6 +7,7 @@ namespace App\Controller\App;
 use App\Entity\Utilisateur;
 use App\Repository\EtablissementRepository;
 use App\Repository\OrganisationRepository;
+use App\Security\SafeRedirectHelper;
 use App\Service\OrganisationContext;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,6 +23,7 @@ class OrganisationSwitchController extends AbstractController
         private readonly OrganisationContext $organisationContext,
         private readonly OrganisationRepository $organisationRepository,
         private readonly EtablissementRepository $etablissementRepository,
+        private readonly SafeRedirectHelper $safeRedirectHelper,
     ) {
     }
 
@@ -83,12 +85,14 @@ class OrganisationSwitchController extends AbstractController
 
         $this->organisationContext->switchContext($organisationId, $etablissementId);
 
-        // Redirect back or to dashboard
-        $referer = $request->headers->get('referer');
-        if ($referer) {
-            return $this->redirect($referer);
-        }
+        // Redirect back or to dashboard (validated against open redirect)
+        $referer = $request->headers->get('referer', '');
+        $safeUrl = $this->safeRedirectHelper->getSafeRedirectUrl(
+            $referer,
+            $request,
+            $this->generateUrl('admin')
+        );
 
-        return $this->redirectToRoute('admin');
+        return $this->redirect($safeUrl);
     }
 }

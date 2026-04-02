@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller\App;
 
 use App\Entity\Etablissement;
+use App\Security\SafeRedirectHelper;
 use App\Service\OrganisationContext;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -18,6 +19,7 @@ class EtablissementSwitchController extends AbstractController
 {
     public function __construct(
         private readonly OrganisationContext $organisationContext,
+        private readonly SafeRedirectHelper $safeRedirectHelper,
     ) {
     }
 
@@ -32,11 +34,13 @@ class EtablissementSwitchController extends AbstractController
             $this->organisationContext->switchContext($orgId, $etablissement->getId());
         }
 
-        $referer = $request->headers->get('referer');
-        if ($referer) {
-            return $this->redirect($referer);
-        }
+        $referer = $request->headers->get('referer', '');
+        $safeUrl = $this->safeRedirectHelper->getSafeRedirectUrl(
+            $referer,
+            $request,
+            $this->generateUrl('admin')
+        );
 
-        return $this->redirectToRoute('admin');
+        return $this->redirect($safeUrl);
     }
 }
