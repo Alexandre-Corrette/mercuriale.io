@@ -144,6 +144,9 @@
             {% include 'components/_confirm_modal.html.twig' %}
         {% endif %}
 
+        {# ── Form Leave Guard (active only if form[data-leave-guard] present) ── #}
+        <script src="{{ asset('js/form-leave-guard.js') }}"></script>
+
         {# ── PWA Service Worker Registration ── #}
         <script src="{{ asset('js/sw-register.js') }}"></script>
     </body>

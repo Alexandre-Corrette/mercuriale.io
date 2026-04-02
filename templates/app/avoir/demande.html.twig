@@ -33,7 +33,7 @@
             </div>
         {% endfor %}
 
-        <form method="post" action="{{ path('app_avoir_demande', {id: bonLivraison.id}) }}" class="avoir-demande__form">
+        <form method="post" action="{{ path('app_avoir_demande', {id: bonLivraison.id}) }}" class="avoir-demande__form" data-leave-guard>
             <input type="hidden" name="_token" value="{{ csrf_token('avoir_demande_' ~ bonLivraison.id) }}">
 
             {# Info BL #}
