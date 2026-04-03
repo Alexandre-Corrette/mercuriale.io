@@ -126,7 +126,7 @@
 
     {# Action buttons #}
     <div class="bl-show-actions">
-        {% if bonLivraison.statut.value == 'BROUILLON' and is_granted('MANAGE', bonLivraison.etablissement) %}
+        {% if bonLivraison.statut.value == 'BROUILLON' and is_granted('ETAB_MANAGE', bonLivraison.etablissement) %}
             <form action="{{ path('app_bl_valider', {id: bonLivraison.id}) }}" method="post">
                 <input type="hidden" name="_token" value="{{ csrf_token('valider_bl_' ~ bonLivraison.id) }}">
                 <button type="submit" class="btn btn--success">
@@ -135,7 +135,7 @@
             </form>
         {% endif %}
 
-        {% if bonLivraison.statut.value == 'ANOMALIE' and is_granted('MANAGE', bonLivraison.etablissement) %}
+        {% if bonLivraison.statut.value == 'ANOMALIE' and is_granted('ETAB_MANAGE', bonLivraison.etablissement) %}
             <form action="{{ path('app_bl_valider_force', {id: bonLivraison.id}) }}" method="post">
                 <input type="hidden" name="_token" value="{{ csrf_token('valider_force_bl_' ~ bonLivraison.id) }}">
                 <button type="submit" class="btn btn--success">
@@ -152,7 +152,7 @@
                     — {{ avoir.demandeLe|date('d/m/Y') }}
                 </a>
             {% endfor %}
-        {% elseif bonLivraison.statut.value == 'ANOMALIE' and is_granted('MANAGE', bonLivraison.etablissement) %}
+        {% elseif bonLivraison.statut.value == 'ANOMALIE' and is_granted('ETAB_MANAGE', bonLivraison.etablissement) %}
             <a href="{{ path('app_avoir_demande', {id: bonLivraison.id}) }}" class="btn btn--danger">
                 <i class="fas fa-paper-plane"></i> Demander un avoir
             </a>

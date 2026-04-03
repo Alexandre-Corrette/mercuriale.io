@@ -200,7 +200,7 @@
             <i class="fas fa-arrow-left"></i> Retour a la liste
         </a>
 
-        {% if is_granted('MANAGE', avoir.etablissement) %}
+        {% if is_granted('ETAB_MANAGE', avoir.etablissement) %}
             {% if avoir.statut.value == 'DEMANDE' %}
                 <a href="{{ path('app_avoir_enregistrer', {id: avoir.idAsString}) }}" class="btn btn--success">
                     <i class="fas fa-check"></i> Enregistrer la reception
@@ -231,7 +231,7 @@
     </div>
 
     {# Hidden forms — refuser / annuler #}
-    {% if is_granted('MANAGE', avoir.etablissement) %}
+    {% if is_granted('ETAB_MANAGE', avoir.etablissement) %}
         {% if avoir.statut.value == 'DEMANDE' %}
             <form id="refuser-form" hidden
                   action="{{ path('app_avoir_refuser', {id: avoir.idAsString}) }}"
