@@ -186,4 +186,49 @@ class MercurialeRepository extends ServiceEntityRepository
 
         return ['items' => $items, 'total' => $total];
     }
+
+    /**
+     * Retourne le prix mercuriale actif pour une liste de ProduitFournisseur IDs.
+     *
+     * @param int[] $produitFournisseurIds
+     *
+     * @return array<int, string> Map ProduitFournisseur ID => prix négocié
+     */
+    public function findActivePrixBatch(array $produitFournisseurIds, ?Etablissement $etablissement = null): array
+    {
+        if ($produitFournisseurIds === []) {
+            return [];
+        }
+
+        $date = new \DateTimeImmutable();
+
+        $qb = $this->createQueryBuilder('m')
+            ->select('IDENTITY(m.produitFournisseur) AS pf_id, m.prixNegocie')
+            ->where('m.produitFournisseur IN (:ids)')
+            ->andWhere('m.dateDebut <= :date')
+            ->andWhere('m.dateFin IS NULL OR m.dateFin >= :date')
+            ->setParameter('ids', $produitFournisseurIds)
+            ->setParameter('date', $date)
+            ->orderBy('m.etablissement', 'DESC');
+
+        if ($etablissement !== null) {
+            $qb->andWhere('m.etablissement = :etablissement OR m.etablissement IS NULL')
+                ->setParameter('etablissement', $etablissement);
+        } else {
+            $qb->andWhere('m.etablissement IS NULL');
+        }
+
+        $rows = $qb->getQuery()->getResult();
+
+        $map = [];
+        foreach ($rows as $row) {
+            $pfId = (int) $row['pf_id'];
+            // Premier résultat = priorité établissement (ORDER BY m.etablissement DESC)
+            if (!isset($map[$pfId])) {
+                $map[$pfId] = $row['prixNegocie'];
+            }
+        }
+
+        return $map;
+    }
 }

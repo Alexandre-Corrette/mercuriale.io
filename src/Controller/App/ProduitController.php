@@ -11,6 +11,7 @@ use App\Form\CategorieProduitType;
 use App\Repository\CategorieProduitRepository;
 use App\Repository\FournisseurRepository;
 use App\Repository\LigneBonLivraisonRepository;
+use App\Repository\MercurialeRepository;
 use App\Repository\ProduitFournisseurRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -28,6 +29,7 @@ class ProduitController extends AbstractController
         private readonly ProduitFournisseurRepository $produitRepo,
         private readonly FournisseurRepository $fournisseurRepo,
         private readonly CategorieProduitRepository $categorieRepo,
+        private readonly MercurialeRepository $mercurialeRepo,
     ) {
     }
 
@@ -86,6 +88,10 @@ class ProduitController extends AbstractController
             $offset,
         );
 
+        // Récupérer les prix mercuriale actifs en batch
+        $pfIds = array_map(fn (ProduitFournisseur $pf) => $pf->getId(), $result['items']);
+        $prixMap = $this->mercurialeRepo->findActivePrixBatch($pfIds);
+
         $items = array_map(fn (ProduitFournisseur $pf) => [
             'id' => $pf->getId(),
             'code' => $pf->getCodeFournisseur(),
@@ -94,6 +100,7 @@ class ProduitController extends AbstractController
             'categorie' => $pf->getProduit()?->getCategorie()?->getNom(),
             'conditionnement' => $pf->getConditionnementAsFloat(),
             'unite' => (string) $pf->getUniteAchat(),
+            'prix' => isset($prixMap[$pf->getId()]) ? number_format((float) $prixMap[$pf->getId()], 2, ',', ' ') : null,
             'url' => $this->generateUrl('app_produit_show', ['id' => $pf->getId()]),
         ], $result['items']);
 

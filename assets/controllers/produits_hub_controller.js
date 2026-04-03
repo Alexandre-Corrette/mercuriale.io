@@ -182,6 +182,7 @@ export default class extends Controller {
                 <td>${item.categorie ? this.escapeHtml(item.categorie) : '<span class="hub-badge hub-badge--secondary">—</span>'}</td>
                 <td>${item.conditionnement}</td>
                 <td>${this.escapeHtml(item.unite)}</td>
+                <td class="hub-table__right">${item.prix ? item.prix + ' €' : '—'}</td>
             </tr>`;
         }).join('');
 
@@ -196,6 +197,7 @@ export default class extends Controller {
                             <th>Catégorie</th>
                             <th>Colisage</th>
                             <th>Unité</th>
+                            <th class="hub-table__right">Prix</th>
                         </tr>
                     </thead>
                     <tbody>${rows}</tbody>

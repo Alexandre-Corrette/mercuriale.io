@@ -95,6 +95,7 @@
     max-width: 1200px;
     margin: 0 auto;
     padding: 1.5rem;
+    overflow-x: hidden;
 }
 
 .hub-content--narrow {
@@ -353,6 +354,10 @@
 
 .hub-table tbody tr:last-child td {
     border-bottom: none;
+}
+
+.hub-table__right {
+    text-align: right;
 }
 
 .hub-table__row--clickable {
