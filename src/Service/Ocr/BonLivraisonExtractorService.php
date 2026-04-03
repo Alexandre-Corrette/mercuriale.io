@@ -117,20 +117,20 @@ class BonLivraisonExtractorService
                 );
 
                 if ($doublon !== null) {
-                    $bl->setStatut(StatutBonLivraison::DOUBLON);
-                    $bl->setNotes('Doublon détecté : BL #' . $doublon->getId() . ' (même fournisseur et numéro ' . $bl->getNumeroBl() . ')');
-                    $this->logger->warning('BL doublon détecté', [
+                    $numeroBl = $bl->getNumeroBl();
+                    $this->logger->warning('BL doublon détecté, suppression', [
                         'bl_id' => $bl->getId(),
                         'doublon_id' => $doublon->getId(),
-                        'numero_bl' => $bl->getNumeroBl(),
+                        'numero_bl' => $numeroBl,
                         'fournisseur' => $bl->getFournisseur()->getNom(),
                     ]);
+                    $this->entityManager->remove($bl);
                     $this->entityManager->flush();
 
                     return new ExtractionResult(
-                        success: true,
+                        success: false,
                         lignes: [],
-                        warnings: ['Ce bon de livraison est un doublon du BL #' . $doublon->getId() . ' (' . $bl->getNumeroBl() . ')'],
+                        warnings: ['Ce bon de livraison est un doublon du BL #' . $doublon->getId() . ' (' . $numeroBl . '). L\'upload a été supprimé.'],
                         confiance: 'haute',
                         produitsNonMatches: [],
                         tempsExtraction: round(microtime(true) - $startTime, 2),
