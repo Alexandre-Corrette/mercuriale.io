@@ -296,8 +296,14 @@ class BonLivraisonMapper
 
         // Fallback sur PU (Pièce unitaire) si non trouvée
         if ($unite === null) {
-            $unite = $this->uniteRepository->findOneBy(['code' => 'PU'])
-                ?? $this->uniteRepository->findOneBy(['code' => 'p']);
+            // Vérifier le cache pour PU avant de requêter la BDD
+            // (un persist précédent non flushé ne serait pas visible en DB)
+            if (isset($cache['PU'])) {
+                $unite = $cache['PU'];
+            } else {
+                $unite = $this->uniteRepository->findOneBy(['code' => 'PU'])
+                    ?? $this->uniteRepository->findOneBy(['code' => 'p']);
+            }
         }
 
         // Créer l'unité pièce en dernier recours
@@ -307,6 +313,7 @@ class BonLivraisonMapper
             $unite->setNom('Pièce unitaire');
             $unite->setType(TypeUnite::QUANTITE);
             $this->entityManager->persist($unite);
+            $cache['PU'] = $unite;
         }
 
         $cache[$code] = $unite;
