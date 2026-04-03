@@ -43,7 +43,7 @@
             <table class="bl-detail-panel__table">
                 <thead>
                     <tr>
-                        {% if bonLivraison.statut.value == 'ANOMALIE' and is_granted('MANAGE', bonLivraison.etablissement) %}
+                        {% if bonLivraison.statut.value == 'ANOMALIE' and is_granted('ETAB_MANAGE', bonLivraison.etablissement) %}
                             <th class="bl-detail-panel__check-col">
                                 <input type="checkbox" id="pending-select-all" title="Tout selectionner">
                             </th>
@@ -58,7 +58,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% set showCheckboxes = bonLivraison.statut.value == 'ANOMALIE' and is_granted('MANAGE', bonLivraison.etablissement) %}
+                    {% set showCheckboxes = bonLivraison.statut.value == 'ANOMALIE' and is_granted('ETAB_MANAGE', bonLivraison.etablissement) %}
                     {% for ligne in bonLivraison.lignes %}
                         {% set hasAlert = ligne.alertes|length > 0 %}
                         {% set isEcart = false %}
@@ -124,7 +124,7 @@
 
     {# Actions #}
     <div class="bl-detail-panel__actions">
-        {% if bonLivraison.statut.value == 'BROUILLON' and is_granted('MANAGE', bonLivraison.etablissement) %}
+        {% if bonLivraison.statut.value == 'BROUILLON' and is_granted('ETAB_MANAGE', bonLivraison.etablissement) %}
             <form action="{{ path('app_bl_valider', {id: bonLivraison.id}) }}" method="post" class="bl-detail-panel__form">
                 <input type="hidden" name="_token" value="{{ csrf_token('valider_bl_' ~ bonLivraison.id) }}">
                 <button type="submit" class="btn btn--success">
@@ -133,7 +133,7 @@
             </form>
         {% endif %}
 
-        {% if bonLivraison.statut.value == 'ANOMALIE' and is_granted('MANAGE', bonLivraison.etablissement) %}
+        {% if bonLivraison.statut.value == 'ANOMALIE' and is_granted('ETAB_MANAGE', bonLivraison.etablissement) %}
             <form action="{{ path('app_bl_valider_force', {id: bonLivraison.id}) }}" method="post" class="bl-detail-panel__form">
                 <input type="hidden" name="_token" value="{{ csrf_token('valider_force_bl_' ~ bonLivraison.id) }}">
                 <button type="submit" class="btn btn--success">
@@ -153,7 +153,7 @@
         {% endif %}
     </div>
 
-    {% if bonLivraison.statut.value == 'ANOMALIE' and is_granted('MANAGE', bonLivraison.etablissement) %}
+    {% if bonLivraison.statut.value == 'ANOMALIE' and is_granted('ETAB_MANAGE', bonLivraison.etablissement) %}
         <script>
             (function() {
                 var selectAll = document.getElementById('pending-select-all');
