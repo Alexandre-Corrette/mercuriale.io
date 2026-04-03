@@ -76,7 +76,12 @@ class ProcessBonLivraisonOcrHandler
                 ]);
             }
 
-            // Le statut est déjà positionné par l'extracteur (VALIDE, ANOMALIE ou DOUBLON)
+            // Positionner le statut selon le résultat de l'extraction
+            if ($result->produitsNonMatches !== [] || !empty($result->warnings)) {
+                $bl->setStatut(StatutBonLivraison::ANOMALIE);
+            } else {
+                $bl->setStatut(StatutBonLivraison::VALIDE);
+            }
             $this->entityManager->flush();
 
             $this->logger->info('[OCR BL Handler] Extraction terminée', [
