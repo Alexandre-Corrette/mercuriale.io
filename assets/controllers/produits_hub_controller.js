@@ -186,19 +186,21 @@ export default class extends Controller {
         }).join('');
 
         this.resultsTarget.innerHTML = `
-            <table class="hub-table">
-                <thead>
-                    <tr>
-                        <th>Code</th>
-                        <th>Désignation</th>
-                        <th>Fournisseur</th>
-                        <th>Catégorie</th>
-                        <th>Colisage</th>
-                        <th>Unité</th>
-                    </tr>
-                </thead>
-                <tbody>${rows}</tbody>
-            </table>
+            <div class="hub-table-wrapper">
+                <table class="hub-table">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Désignation</th>
+                            <th>Fournisseur</th>
+                            <th>Catégorie</th>
+                            <th>Colisage</th>
+                            <th>Unité</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>
             <div class="hub-pagination__info">${data.total} produit${data.total > 1 ? 's' : ''} trouvé${data.total > 1 ? 's' : ''}</div>
         `;
     }

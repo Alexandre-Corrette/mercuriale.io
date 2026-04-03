@@ -311,6 +311,18 @@
    Table
    ============================================= */
 
+.hub-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+.hub-table-wrapper .hub-table {
+    box-shadow: none;
+    border-radius: 0;
+}
+
 .hub-table {
     width: 100%;
     background: #fff;
