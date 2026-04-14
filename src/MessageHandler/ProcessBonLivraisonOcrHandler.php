@@ -97,9 +97,11 @@ class ProcessBonLivraisonOcrHandler
             $this->logger->error('[OCR BL Handler] Exception pendant extraction', [
                 'bl_id' => $blId,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
-            throw $e;
+            // Ne pas re-throw : le BL est marqué ECHEC_OCR, le message est acquitté.
+            // Re-throw causait une boucle de retry (client 3× + Messenger 5× = 15 appels API).
         }
     }
 }

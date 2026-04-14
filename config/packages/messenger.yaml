@@ -7,7 +7,7 @@ framework:
             async:
                 dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
                 retry_strategy:
-                    max_retries: 5
+                    max_retries: 2
                     delay: 5000
                     multiplier: 3
                     max_delay: 60000
