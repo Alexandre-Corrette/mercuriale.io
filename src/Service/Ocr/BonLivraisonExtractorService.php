@@ -609,10 +609,11 @@ CTX;
         }
 
         foreach ($data['lignes'] as $index => $ligne) {
-            $qte = $ligne['quantite_facturee'] ?? null;
-            $pu = $ligne['prix_unitaire'] ?? null;
-            $total = $ligne['total_ht_ligne'] ?? $ligne['total_ligne'] ?? null;
-            $mj = $ligne['majoration_decote'] ?? 0;
+            $qte = is_numeric($ligne['quantite_facturee'] ?? null) ? (float) $ligne['quantite_facturee'] : null;
+            $pu = is_numeric($ligne['prix_unitaire'] ?? null) ? (float) $ligne['prix_unitaire'] : null;
+            $totalRaw = $ligne['total_ht_ligne'] ?? $ligne['total_ligne'] ?? null;
+            $total = is_numeric($totalRaw) ? (float) $totalRaw : null;
+            $mj = is_numeric($ligne['majoration_decote'] ?? null) ? (float) $ligne['majoration_decote'] : 0.0;
 
             if ($qte !== null && $pu !== null && $total !== null) {
                 $calculatedTotal = ($qte * $pu) + $mj;
