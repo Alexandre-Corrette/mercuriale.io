@@ -42,6 +42,8 @@ jobs:
               echo "Dockerfile/docker changes detected, rebuilding images"
               docker compose --env-file .env.docker build php worker
               docker compose --env-file .env.docker up -d --force-recreate php worker
+              # nginx cache l'IP de l'upstream php au startup ; restart pour re-resolve
+              docker compose --env-file .env.docker restart nginx
             fi
             docker compose --env-file .env.docker exec -T php composer install --no-interaction
             docker compose --env-file .env.docker exec -T php php bin/console doctrine:migrations:migrate --no-interaction
@@ -75,6 +77,8 @@ jobs:
               echo "Dockerfile/docker changes detected, rebuilding images"
               docker compose --env-file .env.docker build php worker
               docker compose --env-file .env.docker up -d --force-recreate php worker
+              # nginx cache l'IP de l'upstream php au startup ; restart pour re-resolve
+              docker compose --env-file .env.docker restart nginx
             fi
             docker compose --env-file .env.docker exec -T php composer install --no-interaction --no-dev --optimize-autoloader
             docker compose --env-file .env.docker exec -T php php bin/console doctrine:migrations:migrate --no-interaction
