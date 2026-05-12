@@ -9,9 +9,9 @@ class ImageCompressor
     // ~3.5 MB en binaire → ~4.7 MB en base64, sous la limite API de 5 MB
     private const MAX_BASE64_BYTES = 3_500_000;
     private const MAX_DIMENSION = 2048;
-    private const INITIAL_QUALITY = 85;
-    private const MIN_QUALITY = 30;
-    private const QUALITY_STEP = 10;
+    private const INITIAL_QUALITY = 90;
+    private const MIN_QUALITY = 60;
+    private const QUALITY_STEP = 5;
     // 48 MP décompressée ~= 180 MB, limiter à 50 MP (sécurité mémoire GD)
     private const MAX_PIXELS = 50_000_000;
 
@@ -35,10 +35,10 @@ class ImageCompressor
         $finfo = new \finfo(FILEINFO_MIME_TYPE);
         $mimeType = $finfo->file($imagePath);
 
-        // Vérifier si la compression est nécessaire
+        // Fast-path : JPEG sous la limite ET sans rotation EXIF à appliquer
         $rawBase64Size = (int) ceil($originalSize * 4 / 3);
-        if ($rawBase64Size <= self::MAX_BASE64_BYTES && $mimeType === 'image/jpeg') {
-            // Déjà sous la limite et en JPEG : envoyer tel quel
+        $exifOrientation = $this->readExifOrientation($imagePath, $mimeType);
+        if ($rawBase64Size <= self::MAX_BASE64_BYTES && $mimeType === 'image/jpeg' && $exifOrientation === 1) {
             $imageContent = file_get_contents($imagePath);
             if ($imageContent === false) {
                 throw new \RuntimeException('Impossible de lire le fichier image');
@@ -54,8 +54,8 @@ class ImageCompressor
         }
 
         $image = $this->loadImage($imagePath, $mimeType);
+        $image = $this->applyExifOrientation($image, $imagePath, $mimeType);
         $image = $this->resizeIfNeeded($image);
-        $image = $this->enhanceForOcr($image);
 
         // Boucle de compression qualité dégressive
         $quality = self::INITIAL_QUALITY;
@@ -124,6 +124,58 @@ class ImageCompressor
                 (int) (self::MAX_PIXELS / 1_000_000)
             ));
         }
+    }
+
+    private function readExifOrientation(string $path, string $mimeType): int
+    {
+        if ($mimeType !== 'image/jpeg' || !function_exists('exif_read_data')) {
+            return 1;
+        }
+
+        $exif = @exif_read_data($path);
+        if ($exif === false || !isset($exif['Orientation'])) {
+            return 1;
+        }
+
+        $orientation = (int) $exif['Orientation'];
+        return ($orientation >= 1 && $orientation <= 8) ? $orientation : 1;
+    }
+
+    private function applyExifOrientation(\GdImage $image, string $path, string $mimeType): \GdImage
+    {
+        $orientation = $this->readExifOrientation($path, $mimeType);
+        if ($orientation === 1) {
+            return $image;
+        }
+
+        // EXIF orientation: 1=normal, 2=flip-h, 3=180°, 4=flip-v, 5=transpose,
+        // 6=90°CW, 7=transverse, 8=90°CCW (= 270°CW)
+        $rotated = match ($orientation) {
+            3 => imagerotate($image, 180, 0),
+            6 => imagerotate($image, -90, 0),
+            8 => imagerotate($image, 90, 0),
+            2, 4, 5, 7 => imagerotate($image, match ($orientation) {
+                4 => 180,
+                5 => -90,
+                7 => 90,
+                default => 0,
+            }, 0),
+            default => $image,
+        };
+
+        if ($rotated === false) {
+            return $image;
+        }
+
+        if ($rotated !== $image) {
+            imagedestroy($image);
+        }
+
+        if (in_array($orientation, [2, 4, 5, 7], true)) {
+            imageflip($rotated, IMG_FLIP_HORIZONTAL);
+        }
+
+        return $rotated;
     }
 
     private function loadImage(string $path, string $mimeType): \GdImage
