@@ -9,6 +9,7 @@ use App\Entity\Utilisateur;
 use App\Enum\StatutBonLivraison;
 use App\Message\ProcessBonLivraisonOcrMessage;
 use App\Repository\FournisseurRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -26,6 +27,7 @@ class BonLivraisonExtractionController extends AbstractController
         private readonly MessageBusInterface $messageBus,
         private readonly LoggerInterface $logger,
         private readonly RateLimiterFactory $blUploadLimiter,
+        private readonly EntityManagerInterface $entityManager,
     ) {
     }
 
@@ -37,6 +39,7 @@ class BonLivraisonExtractionController extends AbstractController
         }
 
         $needsExtraction = $bonLivraison->getDonneesBrutes() === null;
+        $extractionInProgress = $bonLivraison->getStatut() === StatutBonLivraison::EN_COURS_OCR;
 
         $fournisseurs = [];
         $organisation = $bonLivraison->getEtablissement()?->getOrganisation();
@@ -47,6 +50,7 @@ class BonLivraisonExtractionController extends AbstractController
         return $this->render('app/bon_livraison/extraction.html.twig', [
             'bonLivraison' => $bonLivraison,
             'needsExtraction' => $needsExtraction,
+            'extractionInProgress' => $extractionInProgress,
             'extractionResult' => null,
             'fournisseurs' => $fournisseurs,
         ]);
@@ -75,6 +79,12 @@ class BonLivraisonExtractionController extends AbstractController
             ], Response::HTTP_CONFLICT);
         }
 
+        // On bascule le statut à EN_COURS_OCR immédiatement (avant dispatch) pour
+        // que le frontend reflète l'état en cours et que les clics ultérieurs
+        // soient rejetés (409) avant que le worker ait pris le job.
+        $bonLivraison->setStatut(StatutBonLivraison::EN_COURS_OCR);
+        $this->entityManager->flush();
+
         $this->messageBus->dispatch(new ProcessBonLivraisonOcrMessage($bonLivraison->getId()));
 
         $this->logger->info('Extraction OCR async dispatchée', [
@@ -87,5 +97,31 @@ class BonLivraisonExtractionController extends AbstractController
             'message' => 'Extraction lancée. Le traitement est en cours.',
             'statut' => StatutBonLivraison::EN_COURS_OCR->value,
         ], Response::HTTP_ACCEPTED);
+    }
+
+    #[Route('/app/bl/{id}/status', name: 'app_bl_status', methods: ['GET'])]
+    public function status(int $id): JsonResponse
+    {
+        // On évite l'EntityValueResolver pour gérer manuellement le cas BL supprimé/inexistant
+        // et renvoyer un JSON propre au polling JS plutôt qu'un 404 HTML qui pollue les logs.
+        $bonLivraison = $this->entityManager->getRepository(BonLivraison::class)->find($id);
+
+        if ($bonLivraison === null) {
+            return new JsonResponse([
+                'deleted' => true,
+                'redirect' => $this->generateUrl('app_bl_hub'),
+                'message' => 'Ce bon de livraison n\'existe plus ou a été supprimé.',
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        if (!$this->isGranted(EtablissementVoter::VIEW, $bonLivraison->getEtablissement())) {
+            return new JsonResponse(['error' => 'Acces refuse'], Response::HTTP_FORBIDDEN);
+        }
+
+        return new JsonResponse([
+            'statut' => $bonLivraison->getStatut()->value,
+            'has_data' => $bonLivraison->getDonneesBrutes() !== null,
+            'nb_lignes' => $bonLivraison->getLignes()->count(),
+        ]);
     }
 }

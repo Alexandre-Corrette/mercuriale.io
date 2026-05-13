@@ -75,9 +75,55 @@
     color: var(--color-success);
 }
 
+.m-flash--info {
+    background-color: var(--color-info-bg, #e0f2fe);
+    border: 1px solid var(--color-info, #0284c7);
+    color: var(--color-info, #0284c7);
+}
+
+/* Variante enrichie : icône + texte + bouton close (utilisée par les flash JS) */
+.m-flash--with-icon {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+    max-width: 100%;
+    padding-right: 0.5rem;
+}
+
+.m-flash__icon {
+    flex-shrink: 0;
+    font-size: 1rem;
+}
+
+.m-flash__text {
+    flex: 1;
+    line-height: 1.4;
+}
+
+.m-flash__close {
+    flex-shrink: 0;
+    background: transparent;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm, 0.25rem);
+    opacity: 0.7;
+    transition: opacity 0.15s, background-color 0.15s;
+}
+
+.m-flash__close:hover {
+    opacity: 1;
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
 @media (max-width: 768px) {
     .m-flash {
         margin-left: var(--space-md);
         margin-right: var(--space-md);
+    }
+
+    .m-flash--with-icon {
+        max-width: calc(100% - 2 * var(--space-md));
     }
 }
