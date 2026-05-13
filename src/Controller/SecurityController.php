@@ -16,7 +16,7 @@ class SecurityController extends AbstractController
     {
         // If already logged in, redirect to admin
         if ($this->getUser()) {
-            return $this->redirectToRoute('admin');
+            return $this->redirectToRoute('app_dashboard');
         }
 
         // Get the login error if there is one

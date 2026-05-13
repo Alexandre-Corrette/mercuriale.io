@@ -38,7 +38,7 @@ class EtablissementSwitchController extends AbstractController
         $safeUrl = $this->safeRedirectHelper->getSafeRedirectUrl(
             $referer,
             $request,
-            $this->generateUrl('admin')
+            $this->generateUrl('app_dashboard')
         );
 
         return $this->redirect($safeUrl);
