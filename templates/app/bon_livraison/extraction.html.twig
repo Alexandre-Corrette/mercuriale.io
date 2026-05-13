@@ -73,9 +73,12 @@
 
             <div class="p-4">
                 {% if needsExtraction %}
-                    {# Extraction needed #}
-                    <div data-controller="extraction" data-extraction-url-value="{{ path('app_bl_extraire', {id: bonLivraison.id}) }}">
-                        <div data-extraction-target="placeholder" class="text-center py-12">
+                    {# Extraction needed (ou deja en cours si statut EN_COURS_OCR) #}
+                    <div data-controller="extraction"
+                         data-extraction-url-value="{{ path('app_bl_extraire', {id: bonLivraison.id}) }}"
+                         data-extraction-status-url-value="{{ path('app_bl_status', {id: bonLivraison.id}) }}"
+                         {% if extractionInProgress %}data-extraction-auto-poll-value="true"{% endif %}>
+                        <div data-extraction-target="placeholder" class="text-center py-12 {{ extractionInProgress ? 'hidden' : '' }}">
                             <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-navy to-navy-light rounded-full flex items-center justify-center">
                                 <i class="fas fa-magic text-3xl text-white"></i>
                             </div>
@@ -87,13 +90,13 @@
                             </button>
                         </div>
 
-                        {# Loading state #}
-                        <div data-extraction-target="loading" class="hidden text-center py-12">
+                        {# Loading state — visible si extractionInProgress=true #}
+                        <div data-extraction-target="loading" class="text-center py-12 {{ extractionInProgress ? '' : 'hidden' }}">
                             <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-navy to-navy-light rounded-full flex items-center justify-center animate-pulse">
                                 <i class="fas fa-spinner fa-spin text-3xl text-white"></i>
                             </div>
                             <h3 class="text-xl font-semibold text-navy mb-2">Extraction en cours...</h3>
-                            <p class="text-gray-500">Analyse de l'image par l'IA, veuillez patienter</p>
+                            <p class="text-gray-500">Analyse de l'image par l'IA, veuillez patienter (env. 30-60 secondes)</p>
                         </div>
                     </div>
                 {% else %}

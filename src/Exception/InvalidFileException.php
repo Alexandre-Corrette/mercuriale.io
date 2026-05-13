@@ -13,6 +13,7 @@ class InvalidFileException extends \RuntimeException
     public const SUSPICIOUS_FILE = 'SUSPICIOUS_FILE';
     public const CONVERSION_ERROR = 'CONVERSION_ERROR';
     public const FILE_NOT_READABLE = 'FILE_NOT_READABLE';
+    public const DUPLICATE = 'DUPLICATE';
 
     private string $errorType;
 
@@ -42,6 +43,7 @@ class InvalidFileException extends \RuntimeException
             self::SUSPICIOUS_FILE => 'Le fichier contient du contenu suspect et a été rejeté.',
             self::CONVERSION_ERROR => 'Erreur lors de la conversion du fichier.',
             self::FILE_NOT_READABLE => 'Le fichier ne peut pas être lu.',
+            self::DUPLICATE => 'Ce bon de livraison a déjà été transmis.',
             default => 'Erreur de fichier inconnue.',
         };
     }

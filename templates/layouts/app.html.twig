@@ -28,6 +28,10 @@
             {% endfor %}
         {% endfor %}
 
+        {# Lit les flash messages déposés dans sessionStorage par du JS (ex. polling
+           extraction qui détecte un BL doublon supprimé côté worker) et les affiche. #}
+        <div data-controller="session-flash"></div>
+
         <div class="app-layout__content">
             {% block content %}{% endblock %}
         </div>

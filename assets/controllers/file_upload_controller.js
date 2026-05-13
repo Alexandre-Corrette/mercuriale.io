@@ -174,8 +174,11 @@ export default class extends Controller {
         }
 
         // Show/hide preview section
+        // On toggle à la fois `hidden` (Tailwind) et `mi-file-preview--visible`
+        // (CSS custom) pour rester compatible avec les pages utilisant l'un ou l'autre.
         if (this.hasPreviewTarget) {
             if (this.selectedFiles.length > 0) {
+                this.previewTarget.classList.remove('hidden');
                 this.previewTarget.classList.add('mi-file-preview--visible');
                 if (this.hasDropZoneTarget) {
                     if (this.modeValue === 'single') {
@@ -185,6 +188,7 @@ export default class extends Controller {
                     }
                 }
             } else {
+                this.previewTarget.classList.add('hidden');
                 this.previewTarget.classList.remove('mi-file-preview--visible');
                 if (this.hasDropZoneTarget) {
                     this.dropZoneTarget.classList.remove('hidden', 'mi-dropzone--has-files');

@@ -7,9 +7,11 @@ namespace App\Service\Ocr;
 use App\DTO\ExtractionResult;
 use App\Entity\BonLivraison;
 use App\Enum\StatutBonLivraison;
+use App\Event\BonLivraisonDoublonDetectedEvent;
 use App\Repository\BonLivraisonRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 class BonLivraisonExtractorService
 {
@@ -21,6 +23,7 @@ class BonLivraisonExtractorService
         private readonly ExtractionValidator $extractionValidator,
         private readonly LoggerInterface $logger,
         private readonly string $projectDir,
+        private readonly EventDispatcherInterface $eventDispatcher,
     ) {
     }
 
@@ -124,6 +127,21 @@ class BonLivraisonExtractorService
                         'numero_bl' => $numeroBl,
                         'fournisseur' => $bl->getFournisseur()->getNom(),
                     ]);
+
+                    // Notifier l'user via event listener avant suppression.
+                    // L'event porte le user_id pour que les listeners puissent
+                    // stocker une notification ciblée (ils peuvent envoyer un mail,
+                    // écrire en cache, logger en audit, etc. sans coupler le service OCR).
+                    $createdBy = $bl->getCreatedBy();
+                    if ($createdBy !== null) {
+                        $this->eventDispatcher->dispatch(new BonLivraisonDoublonDetectedEvent(
+                            userId: $createdBy->getId(),
+                            etablissementId: $bl->getEtablissement()->getId(),
+                            originalBonLivraisonId: $doublon->getId(),
+                            numeroBl: $numeroBl,
+                        ));
+                    }
+
                     $this->entityManager->remove($bl);
                     $this->entityManager->flush();
 

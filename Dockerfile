@@ -11,6 +11,9 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     libicu-dev \
     libpq-dev \
+    libmagickwand-dev \
+    libheif-dev \
+    imagemagick \
     zip \
     unzip \
     && rm -rf /var/lib/apt/lists/*
@@ -31,7 +34,16 @@ RUN docker-php-ext-configure intl \
         opcache \
         sockets
 
-RUN pecl install redis && docker-php-ext-enable redis
+RUN pecl install redis imagick \
+    && docker-php-ext-enable redis imagick
+
+# ImageMagick policy.xml peut bloquer HEIC/HEIF par defaut sur Debian.
+# On autorise read/write pour ces formats afin de permettre la conversion HEIC -> JPEG.
+RUN POLICY_FILE=$(find /etc/ImageMagick-* -name policy.xml 2>/dev/null | head -1) \
+    && if [ -n "$POLICY_FILE" ]; then \
+        sed -i 's|<policy domain="coder" rights="none" pattern="HEIC".*/>|<policy domain="coder" rights="read\|write" pattern="HEIC" />|g' "$POLICY_FILE" \
+        && sed -i 's|<policy domain="coder" rights="none" pattern="HEIF".*/>|<policy domain="coder" rights="read\|write" pattern="HEIF" />|g' "$POLICY_FILE" ; \
+    fi
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 

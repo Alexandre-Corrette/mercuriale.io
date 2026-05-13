@@ -58,6 +58,14 @@ class BonLivraison
     #[Assert\Length(max: 500, maxMessage: 'Le chemin d\'image ne peut pas dépasser {{ limit }} caractères')]
     private ?string $imagePath = null;
 
+    /**
+     * SHA-256 hex (64 chars) du contenu binaire du fichier uploadé.
+     * Sert à détecter les doublons (même fichier re-uploadé) pour un établissement donné.
+     * Nullable pour rester rétro-compatible avec les BL antérieurs à cette feature.
+     */
+    #[ORM\Column(length: 64, nullable: true)]
+    private ?string $imageHash = null;
+
     /** @var array<string, mixed>|null */
     #[ORM\Column(type: Types::JSON, nullable: true)]
     private ?array $donneesBrutes = null;
@@ -180,6 +188,18 @@ class BonLivraison
     public function setImagePath(?string $imagePath): static
     {
         $this->imagePath = $imagePath;
+
+        return $this;
+    }
+
+    public function getImageHash(): ?string
+    {
+        return $this->imageHash;
+    }
+
+    public function setImageHash(?string $imageHash): static
+    {
+        $this->imageHash = $imageHash;
 
         return $this;
     }

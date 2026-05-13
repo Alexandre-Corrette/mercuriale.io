@@ -10,6 +10,7 @@ use App\Entity\Etablissement;
 use App\Entity\Utilisateur;
 use App\Enum\StatutBonLivraison;
 use App\Exception\InvalidFileException;
+use App\Repository\BonLivraisonRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -47,6 +48,7 @@ class BonLivraisonUploadService
         private readonly EntityManagerInterface $entityManager,
         private readonly LoggerInterface $logger,
         private readonly string $projectDir,
+        private readonly BonLivraisonRepository $bonLivraisonRepository,
     ) {
     }
 
@@ -200,6 +202,27 @@ class BonLivraisonUploadService
         Utilisateur $user,
         bool $flushImmediately = true
     ): BonLivraison {
+        // Détection de doublon : hash SHA-256 du contenu binaire de l'upload.
+        // Calculé sur le fichier ORIGINAL (avant move/conversion HEIC) pour qu'un
+        // re-upload du même fichier source soit détecté de manière déterministe.
+        $imageHash = hash_file('sha256', $file->getPathname());
+        if ($imageHash === false) {
+            throw new InvalidFileException(InvalidFileException::FILE_NOT_READABLE);
+        }
+
+        $existing = $this->bonLivraisonRepository->findOneBy([
+            'imageHash' => $imageHash,
+            'etablissement' => $etablissement,
+        ]);
+        if ($existing !== null) {
+            $message = sprintf(
+                'Ce bon de livraison a déjà été transmis (BL #%d, le %s).',
+                $existing->getId(),
+                $existing->getCreatedAt()->format('d/m/Y H:i')
+            );
+            throw new InvalidFileException(InvalidFileException::DUPLICATE, $message);
+        }
+
         // Générer un nom de fichier sécurisé
         $secureFilename = $this->generateSecureFilename($file);
 
@@ -230,6 +253,7 @@ class BonLivraisonUploadService
         $bonLivraison->setEtablissement($etablissement);
         $bonLivraison->setStatut(StatutBonLivraison::BROUILLON);
         $bonLivraison->setImagePath($secureFilename);
+        $bonLivraison->setImageHash($imageHash);
         $bonLivraison->setCreatedBy($user);
         $bonLivraison->setDateLivraison(new \DateTimeImmutable());
 
