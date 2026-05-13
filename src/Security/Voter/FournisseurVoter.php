@@ -52,10 +52,11 @@ class FournisseurVoter extends Voter
             return false;
         }
 
-        // CREATE doesn't require a specific fournisseur — just role check
+        // CREATE doesn't require a specific fournisseur — just role check.
+        // ADMIN et GERANT peuvent créer un nouveau fournisseur.
         if ($attribute === self::CREATE) {
             return \in_array('ROLE_ADMIN', $user->getRoles(), true)
-                || \in_array('ROLE_MANAGER', $user->getRoles(), true);
+                || \in_array('ROLE_GERANT', $user->getRoles(), true);
         }
 
         /** @var Fournisseur $fournisseur */
@@ -87,21 +88,15 @@ class FournisseurVoter extends Voter
             return true;
         }
 
-        // ROLE_MANAGER can view and import
-        if (\in_array('ROLE_MANAGER', $user->getRoles(), true)) {
+        // ROLE_GERANT : voir, importer, éditer un fournisseur de son organisation.
+        if (\in_array('ROLE_GERANT', $user->getRoles(), true)) {
             return match ($attribute) {
-                self::VIEW, self::IMPORT => true,
-                self::EDIT => false,
+                self::VIEW, self::IMPORT, self::EDIT => true,
                 default => false,
             };
         }
 
-        // ROLE_OPERATOR can only view
-        if (\in_array('ROLE_OPERATOR', $user->getRoles(), true)) {
-            return $attribute === self::VIEW;
-        }
-
-        // Default: view only for authenticated users in same org
+        // ROLE_CUISINIER (et autres) : consultation uniquement.
         return $attribute === self::VIEW;
     }
 }

@@ -7,6 +7,7 @@ namespace App\Service\Upload;
 use App\DTO\UploadResult;
 use App\Entity\BonLivraison;
 use App\Entity\Etablissement;
+use App\Entity\Fournisseur;
 use App\Entity\Utilisateur;
 use App\Enum\StatutBonLivraison;
 use App\Exception\InvalidFileException;
@@ -82,7 +83,7 @@ class BonLivraisonUploadService
      *
      * @param array<int, UploadedFile> $files
      */
-    public function uploadMultiple(array $files, Etablissement $etablissement, Utilisateur $user): UploadResult
+    public function uploadMultiple(array $files, Etablissement $etablissement, Utilisateur $user, ?Fournisseur $fournisseur = null): UploadResult
     {
         $successfulUploads = [];
         $failedUploads = [];
@@ -103,7 +104,7 @@ class BonLivraisonUploadService
             }
 
             try {
-                $bonLivraison = $this->uploadSingle($file, $etablissement, $user, false);
+                $bonLivraison = $this->uploadSingle($file, $etablissement, $user, false, $fournisseur);
                 $successfulUploads[] = $bonLivraison;
 
                 $this->logger->info('Fichier uploadé avec succès', [
@@ -200,7 +201,8 @@ class BonLivraisonUploadService
         UploadedFile $file,
         Etablissement $etablissement,
         Utilisateur $user,
-        bool $flushImmediately = true
+        bool $flushImmediately = true,
+        ?Fournisseur $fournisseur = null
     ): BonLivraison {
         // Détection de doublon : hash SHA-256 du contenu binaire de l'upload.
         // Calculé sur le fichier ORIGINAL (avant move/conversion HEIC) pour qu'un
@@ -251,6 +253,11 @@ class BonLivraisonUploadService
         // Créer l'entité BonLivraison
         $bonLivraison = new BonLivraison();
         $bonLivraison->setEtablissement($etablissement);
+        if ($fournisseur !== null) {
+            // Pré-sélection : le mapper OCR respectera ce choix (cf updateFournisseurInfo
+            // qui ne touche pas si fournisseur déjà set).
+            $bonLivraison->setFournisseur($fournisseur);
+        }
         $bonLivraison->setStatut(StatutBonLivraison::BROUILLON);
         $bonLivraison->setImagePath($secureFilename);
         $bonLivraison->setImageHash($imageHash);

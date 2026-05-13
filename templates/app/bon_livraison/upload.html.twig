@@ -57,6 +57,34 @@
                         {% endif %}
                     </div>
 
+                    {# Fournisseur (optionnel) — affiche seulement si une liste a ete fournie par le controleur #}
+                    {% if form.fournisseur is defined %}
+                        <div class="mb-6">
+                            <label class="block font-semibold text-gray-700 mb-2">
+                                <i class="fas fa-handshake mr-2"></i>Fournisseur
+                                <span class="text-sm text-gray-400 font-normal">(optionnel)</span>
+                            </label>
+                            {% if fournisseur_unique %}
+                                {# Mono-fournisseur : affichage direct #}
+                                <div class="px-4 py-3 text-base border-2 border-gray-100 rounded-xl bg-gray-50 text-gray-900 font-medium">
+                                    <i class="fas fa-check-circle text-coral mr-2"></i>{{ fournisseur_unique.nom }}
+                                </div>
+                                <div class="hidden">
+                                    {{ form_widget(form.fournisseur) }}
+                                </div>
+                            {% else %}
+                                {{ form_widget(form.fournisseur, {'attr': {
+                                    'class': 'w-full px-4 py-3 text-base border-2 border-gray-200 rounded-xl bg-white focus:outline-none focus:border-coral focus:ring-4 focus:ring-coral/10 transition-all'
+                                }}) }}
+                                {{ form_errors(form.fournisseur) }}
+                                <p class="text-sm text-gray-500 mt-2">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    Laisse vide pour que l'OCR détecte automatiquement le fournisseur.
+                                </p>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
                     {# Drop zone #}
                     <div class="mb-4">
                         <label class="block font-semibold text-gray-700 mb-2">

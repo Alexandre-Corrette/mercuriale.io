@@ -57,10 +57,10 @@
                     {% set role_label = 'Utilisateur' %}
                     {% if 'ROLE_ADMIN' in user.roles %}
                         {% set role_label = 'Administrateur' %}
-                    {% elseif 'ROLE_MANAGER' in user.roles %}
+                    {% elseif 'ROLE_GERANT' in user.roles %}
                         {% set role_label = 'Gerant' %}
-                    {% elseif 'ROLE_OPERATOR' in user.roles %}
-                        {% set role_label = 'Operateur' %}
+                    {% elseif 'ROLE_CUISINIER' in user.roles %}
+                        {% set role_label = 'Cuisinier' %}
                     {% endif %}
                     {% include 'components/_status_badge.html.twig' with {
                         label: role_label,

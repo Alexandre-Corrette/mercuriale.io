@@ -41,6 +41,7 @@ class BonLivraisonUploadController extends AbstractController
         private readonly LoggerInterface $logger,
         private readonly RateLimiterFactory $blUploadLimiter,
         private readonly EtablissementRepository $etablissementRepository,
+        private readonly FournisseurRepository $fournisseurRepository,
     ) {
     }
 
@@ -50,10 +51,6 @@ class BonLivraisonUploadController extends AbstractController
         /** @var Utilisateur $user */
         $user = $this->getUser();
 
-        $form = $this->createForm(BonLivraisonUploadType::class, null, [
-            'user' => $user,
-        ]);
-
         // Si l'utilisateur n'a accès qu'à un seul établissement, on pré-sélectionne
         // et le template affichera le nom en clair au lieu du select.
         $accessibleEtablissements = $this->etablissementRepository
@@ -61,14 +58,38 @@ class BonLivraisonUploadController extends AbstractController
             ->getQuery()
             ->getResult();
         $etablissementUnique = count($accessibleEtablissements) === 1 ? $accessibleEtablissements[0] : null;
+
+        // Si mono-établissement, on charge ses fournisseurs pour proposer la pré-sélection
+        // au moment de l'upload (l'OCR ne touche pas au fournisseur s'il est déjà set).
+        // En multi-établissement on n'affiche pas le select (l'organisation à filtrer n'est
+        // pas encore connue côté form ; détection OCR fait le boulot comme avant).
+        $fournisseurs = [];
+        if ($etablissementUnique !== null && $etablissementUnique->getOrganisation() !== null) {
+            $fournisseurs = $this->fournisseurRepository->findByOrganisation(
+                $etablissementUnique->getOrganisation()
+            );
+        }
+
+        $form = $this->createForm(BonLivraisonUploadType::class, null, [
+            'user' => $user,
+            'fournisseurs' => $fournisseurs,
+        ]);
+
         if ($etablissementUnique !== null) {
             $form->get('etablissement')->setData($etablissementUnique);
+        }
+
+        // Auto-pré-sélection si l'organisation n'a qu'un seul fournisseur actif.
+        $fournisseurUnique = count($fournisseurs) === 1 ? $fournisseurs[0] : null;
+        if ($fournisseurUnique !== null && $form->has('fournisseur')) {
+            $form->get('fournisseur')->setData($fournisseurUnique);
         }
 
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $etablissement = $form->get('etablissement')->getData();
+            $fournisseurSelectionne = $form->has('fournisseur') ? $form->get('fournisseur')->getData() : null;
             /** @var array<int, \Symfony\Component\HttpFoundation\File\UploadedFile> $files */
             $files = $form->get('files')->getData();
 
@@ -87,7 +108,7 @@ class BonLivraisonUploadController extends AbstractController
                 return $this->redirectToRoute('app_bl_upload');
             }
 
-            $result = $this->uploadService->uploadMultiple($files, $etablissement, $user);
+            $result = $this->uploadService->uploadMultiple($files, $etablissement, $user, $fournisseurSelectionne);
 
             $this->logger->info('Upload multiple termine', [
                 'user_id' => $user->getId(),
@@ -104,6 +125,7 @@ class BonLivraisonUploadController extends AbstractController
         return $this->render('app/bon_livraison/upload.html.twig', [
             'form' => $form,
             'etablissement_unique' => $etablissementUnique,
+            'fournisseur_unique' => $fournisseurUnique,
         ]);
     }
 

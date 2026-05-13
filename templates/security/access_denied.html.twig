@@ -26,7 +26,7 @@
                     {% set role = app.user.roles|first %}
                     {% if role == 'ROLE_ADMIN' or role == 'ROLE_SUPER_ADMIN' %}
                         Administrateur
-                    {% elseif role == 'ROLE_MANAGER' %}
+                    {% elseif role == 'ROLE_GERANT' %}
                         Gerant
                     {% else %}
                         Cuisinier

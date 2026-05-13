@@ -38,9 +38,8 @@ class UtilisateurEtablissementCrudController extends AbstractCrudController
             ->setRequired(true);
         yield ChoiceField::new('role', 'Rôle')
             ->setChoices([
-                'Lecteur' => 'ROLE_VIEWER',
-                'Éditeur' => 'ROLE_EDITOR',
-                'Manager' => 'ROLE_MANAGER',
+                'Cuisinier' => 'ROLE_CUISINIER',
+                'Gérant' => 'ROLE_GERANT',
                 'Admin' => 'ROLE_ADMIN',
             ])
             ->setRequired(true);
