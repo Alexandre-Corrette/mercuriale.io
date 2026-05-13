@@ -645,7 +645,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         }>,
  *     },
  *     uid?: bool|array{ // Uid configuration
- *         enabled?: bool|Param, // Default: true
+ *         enabled?: bool|Param, // Default: false
  *         default_uuid_version?: 7|6|4|1|Param, // Default: 7
  *         name_based_uuid_version?: 5|3|Param, // Default: 5
  *         name_based_uuid_namespace?: scalar|Param|null,
@@ -965,7 +965,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         enabled?: bool|Param, // Default: false
  *     },
  *     html?: bool|array{
- *         enabled?: bool|Param, // Default: true
+ *         enabled?: bool|Param, // Default: false
  *     },
  *     markdown?: bool|array{
  *         enabled?: bool|Param, // Default: false
@@ -1734,18 +1734,6 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         ...<mixed>
  *     },
  * }
- * @psalm-type TwigComponentConfig = array{
- *     defaults?: array<string, string|array{ // Default: ["__deprecated__use_old_naming_behavior"]
- *         template_directory?: scalar|Param|null, // Default: "components"
- *         name_prefix?: scalar|Param|null, // Default: ""
- *     }>,
- *     anonymous_template_directory?: scalar|Param|null, // Defaults to `components`
- *     profiler?: bool|array{ // Enables the profiler for Twig Component
- *         enabled?: bool|Param, // Default: "%kernel.debug%"
- *         collect_components?: bool|Param, // Collect components instances // Default: true
- *     },
- *     controllers_json?: scalar|Param|null, // Deprecated: The "twig_component.controllers_json" config option is deprecated, and will be removed in 3.0. // Default: null
- * }
  * @psalm-type LexikJwtAuthenticationConfig = array{
  *     public_key?: scalar|Param|null, // The key used to sign tokens (useless for HMAC). If not set, the key will be automatically computed from the secret key. // Default: null
  *     additional_public_keys?: list<scalar|Param|null>,
@@ -1883,7 +1871,6 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     security?: SecurityConfig,
  *     monolog?: MonologConfig,
  *     api_platform?: ApiPlatformConfig,
- *     twig_component?: TwigComponentConfig,
  *     lexik_jwt_authentication?: LexikJwtAuthenticationConfig,
  *     symfonycasts_tailwind?: SymfonycastsTailwindConfig,
  *     gesdinet_jwt_refresh_token?: GesdinetJwtRefreshTokenConfig,
@@ -1904,7 +1891,6 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         monolog?: MonologConfig,
  *         maker?: MakerConfig,
  *         api_platform?: ApiPlatformConfig,
- *         twig_component?: TwigComponentConfig,
  *         lexik_jwt_authentication?: LexikJwtAuthenticationConfig,
  *         symfonycasts_tailwind?: SymfonycastsTailwindConfig,
  *         gesdinet_jwt_refresh_token?: GesdinetJwtRefreshTokenConfig,
@@ -1923,7 +1909,6 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         security?: SecurityConfig,
  *         monolog?: MonologConfig,
  *         api_platform?: ApiPlatformConfig,
- *         twig_component?: TwigComponentConfig,
  *         lexik_jwt_authentication?: LexikJwtAuthenticationConfig,
  *         symfonycasts_tailwind?: SymfonycastsTailwindConfig,
  *         gesdinet_jwt_refresh_token?: GesdinetJwtRefreshTokenConfig,
@@ -1943,7 +1928,6 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         security?: SecurityConfig,
  *         monolog?: MonologConfig,
  *         api_platform?: ApiPlatformConfig,
- *         twig_component?: TwigComponentConfig,
  *         lexik_jwt_authentication?: LexikJwtAuthenticationConfig,
  *         symfonycasts_tailwind?: SymfonycastsTailwindConfig,
  *         gesdinet_jwt_refresh_token?: GesdinetJwtRefreshTokenConfig,
