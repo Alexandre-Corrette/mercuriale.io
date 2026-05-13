@@ -35,7 +35,7 @@ class RegistrationController extends AbstractController
         Security $security,
     ): Response {
         if ($this->getUser()) {
-            return $this->redirectToRoute('admin');
+            return $this->redirectToRoute('app_dashboard');
         }
 
         if ($request->isMethod('POST')) {

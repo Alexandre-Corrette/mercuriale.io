@@ -42,7 +42,7 @@ class OrganisationSwitchController extends AbstractController
                 $this->organisationContext->switchContext($org->getId(), $firstEtab->getId());
             }
 
-            return $this->redirectToRoute('admin');
+            return $this->redirectToRoute('app_dashboard');
         }
 
         // No org at all — shouldn't happen but handle gracefully
@@ -90,7 +90,7 @@ class OrganisationSwitchController extends AbstractController
         $safeUrl = $this->safeRedirectHelper->getSafeRedirectUrl(
             $referer,
             $request,
-            $this->generateUrl('admin')
+            $this->generateUrl('app_dashboard')
         );
 
         return $this->redirect($safeUrl);

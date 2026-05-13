@@ -28,7 +28,7 @@
                 </div>
                 <h1 class="verification-card__title">Compte verifie</h1>
                 <p class="verification-card__text">Votre organisation est verifiee. Vous avez acces a toutes les fonctionnalites.</p>
-                <a href="{{ path('admin') }}" class="btn btn--primary btn--lg">
+                <a href="{{ path('app_dashboard') }}" class="btn btn--primary btn--lg">
                     <i class="fas fa-home"></i> Acceder au tableau de bord
                 </a>
             </div>
@@ -66,7 +66,7 @@
                     </button>
                 </form>
 
-                <a href="{{ path('admin') }}" class="verification-card__link">
+                <a href="{{ path('app_dashboard') }}" class="verification-card__link">
                     <i class="fas fa-arrow-left"></i> Retour au tableau de bord
                 </a>
             </div>
@@ -113,7 +113,7 @@
                 </form>
 
                 {% if not is_expired %}
-                    <a href="{{ path('admin') }}" class="verification-card__link">
+                    <a href="{{ path('app_dashboard') }}" class="verification-card__link">
                         <i class="fas fa-arrow-left"></i> Retour au tableau de bord
                     </a>
                 {% endif %}
