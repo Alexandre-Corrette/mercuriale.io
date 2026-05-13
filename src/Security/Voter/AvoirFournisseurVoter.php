@@ -72,10 +72,13 @@ class AvoirFournisseurVoter extends Voter
 
         $role = $access->getRole();
 
+        // Rôles scopés cf CLAUDE.md :
+        // - ROLE_ADMIN / ROLE_GERANT : création + validation/imputation avoirs
+        // - ROLE_CUISINIER : consultation uniquement
         return match ($attribute) {
             self::VIEW => true,
-            self::CREATE => in_array($role, ['ROLE_MANAGER', 'ROLE_OPERATOR'], true),
-            self::MANAGE => $role === 'ROLE_MANAGER',
+            self::CREATE => in_array($role, ['ROLE_ADMIN', 'ROLE_GERANT'], true),
+            self::MANAGE => in_array($role, ['ROLE_ADMIN', 'ROLE_GERANT'], true),
             default => false,
         };
     }

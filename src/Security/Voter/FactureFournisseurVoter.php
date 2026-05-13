@@ -71,9 +71,10 @@ class FactureFournisseurVoter extends Voter
 
         $role = $access->getRole();
 
+        // Rôles scopés cf CLAUDE.md : ADMIN + GERANT gèrent les factures.
         return match ($attribute) {
             self::VIEW => true,
-            self::MANAGE => $role === 'ROLE_MANAGER',
+            self::MANAGE => in_array($role, ['ROLE_ADMIN', 'ROLE_GERANT'], true),
             default => false,
         };
     }

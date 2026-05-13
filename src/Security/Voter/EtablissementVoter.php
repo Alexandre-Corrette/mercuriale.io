@@ -68,10 +68,14 @@ class EtablissementVoter extends Voter
 
         $role = $access->getRole();
 
+        // Rôles scopés à l'établissement (UtilisateurEtablissement.role), cf CLAUDE.md :
+        // - ROLE_ADMIN scopé    → tout (gestion + upload + lecture)
+        // - ROLE_GERANT scopé   → upload BL, validation, mercuriale, avoirs, prix
+        // - ROLE_CUISINIER      → consultation uniquement (mercuriale, BL, alertes)
         return match ($attribute) {
             self::VIEW => true,
-            self::UPLOAD => in_array($role, ['ROLE_MANAGER', 'ROLE_OPERATOR'], true),
-            self::MANAGE => $role === 'ROLE_MANAGER',
+            self::UPLOAD => in_array($role, ['ROLE_ADMIN', 'ROLE_GERANT'], true),
+            self::MANAGE => in_array($role, ['ROLE_ADMIN', 'ROLE_GERANT'], true),
             default => false,
         };
     }

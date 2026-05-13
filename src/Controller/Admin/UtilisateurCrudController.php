@@ -59,8 +59,8 @@ class UtilisateurCrudController extends AbstractCrudController
             ->setHelp($pageName === Crud::PAGE_EDIT ? 'Laisser vide pour ne pas modifier' : '');
         yield ChoiceField::new('roles', 'Rôles')
             ->setChoices([
-                'Utilisateur' => 'ROLE_USER',
-                'Manager' => 'ROLE_MANAGER',
+                'Cuisinier' => 'ROLE_CUISINIER',
+                'Gérant' => 'ROLE_GERANT',
                 'Administrateur' => 'ROLE_ADMIN',
                 'Super Admin' => 'ROLE_SUPER_ADMIN',
             ])

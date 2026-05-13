@@ -72,11 +72,11 @@ class SignalementProduitVoter extends Voter
 
         $role = $access->getRole();
 
-        // Tous les rôles peuvent voir et créer un signalement
-        // Seuls MANAGER+ peuvent gérer (envoyer réclamation, créer avoir)
+        // Tous les rôles peuvent voir et créer un signalement.
+        // Seuls ADMIN/GERANT peuvent gérer (envoyer réclamation, créer avoir).
         return match ($attribute) {
             self::VIEW, self::CREATE => true,
-            self::MANAGE => in_array($role, ['ROLE_MANAGER', 'ROLE_ADMIN'], true),
+            self::MANAGE => in_array($role, ['ROLE_ADMIN', 'ROLE_GERANT'], true),
             default => false,
         };
     }

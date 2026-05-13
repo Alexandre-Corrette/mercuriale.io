@@ -127,7 +127,7 @@ class FournisseurController extends AbstractController
     }
 
     #[Route('/contacts/send', name: 'app_fournisseurs_contacts_send', methods: ['POST'])]
-    #[IsGranted('ROLE_MANAGER')]
+    #[IsGranted('ROLE_GERANT')]
     public function contactSendEmail(
         Request $request,
         MailerInterface $mailer,

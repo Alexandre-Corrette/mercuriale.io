@@ -25,7 +25,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\TelephoneField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-#[IsGranted('ROLE_MANAGER')]
+#[IsGranted('ROLE_GERANT')]
 class FournisseurCrudController extends AbstractCrudController
 {
     public function __construct(

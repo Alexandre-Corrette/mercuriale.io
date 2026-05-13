@@ -90,7 +90,7 @@
                                         <a href="tel:{{ contact.telephone|default('') }}" class="contact-card__action contact-card__action--edit">
                                             <i class="fas fa-phone"></i> Appeler
                                         </a>
-                                        {% if is_granted('ROLE_MANAGER') %}
+                                        {% if is_granted('ROLE_GERANT') %}
                                             <button type="button" class="contact-card__action contact-card__action--email"
                                                     onclick="openEmailModal('{{ contact.idAsString }}', '{{ contact.email|e('js') }}', '{{ contact.nomComplet|e('js') }}')">
                                                 <i class="fas fa-paper-plane"></i> Email
@@ -108,7 +108,7 @@
 </div>
 
 {# Email modal #}
-{% if is_granted('ROLE_MANAGER') %}
+{% if is_granted('ROLE_GERANT') %}
 <div id="email-modal" class="email-modal" style="display:none">
     <div class="email-modal__backdrop" onclick="closeEmailModal()"></div>
     <div class="email-modal__content">
@@ -148,7 +148,7 @@
 
 {% block javascripts %}
     {{ parent() }}
-    {% if is_granted('ROLE_MANAGER') %}
+    {% if is_granted('ROLE_GERANT') %}
     <script>
         function openEmailModal(contactId, email, name) {
             document.getElementById('email-contact-id').value = contactId;

@@ -15,7 +15,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\NumberField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-#[IsGranted('ROLE_MANAGER')]
+#[IsGranted('ROLE_GERANT')]
 class ProduitFournisseurCrudController extends AbstractCrudController
 {
     public static function getEntityFqcn(): string
