@@ -46,8 +46,18 @@
         {% endif %}
     </div>
 
-    {# Info grid #}
+    {# Info grid (coordonnees + bouton modifier inline) #}
     <div class="fournisseur-show-info">
+        <div class="fournisseur-show-info__header">
+            <h2 class="fournisseur-show-info__title">
+                <i class="fas fa-id-card"></i> Coordonnees
+            </h2>
+            {% if is_granted(constant('App\\Security\\Voter\\FournisseurVoter::EDIT'), fournisseur) %}
+                <a href="{{ path('app_fournisseur_edit', {id: fournisseur.id}) }}" class="fournisseur-show-info__edit-btn">
+                    <i class="fas fa-pen"></i> Modifier
+                </a>
+            {% endif %}
+        </div>
         <div class="fournisseur-show-info__item">
             <div class="fournisseur-show-info__label">Code</div>
             <div class="fournisseur-show-info__value">{{ fournisseur.code ?? '—' }}</div>

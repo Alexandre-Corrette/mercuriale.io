@@ -89,6 +89,27 @@ class FournisseurController extends AbstractController
         ]);
     }
 
+    #[Route('/{id}/edit', name: 'app_fournisseur_edit', methods: ['GET', 'POST'])]
+    public function edit(Fournisseur $fournisseur, Request $request): Response
+    {
+        $this->denyAccessUnlessGranted(FournisseurVoter::EDIT, $fournisseur);
+
+        $form = $this->createForm(FournisseurCreateType::class, $fournisseur);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $this->entityManager->flush();
+            $this->addFlash('success', 'Coordonnees du fournisseur mises a jour.');
+
+            return $this->redirectToRoute('app_fournisseur_show', ['id' => $fournisseur->getId()]);
+        }
+
+        return $this->render('app/fournisseur/edit.html.twig', [
+            'form' => $form,
+            'fournisseur' => $fournisseur,
+        ]);
+    }
+
     #[Route('/siren-lookup', name: 'app_fournisseur_siren_lookup', methods: ['GET'])]
     public function sirenLookup(Request $request, SirenApiService $sirenApi): JsonResponse
     {
