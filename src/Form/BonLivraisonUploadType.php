@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Form;
 
 use App\Entity\Etablissement;
+use App\Entity\Fournisseur;
 use App\Entity\Utilisateur;
 use App\Repository\EtablissementRepository;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
@@ -40,7 +41,26 @@ class BonLivraisonUploadType extends AbstractType
                 'attr' => [
                     'class' => 'form-select',
                 ],
-            ])
+            ]);
+
+        // Fournisseur (optionnel) : visible uniquement si on a une liste à proposer.
+        // Le contrôleur fournit la liste filtrée par organisation de l'établissement.
+        $fournisseurs = $options['fournisseurs'];
+        if (!empty($fournisseurs)) {
+            $builder->add('fournisseur', EntityType::class, [
+                'class' => Fournisseur::class,
+                'choices' => $fournisseurs,
+                'choice_label' => 'nom',
+                'label' => 'Fournisseur (optionnel)',
+                'placeholder' => 'Détection automatique par OCR',
+                'required' => false,
+                'attr' => [
+                    'class' => 'form-select',
+                ],
+            ]);
+        }
+
+        $builder
             ->add('files', FileType::class, [
                 'label' => 'Bon de livraison (images ou PDF)',
                 'mapped' => false,
@@ -86,8 +106,10 @@ class BonLivraisonUploadType extends AbstractType
             'csrf_field_name' => '_token',
             'csrf_token_id' => 'bl_upload',
             'user' => null,
+            'fournisseurs' => [],
         ]);
 
         $resolver->setAllowedTypes('user', ['null', Utilisateur::class]);
+        $resolver->setAllowedTypes('fournisseurs', ['array']);
     }
 }
