@@ -13,6 +13,7 @@ use Doctrine\ORM\Event\PostUpdateEventArgs;
 use Doctrine\ORM\Event\PreUpdateEventArgs;
 use Doctrine\ORM\Events;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 #[AsDoctrineListener(event: Events::preUpdate)]
 #[AsDoctrineListener(event: Events::postUpdate)]
@@ -24,6 +25,7 @@ class BonLivraisonListener
         private readonly ControleService $controleService,
         private readonly PushNotificationService $pushNotificationService,
         private readonly LoggerInterface $logger,
+        private readonly UrlGeneratorInterface $urlGenerator,
     ) {
     }
 
@@ -106,7 +108,11 @@ class BonLivraisonListener
 
         try {
             $blRef = (string) $bl;
-            $blUrl = '/admin?crudAction=detail&crudControllerFqcn=App%5CController%5CAdmin%5CBonLivraisonCrudController&entityId=' . $bl->getId();
+            $blUrl = $this->urlGenerator->generate(
+                'app_bl_show',
+                ['id' => $bl->getId()],
+                UrlGeneratorInterface::ABSOLUTE_URL,
+            );
 
             if ($nombreAlertes === 0) {
                 $this->pushNotificationService->sendToUser(
