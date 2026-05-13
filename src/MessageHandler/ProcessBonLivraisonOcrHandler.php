@@ -7,7 +7,6 @@ namespace App\MessageHandler;
 use App\Entity\BonLivraison;
 use App\Enum\StatutBonLivraison;
 use App\Message\ProcessBonLivraisonOcrMessage;
-use App\Service\BonLivraisonImageService;
 use App\Service\Ocr\BonLivraisonExtractorService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
@@ -18,7 +17,6 @@ class ProcessBonLivraisonOcrHandler
 {
     public function __construct(
         private readonly BonLivraisonExtractorService $extractorService,
-        private readonly BonLivraisonImageService $imageService,
         private readonly EntityManagerInterface $entityManager,
         private readonly LoggerInterface $logger,
     ) {
@@ -65,16 +63,10 @@ class ProcessBonLivraisonOcrHandler
                 return;
             }
 
-            // Extraction réussie — supprimer l'image (le BL papier fait foi)
-            try {
-                $this->imageService->deleteImage($bl);
-                $bl->setImagePath(null);
-            } catch (\Throwable $e) {
-                $this->logger->error('[OCR BL Handler] Impossible de supprimer l\'image', [
-                    'bl_id' => $blId,
-                    'error' => $e->getMessage(),
-                ]);
-            }
+            // Image conservée après extraction : permet la vérification visuelle des
+            // données extraites, l'audit en cas de litige fournisseur, et donne du sens
+            // aux warnings type "vérifie sur le BL" (conflit fournisseur OCR, anomalies).
+            // Une purge périodique pourra être ajoutée plus tard via une command cron.
 
             // Positionner le statut selon le résultat de l'extraction
             if ($result->produitsNonMatches !== [] || !empty($result->warnings)) {
