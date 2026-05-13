@@ -9,6 +9,7 @@ use App\Entity\BonLivraison;
 use App\Entity\Utilisateur;
 use App\Form\BonLivraisonUploadType;
 use App\Repository\BonLivraisonRepository;
+use App\Repository\EtablissementRepository;
 use App\Repository\FournisseurRepository;
 use App\Service\BonLivraison\RejectBonLivraisonService;
 use App\Service\BonLivraison\ValidateBonLivraisonService;
@@ -39,6 +40,7 @@ class BonLivraisonUploadController extends AbstractController
         private readonly EntityManagerInterface $entityManager,
         private readonly LoggerInterface $logger,
         private readonly RateLimiterFactory $blUploadLimiter,
+        private readonly EtablissementRepository $etablissementRepository,
     ) {
     }
 
@@ -51,6 +53,17 @@ class BonLivraisonUploadController extends AbstractController
         $form = $this->createForm(BonLivraisonUploadType::class, null, [
             'user' => $user,
         ]);
+
+        // Si l'utilisateur n'a accès qu'à un seul établissement, on pré-sélectionne
+        // et le template affichera le nom en clair au lieu du select.
+        $accessibleEtablissements = $this->etablissementRepository
+            ->createQueryBuilderForUserAccess($user)
+            ->getQuery()
+            ->getResult();
+        $etablissementUnique = count($accessibleEtablissements) === 1 ? $accessibleEtablissements[0] : null;
+        if ($etablissementUnique !== null) {
+            $form->get('etablissement')->setData($etablissementUnique);
+        }
 
         $form->handleRequest($request);
 
@@ -90,6 +103,7 @@ class BonLivraisonUploadController extends AbstractController
 
         return $this->render('app/bon_livraison/upload.html.twig', [
             'form' => $form,
+            'etablissement_unique' => $etablissementUnique,
         ]);
     }
 
