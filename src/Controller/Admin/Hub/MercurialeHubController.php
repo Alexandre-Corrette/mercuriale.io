@@ -4,12 +4,9 @@ declare(strict_types=1);
 
 namespace App\Controller\Admin\Hub;
 
-use App\Controller\Admin\MercurialeCrudController;
 use App\Entity\Utilisateur;
 use App\Repository\FournisseurRepository;
 use App\Repository\MercurialeRepository;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
-use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -23,7 +20,6 @@ class MercurialeHubController extends AbstractController
     public function __construct(
         private readonly MercurialeRepository $mercurialeRepo,
         private readonly FournisseurRepository $fournisseurRepo,
-        private readonly AdminUrlGenerator $adminUrlGenerator,
     ) {
     }
 
@@ -34,17 +30,11 @@ class MercurialeHubController extends AbstractController
         $user = $this->getUser();
         $org = $user->getOrganisation();
 
-        $crudMercurialeUrl = $this->adminUrlGenerator
-            ->setController(MercurialeCrudController::class)
-            ->setAction(Action::INDEX)
-            ->generateUrl();
-
         return $this->render('admin/hub/mercuriale.html.twig', [
             'hub_title' => 'Mercuriale',
             'mercuriale_count' => $this->mercurialeRepo->countActiveForOrganisation($org),
             'fournisseur_count' => $this->fournisseurRepo->countActiveForOrganisation($org),
             'fournisseurs' => $this->fournisseurRepo->findWithProductCountForOrganisation($org),
-            'crud_mercuriale_url' => $crudMercurialeUrl,
         ]);
     }
 
