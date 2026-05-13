@@ -31,10 +31,19 @@ class BonLivraisonMapper
      * Met à jour les informations du fournisseur et du BL depuis les données OCR.
      * À appeler AVANT la vérification anti-doublon.
      */
-    public function mapHeader(BonLivraison $bl, array $data): void
+    /**
+     * Mappe les infos d'en-tête (fournisseur, dates, numéros…) extraites par OCR.
+     *
+     * @return array<string, mixed> conflits détectés (ex: fournisseur OCR ≠ pré-sélection).
+     *                              Vide si aucun. À stocker dans donneesBrutes['_conflicts'].
+     */
+    public function mapHeader(BonLivraison $bl, array $data): array
     {
-        $this->updateFournisseurInfo($bl, $data);
+        $conflicts = [];
+        $this->updateFournisseurInfo($bl, $data, $conflicts);
         $this->updateBonLivraisonInfo($bl, $data);
+
+        return $conflicts;
     }
 
     /**
@@ -57,7 +66,10 @@ class BonLivraisonMapper
      * Met à jour les informations du fournisseur si nécessaire.
      * Si le BL n'a pas de fournisseur, tente de le résoudre depuis le nom extrait par OCR.
      */
-    private function updateFournisseurInfo(BonLivraison $bl, array $data): void
+    /**
+     * @param array<string, mixed> $conflicts collecte les divergences entre l'OCR et l'état du BL
+     */
+    private function updateFournisseurInfo(BonLivraison $bl, array $data, array &$conflicts): void
     {
         if (!isset($data['fournisseur'])) {
             return;
@@ -80,6 +92,56 @@ class BonLivraisonMapper
                     'bl_id' => $bl->getId(),
                     'nom_extrait' => $fournisseurData['nom'],
                 ]);
+            }
+        }
+
+        // Détection conflit : pré-sélection user vs détection OCR.
+        // Deux niveaux pour couvrir le cas où l'OCR lit un nom qu'on n'arrive
+        // pas à résoudre en base (ex: confusion fournisseur/client) :
+        //  - severity=high : OCR matche un autre fournisseur connu.
+        //  - severity=low  : OCR a lu un nom non-résolu mais clairement différent
+        //                    de la pré-sélection. Demande de vérification.
+        if ($bl->getFournisseur() !== null && !empty($fournisseurData['nom'])) {
+            $preselectNom = $bl->getFournisseur()->getNom();
+            $ocrNom = (string) $fournisseurData['nom'];
+
+            // Heuristique : si le nom OCR contient ou est contenu dans le nom
+            // pré-sélectionné (insensible à la casse), considérer comme cohérent.
+            $coherent = mb_stripos($ocrNom, $preselectNom) !== false
+                || mb_stripos($preselectNom, $ocrNom) !== false;
+
+            if (!$coherent) {
+                $detected = $this->resolveFournisseurFromName($bl, $ocrNom);
+
+                if ($detected !== null && $detected->getId() !== $bl->getFournisseur()->getId()) {
+                    $conflicts['fournisseur'] = [
+                        'severity' => 'high',
+                        'preselect_id' => $bl->getFournisseur()->getId(),
+                        'preselect_nom' => $preselectNom,
+                        'ocr_id' => $detected->getId(),
+                        'ocr_nom' => $detected->getNom(),
+                        'ocr_nom_extrait' => $ocrNom,
+                    ];
+                    $this->logger->warning('Conflit fournisseur OCR vs pré-sélection (high)', [
+                        'bl_id' => $bl->getId(),
+                        'preselect' => $preselectNom,
+                        'ocr' => $detected->getNom(),
+                    ]);
+                } elseif ($detected === null) {
+                    $conflicts['fournisseur'] = [
+                        'severity' => 'low',
+                        'preselect_id' => $bl->getFournisseur()->getId(),
+                        'preselect_nom' => $preselectNom,
+                        'ocr_id' => null,
+                        'ocr_nom' => null,
+                        'ocr_nom_extrait' => $ocrNom,
+                    ];
+                    $this->logger->info('Nom fournisseur OCR non-résolu mais différent de la pré-sélection (low)', [
+                        'bl_id' => $bl->getId(),
+                        'preselect' => $preselectNom,
+                        'ocr_nom_extrait' => $ocrNom,
+                    ]);
+                }
             }
         }
 

@@ -199,6 +199,13 @@ class BonLivraisonController extends AbstractController
 
         $em->beginTransaction();
         try {
+            // Cache in-memory : un BL peut avoir plusieurs lignes pointant sur le même
+            // code produit (doublons OCR, multi-conditionnements, etc.). Sans ce cache,
+            // findByFournisseurAndCode ne verrait pas les ProduitFournisseur persist()
+            // dans la transaction en cours et on ferait un 2e INSERT qui viole la
+            // contrainte unique (fournisseur_id, code_fournisseur).
+            $produitsParCode = [];
+
             foreach ($bonLivraison->getLignes() as $ligne) {
                 if ($ligne->getProduitFournisseur() !== null) {
                     continue;
@@ -209,9 +216,15 @@ class BonLivraisonController extends AbstractController
                     continue;
                 }
 
+                if (isset($produitsParCode[$code])) {
+                    $ligne->setProduitFournisseur($produitsParCode[$code]);
+                    continue;
+                }
+
                 // Check if product already exists for this supplier
                 $existing = $produitFournisseurRepo->findByFournisseurAndCode($fournisseur, $code);
                 if ($existing !== null) {
+                    $produitsParCode[$code] = $existing;
                     $ligne->setProduitFournisseur($existing);
                     continue;
                 }
@@ -224,6 +237,7 @@ class BonLivraisonController extends AbstractController
                 $produit->setUniteAchat($ligne->getUnite());
 
                 $em->persist($produit);
+                $produitsParCode[$code] = $produit;
                 $ligne->setProduitFournisseur($produit);
                 $createdCount++;
             }

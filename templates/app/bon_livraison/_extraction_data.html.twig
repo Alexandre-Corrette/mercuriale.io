@@ -65,6 +65,30 @@
     </div>
 </div>
 
+{# Conflit fournisseur OCR vs pré-sélection : on garde la pré-sélection mais on demande à l'user de confirmer #}
+{% if bonLivraison.donneesBrutes._conflicts.fournisseur is defined %}
+    {% set conflit = bonLivraison.donneesBrutes._conflicts.fournisseur %}
+    <div class="mb-4 p-3 bg-orange-50 border border-orange-300 rounded-lg text-sm" role="alert">
+        <div class="font-semibold text-orange-700 mb-1">
+            <i class="fas fa-triangle-exclamation mr-1"></i> Fournisseur à vérifier
+        </div>
+        <p class="text-gray-700">
+            {% if conflit.severity == 'high' %}
+                Tu avais pré-sélectionné <strong>{{ conflit.preselect_nom }}</strong> à l'upload,
+                mais l'OCR a lu <strong>« {{ conflit.ocr_nom_extrait|e }} »</strong> sur le BL
+                (correspondrait à <strong>{{ conflit.ocr_nom }}</strong>).
+                Le fournisseur actuel reste <strong>{{ conflit.preselect_nom }}</strong> —
+                utilise le bouton « Corriger » ci-dessus si l'OCR a raison.
+            {% else %}
+                Tu avais pré-sélectionné <strong>{{ conflit.preselect_nom }}</strong> à l'upload,
+                mais l'OCR a lu <strong>« {{ conflit.ocr_nom_extrait|e }} »</strong> qu'on ne reconnaît
+                pas en base. Vérifie que <strong>{{ conflit.preselect_nom }}</strong> est bien le bon
+                fournisseur sur ce BL.
+            {% endif %}
+        </p>
+    </div>
+{% endif %}
+
 {# Warnings from extraction #}
 {% if bonLivraison.donneesBrutes.remarques is defined and bonLivraison.donneesBrutes.remarques|length > 0 %}
 <div class="mb-4 p-3 bg-gold/10 border border-gold rounded-lg text-sm">

@@ -107,8 +107,10 @@ class BonLivraisonExtractorService
                 }
             }
 
-            // 5-6. Mapper le header (fournisseur + infos BL)
-            $this->mapper->mapHeader($bl, $data);
+            // 5-6. Mapper le header (fournisseur + infos BL).
+            // Retourne les conflits OCR vs état pré-existant (ex: fournisseur
+            // pré-sélectionné à l'upload différent de celui détecté par OCR).
+            $headerConflicts = $this->mapper->mapHeader($bl, $data);
 
             // 6b. Vérification anti-doublon (fournisseur + numéro BL)
             if ($bl->getNumeroBl() !== null && $bl->getFournisseur() !== null && $bl->getEtablissement() !== null) {
@@ -162,7 +164,10 @@ class BonLivraisonExtractorService
             $lignes = $mappingResult->lignes;
             $produitsNonMatches = $mappingResult->produitsNonMatches;
 
-            // 8. Sauvegarder les données brutes
+            // 8. Sauvegarder les données brutes (+ conflits éventuels pour l'UI)
+            if ($headerConflicts !== []) {
+                $data['_conflicts'] = $headerConflicts;
+            }
             $bl->setDonneesBrutes($data);
 
             // 9. Calculer le temps
