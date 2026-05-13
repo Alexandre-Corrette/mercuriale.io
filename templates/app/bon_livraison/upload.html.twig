@@ -8,6 +8,12 @@
 
 {% block title %}Upload Bon de Livraison - Mercuriale.io{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    {# Styles pour le feedback de selection de fichier (mi-file-item, mi-file-preview, mi-dropzone) #}
+    <link rel="stylesheet" href="{{ asset('css/mercuriale-import.css') }}">
+{% endblock %}
+
 {% block hub_content %}
 <div class="hub-content hub-content--narrow">
     <h1 class="hub-title"><i class="fas fa-receipt"></i> Nouveaux bons de livraison</h1>
