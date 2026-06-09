@@ -422,6 +422,12 @@
     border-left: 4px solid #dc2626;
 }
 
+.fournisseur-create__flash--warning {
+    background: #fef3c7;
+    color: #92400e;
+    border-left: 4px solid #f59e0b;
+}
+
 .fournisseur-create__form {
     display: flex;
     flex-direction: column;
