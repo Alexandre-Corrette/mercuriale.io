@@ -16,7 +16,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Table(name: 'fournisseur')]
 #[ORM\UniqueConstraint(name: 'uniq_fournisseur_siret', columns: ['siret'])]
 #[ORM\HasLifecycleCallbacks]
-#[UniqueEntity(fields: ['siret'], message: 'Un fournisseur avec ce SIRET existe déjà.', ignoreNull: true)]
+#[UniqueEntity(fields: ['siret'], message: 'Ce fournisseur existe déjà, vous ne pouvez pas le dupliquer.', ignoreNull: true)]
 class Fournisseur
 {
     use TimestampableTrait;

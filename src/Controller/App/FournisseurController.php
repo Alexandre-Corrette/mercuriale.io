@@ -84,6 +84,17 @@ class FournisseurController extends AbstractController
             return $this->redirectToRoute('app_fournisseur_show', ['id' => $fournisseur->getId()]);
         }
 
+        // Doublon SIRET : avertissement explicite (en plus de l'erreur inline du champ).
+        // Couvre la création manuelle et la modale SIREN, qui postent toutes deux ici.
+        $siret = $fournisseur->getSiret();
+        if (
+            $form->isSubmitted()
+            && $siret !== null && $siret !== ''
+            && $this->fournisseurRepo->count(['siret' => $siret]) > 0
+        ) {
+            $this->addFlash('warning', 'Ce fournisseur existe déjà, vous ne pouvez pas le dupliquer.');
+        }
+
         return $this->render('app/fournisseur/create.html.twig', [
             'form' => $form,
         ]);
