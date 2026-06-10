@@ -118,6 +118,43 @@ class AnthropicClient
     }
 
     /**
+     * Envoie un prompt TEXTE seul à Claude (pas de vision). Réutilise le retry,
+     * le logging et la clé. Utilisé p.ex. pour la catégorisation produit.
+     *
+     * @return array{content: string, usage: array{input_tokens: int, output_tokens: int}}
+     *
+     * @throws AnthropicApiException
+     */
+    public function analyzeText(string $prompt, ?int $maxTokens = null): array
+    {
+        $startTime = microtime(true);
+
+        $payload = [
+            'model' => $this->model,
+            'max_tokens' => $maxTokens ?? $this->maxTokens,
+            'messages' => [
+                ['role' => 'user', 'content' => $prompt],
+            ],
+        ];
+
+        $response = $this->callApiWithRetry($payload);
+
+        $duration = round(microtime(true) - $startTime, 2);
+        $this->logger->info('Anthropic API call successful', [
+            'duration_seconds' => $duration,
+            'input_tokens' => $response['usage']['input_tokens'] ?? 0,
+            'output_tokens' => $response['usage']['output_tokens'] ?? 0,
+            'model' => $this->model,
+            'mode' => 'text',
+        ]);
+
+        return [
+            'content' => $this->extractContent($response),
+            'usage' => $response['usage'] ?? ['input_tokens' => 0, 'output_tokens' => 0],
+        ];
+    }
+
+    /**
      * Construit le payload pour l'API Anthropic (type "document" pour PDF).
      */
     private function buildDocumentPayload(string $base64Pdf, string $prompt): array
