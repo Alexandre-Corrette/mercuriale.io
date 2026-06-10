@@ -159,88 +159,100 @@ class MercurialeImportController extends AbstractController
             throw $this->createAccessDeniedException();
         }
 
-        $parsedData = $import->getParsedData();
-        $headers = $parsedData['headers'] ?? [];
-        $currentMapping = $import->getColumnMapping();
+        try {
+            $parsedData = $import->getParsedData();
+            $headers = $parsedData['headers'] ?? [];
+            $currentMapping = $import->getColumnMapping();
 
-        $form = $this->createForm(MercurialeColumnMappingType::class, null, [
-            'headers' => $headers,
-        ]);
+            $form = $this->createForm(MercurialeColumnMappingType::class, null, [
+                'headers' => $headers,
+            ]);
 
-        if ($currentMapping !== null) {
-            $config = ColumnMappingConfig::fromArray($currentMapping);
-            foreach ($config->mapping as $columnIndex => $field) {
-                $fieldName = 'mapping_' . $field;
-                if ($form->has($fieldName)) {
-                    $form->get($fieldName)->setData((string) $columnIndex);
+            if ($currentMapping !== null) {
+                $config = ColumnMappingConfig::fromArray($currentMapping);
+                foreach ($config->mapping as $columnIndex => $field) {
+                    $fieldName = 'mapping_' . $field;
+                    if ($form->has($fieldName)) {
+                        $form->get($fieldName)->setData((string) $columnIndex);
+                    }
                 }
-            }
-            if ($form->has('hasHeaderRow')) {
-                $form->get('hasHeaderRow')->setData($config->hasHeaderRow);
-            }
-        }
-
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-            $mapping = [];
-
-            $fields = [
-                'code_fournisseur',
-                'designation',
-                'prix',
-                'unite',
-                'conditionnement',
-                'date_debut',
-                'date_fin',
-            ];
-
-            foreach ($fields as $field) {
-                $columnIndex = $form->get('mapping_' . $field)->getData();
-                if ($columnIndex !== null && $columnIndex !== ColumnMappingConfig::FIELD_IGNORE) {
-                    $mapping[(int) $columnIndex] = $field;
+                if ($form->has('hasHeaderRow')) {
+                    $form->get('hasHeaderRow')->setData($config->hasHeaderRow);
                 }
             }
 
-            $config = new ColumnMappingConfig(
-                mapping: $mapping,
-                hasHeaderRow: $form->get('hasHeaderRow')->getData() ?? true,
-                defaultUnite: $form->get('defaultUnite')->getData()?->getCode(),
-                defaultDateDebut: $form->get('defaultDateDebut')->getData()
-                    ? \DateTimeImmutable::createFromMutable($form->get('defaultDateDebut')->getData())
-                    : null,
-            );
+            $form->handleRequest($request);
 
-            if (!$config->hasRequiredFields()) {
-                $missing = $config->getMissingRequiredFields();
-                $this->addFlash('error', sprintf(
-                    'Colonnes obligatoires non mappees : %s',
-                    implode(', ', $missing),
-                ));
+            if ($form->isSubmitted() && $form->isValid()) {
+                $mapping = [];
 
-                return $this->render('app/mercuriale_import/mapping.html.twig', [
-                    'form' => $form,
-                    'import' => $import,
-                    'headers' => $headers,
-                    'previewRows' => \array_slice($parsedData['rows'] ?? [], 0, 5),
+                $fields = [
+                    'code_fournisseur',
+                    'designation',
+                    'prix',
+                    'unite',
+                    'conditionnement',
+                    'date_debut',
+                    'date_fin',
+                ];
+
+                foreach ($fields as $field) {
+                    $columnIndex = $form->get('mapping_' . $field)->getData();
+                    if ($columnIndex !== null && $columnIndex !== ColumnMappingConfig::FIELD_IGNORE) {
+                        $mapping[(int) $columnIndex] = $field;
+                    }
+                }
+
+                $config = new ColumnMappingConfig(
+                    mapping: $mapping,
+                    hasHeaderRow: $form->get('hasHeaderRow')->getData() ?? true,
+                    defaultUnite: $form->get('defaultUnite')->getData()?->getCode(),
+                    defaultDateDebut: $form->get('defaultDateDebut')->getData()
+                        ? \DateTimeImmutable::createFromMutable($form->get('defaultDateDebut')->getData())
+                        : null,
+                );
+
+                if (!$config->hasRequiredFields()) {
+                    $missing = $config->getMissingRequiredFields();
+                    $this->addFlash('error', sprintf(
+                        'Colonnes obligatoires non mappees : %s',
+                        implode(', ', $missing),
+                    ));
+
+                    return $this->render('app/mercuriale_import/mapping.html.twig', [
+                        'form' => $form,
+                        'import' => $import,
+                        'headers' => $headers,
+                        'previewRows' => \array_slice($parsedData['rows'] ?? [], 0, 5),
+                    ]);
+                }
+
+                $import->setColumnMapping($config->toArray());
+                $import->extendExpiration();
+                $this->entityManager->flush();
+
+                return $this->redirectToRoute('app_mercuriale_import_preview', [
+                    'importId' => $import->getIdAsString(),
                 ]);
             }
 
-            $import->setColumnMapping($config->toArray());
-            $import->extendExpiration();
-            $this->entityManager->flush();
-
-            return $this->redirectToRoute('app_mercuriale_import_preview', [
-                'importId' => $import->getIdAsString(),
+            return $this->render('app/mercuriale_import/mapping.html.twig', [
+                'form' => $form,
+                'import' => $import,
+                'headers' => $headers,
+                'previewRows' => \array_slice($parsedData['rows'] ?? [], 0, 5),
             ]);
-        }
+        } catch (\Throwable $e) {
+            $this->logger->error('Erreur a l\'etape de mapping de l\'import mercuriale', [
+                'import_id' => $importId,
+                'exception' => $e::class,
+                'error' => $e->getMessage(),
+            ]);
 
-        return $this->render('app/mercuriale_import/mapping.html.twig', [
-            'form' => $form,
-            'import' => $import,
-            'headers' => $headers,
-            'previewRows' => \array_slice($parsedData['rows'] ?? [], 0, 5),
-        ]);
+            $this->addFlash('error', 'Une erreur est survenue lors de la preparation du mapping des colonnes. Veuillez reessayer ou relancer l\'import.');
+
+            return $this->redirectToRoute('app_mercuriale_import');
+        }
     }
 
     #[Route('/app/mercuriale/import/preview/{importId}', name: 'app_mercuriale_import_preview', methods: ['GET', 'POST'])]
