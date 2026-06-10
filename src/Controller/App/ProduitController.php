@@ -88,9 +88,17 @@ class ProduitController extends AbstractController
             $offset,
         );
 
-        // Récupérer les prix mercuriale actifs en batch
+        // Récupérer les prix mercuriale actifs en batch.
+        // Les prix peuvent être négociés au niveau établissement : sans cet
+        // établissement, findActivePrixBatch ne renvoie que les prix globaux
+        // (etablissement IS NULL) et masque tous les prix propres à l'établissement.
+        // Mono-établissement (cas courant) → on cible son établissement (il prime
+        // sur le global) ; multi-établissements → fallback global.
+        $etablissements = $user->getEtablissements();
+        $etablissement = count($etablissements) === 1 ? $etablissements[0] : null;
+
         $pfIds = array_map(fn (ProduitFournisseur $pf) => $pf->getId(), $result['items']);
-        $prixMap = $this->mercurialeRepo->findActivePrixBatch($pfIds);
+        $prixMap = $this->mercurialeRepo->findActivePrixBatch($pfIds, $etablissement);
 
         $items = array_map(fn (ProduitFournisseur $pf) => [
             'id' => $pf->getId(),
