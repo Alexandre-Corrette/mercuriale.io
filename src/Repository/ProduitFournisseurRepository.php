@@ -65,7 +65,9 @@ class ProduitFournisseurRepository extends ServiceEntityRepository
     ): array {
         $qb = $this->createQueryBuilder('pf')
             ->join('pf.fournisseur', 'f')
-            ->join('pf.uniteAchat', 'u')
+            // leftJoin : uniteAchat est nullable (produits importés sans unité d'achat).
+            // Un INNER JOIN ici excluait silencieusement tous ces produits du listing.
+            ->leftJoin('pf.uniteAchat', 'u')
             ->innerJoin('f.organisationFournisseurs', 'orgf')
             ->leftJoin('pf.produit', 'p')
             ->leftJoin('p.categorie', 'cat')
