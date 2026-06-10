@@ -78,6 +78,11 @@ services:
         arguments:
             $projectDir: '%kernel.project_dir%'
 
+    # Devine la catégorie d'un produit ; implémentation par défaut = règles mots-clés.
+    # Brancher un fallback Claude / modèle maison plus tard en changeant cet alias.
+    App\Service\Categorisation\CategoryGuesserInterface:
+        alias: App\Service\Categorisation\KeywordCategoryGuesser
+
     App\Service\Upload\FactureUploadService:
         arguments:
             $projectDir: '%kernel.project_dir%'
