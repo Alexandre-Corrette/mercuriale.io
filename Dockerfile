@@ -56,7 +56,18 @@ COPY docker/php/php-${APP_ENV}.ini $PHP_INI_DIR/conf.d/mercuriale.ini
 
 WORKDIR /var/www/html
 
-RUN usermod -u 1000 www-data
+# Aligner l'utilisateur d'exécution (www-data) sur l'utilisateur hôte qui possède
+# le repo cloné côté serveur (user "deploy" = 1001:1001).
+# Sans cet alignement, php-fpm tourne en uid 1000 / gid 33 alors que public/ est
+# owné 1001:1001 en mode 775 : www-data tombe dans "others" (r-x) et
+# `asset-map:compile --env=prod` échoue sur `mkdir(public/assets): Permission denied`.
+# En devenant owner de public/ (et var/), www-data écrit via les droits owner (rwx),
+# et l'ownership reste cohérent avec les opérations git du déploiement (uid 1001).
+# Surchargeable au build : --build-arg PUID=... PGID=... (cf. docker-compose.yml).
+ARG PUID=1001
+ARG PGID=1001
+RUN groupmod -o -g "${PGID}" www-data \
+    && usermod  -o -u "${PUID}" -g "${PGID}" www-data
 
 USER www-data
 
