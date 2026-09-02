@@ -1,0 +1,44 @@
+# Overlay TLS — PREPROD uniquement (test.mercuriale.io).
+#
+# En preprod, Nginx termine le TLS avec des certificats Let's Encrypt montés
+# depuis l'hôte (/etc/letsencrypt, cf. docker-compose.yml + docker/nginx/default.conf).
+# Cet overlay ajoute le renouvellement automatique des certificats + le reload Nginx.
+#
+# ⚠️ NON destiné à la prod : mercuriale.io termine le TLS au load-balancer
+# (docker/nginx/nginx-prod.conf écoute en HTTP seul, derrière reverse proxy).
+# Cet overlay n'est activé QUE par deploy-preprod.sh (via -f docker-compose.ssl.yml).
+# deploy-prod.sh n'y touche pas → aucun conteneur certbot en prod.
+
+services:
+  certbot:
+    image: certbot/certbot
+    container_name: mercuriale_certbot
+    restart: unless-stopped
+    volumes:
+      # Certs + config de renouvellement, partagés en écriture avec l'hôte et Nginx (ro côté Nginx).
+      - /etc/letsencrypt:/etc/letsencrypt
+      # Webroot partagé avec Nginx pour déposer le challenge ACME (.well-known/acme-challenge/).
+      - .:/var/www/html
+    # Boucle de renouvellement : tente un renew toutes les 12h.
+    # `certbot renew` est un no-op tant que le cert a plus de 30j de validité
+    # (et renouvelle bien un cert déjà expiré). --webroot force le dépôt du
+    # challenge dans le webroot servi par Nginx, indépendamment du webroot_path
+    # stocké dans la conf de renouvellement de l'hôte.
+    entrypoint: >
+      /bin/sh -c 'trap exit TERM;
+      while :; do
+        certbot renew --webroot -w /var/www/html/public --quiet;
+        sleep 12h & wait $${!};
+      done'
+    networks:
+      - mercuriale
+
+  nginx:
+    # Recharge Nginx toutes les 6h pour prendre en compte un certificat renouvelé,
+    # tout en gardant le process Nginx au premier plan (le conteneur s'arrête si
+    # Nginx meurt → la restart policy le relance). Pattern officiel Nginx/Certbot.
+    command: >
+      /bin/sh -c 'while :; do
+        sleep 6h & wait $${!};
+        nginx -s reload;
+      done & nginx -g "daemon off;"'
